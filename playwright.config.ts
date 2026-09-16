@@ -2,6 +2,13 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
 
+/**
+ * Use a Chromium that is already on the machine when one is provided (CI images often
+ * pre-install browsers at a version that does not match this package's expectation).
+ */
+const executablePath = process.env.CHROMIUM_PATH;
+const launchOptions = executablePath ? { executablePath } : {};
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
@@ -19,11 +26,11 @@ export default defineConfig({
   projects: [
     {
       name: 'mobile',
-      use: { ...devices['Pixel 7'] },
+      use: { ...devices['Pixel 7'], launchOptions },
     },
     {
       name: 'desktop',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, launchOptions },
       testMatch: /responsive\.spec\.ts|themes\.spec\.ts/,
     },
   ],

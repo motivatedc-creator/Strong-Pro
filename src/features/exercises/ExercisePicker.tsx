@@ -91,7 +91,7 @@ export function ExercisePicker({
                   reset();
                 }}
               >
-                Add {selected.length > 0 ? `${selected.length}` : ''}
+                Add selected{selected.length > 0 ? ` (${selected.length})` : ''}
               </Button>
             </div>
           ) : (

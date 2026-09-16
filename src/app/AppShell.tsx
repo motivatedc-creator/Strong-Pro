@@ -16,6 +16,7 @@ import { elapsedSeconds } from '@/domain/time';
 export function AppShell() {
   const location = useLocation();
   const hydrateTimer = useRestTimerStore((state) => state.hydrate);
+  const timer = useRestTimerStore((state) => state.timer);
 
   const { data: active, reload } = useRepositoryData(
     (repository) => repository.getActiveWorkout(),
@@ -60,7 +61,12 @@ export function AppShell() {
       {active && !onActiveWorkoutScreen && (
         <Link
           to="/workout"
-          className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-accent/40 bg-accent px-4 py-2 text-accent-ink lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-lg lg:border"
+          // Sits above the rest-timer bar when one is running so neither covers the other.
+          className={
+            timer
+              ? 'fixed inset-x-0 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-accent/40 bg-accent px-4 py-2 text-accent-ink lg:bottom-28 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-lg lg:border'
+              : 'fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-accent/40 bg-accent px-4 py-2 text-accent-ink lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-lg lg:border'
+          }
         >
           <span className="flex items-center gap-2 text-sm font-semibold">
             <span

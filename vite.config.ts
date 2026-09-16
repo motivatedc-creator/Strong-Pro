@@ -35,6 +35,9 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff2}'],
         cleanupOutdatedCaches: true,
+        // Take control on the first load so the very next navigation already works
+        // offline; updates still wait for an explicit prompt (skipWaiting stays off).
+        clientsClaim: true,
         navigateFallback: 'index.html',
       },
       devOptions: {

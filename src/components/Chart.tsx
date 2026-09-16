@@ -199,6 +199,7 @@ export function ChartCard({
                       name={entry.name}
                       fill={entry.color}
                       radius={[4, 4, 0, 0]}
+                      maxBarSize={56}
                       isAnimationActive={false}
                     />
                   ))}

@@ -94,7 +94,9 @@ export function SetRow({
   return (
     <li
       className={cx(
-        'grid grid-cols-[2.25rem_1fr_auto] items-center gap-2 rounded border px-2 py-2 transition sm:grid-cols-[2.5rem_5.5rem_1fr_auto]',
+        // Two columns on a narrow phone (badge + inputs, with the actions and the
+        // previous-set line wrapping underneath); four columns once there is room.
+        'grid grid-cols-[2.75rem_1fr] items-center gap-2 rounded border px-2 py-2 transition sm:grid-cols-[2.75rem_5.5rem_1fr_auto]',
         set.isCompleted ? 'border-success/50 bg-success/10' : 'border-line bg-surface-raised',
       )}
     >
@@ -105,7 +107,7 @@ export function SetRow({
           title={`Set type: ${typeMeta.label}. Tap to change to ${nextType.label}.`}
           aria-label={`Set ${index + 1}, ${typeMeta.label}. Change set type`}
           className={cx(
-            'flex h-8 w-8 items-center justify-center rounded text-sm font-bold',
+            'flex h-11 w-11 items-center justify-center rounded text-sm font-bold',
             set.setType === 'warmup'
               ? 'bg-warning/20 text-warning'
               : set.setType === 'drop'
@@ -133,7 +135,7 @@ export function SetRow({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         {usesWeight(trackingType) && (
           <div className="flex items-center gap-1">
             <IconButton
@@ -149,7 +151,7 @@ export function SetRow({
               aria-label={`Weight for set ${index + 1} in ${weightUnit}`}
               step="any"
               min={0}
-              className="h-10 w-20 min-h-0 px-2"
+              className="h-11 w-[4.5rem] min-h-0 px-2 sm:w-20"
               onChange={(event) => setWeightText(event.target.value)}
               onBlur={(event) => commitWeight(event.target.value)}
             />
@@ -170,7 +172,7 @@ export function SetRow({
             aria-label={`Reps for set ${index + 1}`}
             inputMode="numeric"
             min={0}
-            className="h-10 w-16 min-h-0 px-2"
+            className="h-11 w-14 min-h-0 px-2 sm:w-16"
             placeholder="reps"
             onChange={(event) => setRepsText(event.target.value)}
             onBlur={(event) => {
@@ -186,7 +188,7 @@ export function SetRow({
             aria-label={`Duration in seconds for set ${index + 1}`}
             inputMode="numeric"
             min={0}
-            className="h-10 w-20 min-h-0 px-2"
+            className="h-11 w-16 min-h-0 px-2 sm:w-20"
             placeholder="secs"
             onBlur={(event) => {
               const value = Number.parseInt(event.target.value, 10);
@@ -203,7 +205,7 @@ export function SetRow({
             aria-label={`Distance in metres for set ${index + 1}`}
             inputMode="numeric"
             min={0}
-            className="h-10 w-20 min-h-0 px-2"
+            className="h-11 w-16 min-h-0 px-2 sm:w-20"
             placeholder="m"
             onBlur={(event) => {
               const value = Number.parseInt(event.target.value, 10);
@@ -219,7 +221,7 @@ export function SetRow({
             step="0.5"
             min={0}
             max={intensityMode === 'rpe' ? 10 : 10}
-            className="h-10 w-16 min-h-0 px-2"
+            className="h-11 w-14 min-h-0 px-2 sm:w-16"
             placeholder={intensityMode.toUpperCase()}
             onBlur={(event) => {
               const raw = event.target.value.trim();
@@ -236,7 +238,7 @@ export function SetRow({
         )}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="col-span-2 flex items-center justify-end gap-1 sm:col-span-1">
         {isPr && (
           <span
             title="Personal record"
@@ -252,20 +254,20 @@ export function SetRow({
           aria-label={
             set.isCompleted ? `Mark set ${index + 1} as not done` : `Complete set ${index + 1}`
           }
-          className="h-10 w-11 px-0"
+          className="h-11 w-12 px-0"
           onClick={onToggleComplete}
         >
           <span aria-hidden="true" className="text-base">
             ✓
           </span>
         </Button>
-        <IconButton label={`Delete set ${index + 1}`} onClick={onDelete} className="h-10 w-9">
+        <IconButton label={`Delete set ${index + 1}`} onClick={onDelete} className="h-11 w-11">
           <span aria-hidden="true">🗑</span>
         </IconButton>
       </div>
 
       {/* Mobile: previous-set reference sits under the inputs where there is room. */}
-      <p className="col-span-3 -mt-1 flex items-center gap-2 text-[11px] text-ink-subtle sm:hidden">
+      <p className="col-span-2 -mt-1 flex flex-wrap items-center gap-2 text-[11px] text-ink-subtle sm:hidden">
         <span>Prev: {previousLabel}</span>
         {onCopyPrevious && previous && (
           <button type="button" onClick={onCopyPrevious} className="font-semibold text-accent">

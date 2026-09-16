@@ -10,3 +10,4 @@ test-results
 .env.*
 ios
 android
+e2e/screenshots/
