@@ -49,7 +49,11 @@ export function estimateOneRepMax(
 
   if (formula === 'brzycki') {
     if (wholeReps <= BRZYCKI_MAX_REPS) {
-      return { value: Math.round(brzycki(weight, wholeReps)), formulaUsed: 'brzycki', fellBack: false };
+      return {
+        value: Math.round(brzycki(weight, wholeReps)),
+        formulaUsed: 'brzycki',
+        fellBack: false,
+      };
     }
     return { value: Math.round(epley(weight, wholeReps)), formulaUsed: 'epley', fellBack: true };
   }

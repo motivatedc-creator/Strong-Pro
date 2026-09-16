@@ -34,7 +34,13 @@ const SEED: SeedTuple[] = [
   ['Back Squat', 'quads', ['glutes', 'hamstrings', 'core'], 'barbell', 'squat'],
   ['Front Squat', 'quads', ['glutes', 'core'], 'barbell', 'squat'],
   ['Box Squat', 'quads', ['glutes', 'hamstrings'], 'barbell', 'squat'],
-  ['Conventional Deadlift', 'hamstrings', ['glutes', 'back', 'traps', 'forearms'], 'barbell', 'hinge'],
+  [
+    'Conventional Deadlift',
+    'hamstrings',
+    ['glutes', 'back', 'traps', 'forearms'],
+    'barbell',
+    'hinge',
+  ],
   ['Sumo Deadlift', 'glutes', ['quads', 'hamstrings', 'back'], 'barbell', 'hinge'],
   ['Romanian Deadlift', 'hamstrings', ['glutes', 'back'], 'barbell', 'hinge'],
   ['Rack Pull', 'back', ['traps', 'glutes', 'forearms'], 'barbell', 'hinge'],
@@ -93,7 +99,13 @@ const SEED: SeedTuple[] = [
   ['Cable Lateral Raise', 'shoulders', [], 'cable', 'isolation'],
   ['Cable Crunch', 'core', [], 'cable', 'core'],
   ['Smith Machine Squat', 'quads', ['glutes', 'hamstrings'], 'smith machine', 'squat'],
-  ['Smith Machine Bench Press', 'chest', ['triceps', 'shoulders'], 'smith machine', 'horizontal push'],
+  [
+    'Smith Machine Bench Press',
+    'chest',
+    ['triceps', 'shoulders'],
+    'smith machine',
+    'horizontal push',
+  ],
 
   // --- Bodyweight ---
   ['Pull-Up', 'lats', ['biceps', 'back'], 'bodyweight', 'vertical pull', 'reps_only'],
@@ -193,11 +205,47 @@ export function seedPlateInventories(): PlateInventory[] {
 
 export function seedBarProfiles(): BarProfile[] {
   return [
-    { id: 'seed-bar-olympic-kg', name: 'Olympic bar (20 kg)', weightG: toGrams(20, 'kg'), collarWeightG: 0, isDefault: true },
-    { id: 'seed-bar-olympic-lb', name: 'Olympic bar (45 lb)', weightG: toGrams(45, 'lb'), collarWeightG: 0, isDefault: false },
-    { id: 'seed-bar-womens', name: "Women's bar (15 kg)", weightG: toGrams(15, 'kg'), collarWeightG: 0, isDefault: false },
-    { id: 'seed-bar-ez', name: 'EZ curl bar (10 kg)', weightG: toGrams(10, 'kg'), collarWeightG: 0, isDefault: false },
-    { id: 'seed-bar-trap', name: 'Trap bar (25 kg)', weightG: toGrams(25, 'kg'), collarWeightG: 0, isDefault: false },
-    { id: 'seed-bar-safety', name: 'Safety squat bar (32 kg)', weightG: toGrams(32, 'kg'), collarWeightG: 0, isDefault: false },
+    {
+      id: 'seed-bar-olympic-kg',
+      name: 'Olympic bar (20 kg)',
+      weightG: toGrams(20, 'kg'),
+      collarWeightG: 0,
+      isDefault: true,
+    },
+    {
+      id: 'seed-bar-olympic-lb',
+      name: 'Olympic bar (45 lb)',
+      weightG: toGrams(45, 'lb'),
+      collarWeightG: 0,
+      isDefault: false,
+    },
+    {
+      id: 'seed-bar-womens',
+      name: "Women's bar (15 kg)",
+      weightG: toGrams(15, 'kg'),
+      collarWeightG: 0,
+      isDefault: false,
+    },
+    {
+      id: 'seed-bar-ez',
+      name: 'EZ curl bar (10 kg)',
+      weightG: toGrams(10, 'kg'),
+      collarWeightG: 0,
+      isDefault: false,
+    },
+    {
+      id: 'seed-bar-trap',
+      name: 'Trap bar (25 kg)',
+      weightG: toGrams(25, 'kg'),
+      collarWeightG: 0,
+      isDefault: false,
+    },
+    {
+      id: 'seed-bar-safety',
+      name: 'Safety squat bar (32 kg)',
+      weightG: toGrams(32, 'kg'),
+      collarWeightG: 0,
+      isDefault: false,
+    },
   ];
 }

@@ -83,7 +83,14 @@ export function calculatePlates(input: PlateCalculatorInput): PlateCalculatorRes
   const base = barWeightG + collarWeightG * 2;
 
   if (!Number.isFinite(targetTotalG) || targetTotalG < 0) {
-    return barOnlyResult('invalid', 'Enter a target weight of zero or more.', barWeightG, collarWeightG, base, 0);
+    return barOnlyResult(
+      'invalid',
+      'Enter a target weight of zero or more.',
+      barWeightG,
+      collarWeightG,
+      base,
+      0,
+    );
   }
 
   if (targetTotalG < base) {
@@ -101,7 +108,14 @@ export function calculatePlates(input: PlateCalculatorInput): PlateCalculatorRes
 
   const remainder = targetTotalG - base;
   if (remainder === 0) {
-    return barOnlyResult('bar_only', 'No plates needed — that is the bar.', barWeightG, collarWeightG, base, 0);
+    return barOnlyResult(
+      'bar_only',
+      'No plates needed — that is the bar.',
+      barWeightG,
+      collarWeightG,
+      base,
+      0,
+    );
   }
 
   const denominations = normalisePlates(input.plates);
@@ -121,7 +135,9 @@ export function calculatePlates(input: PlateCalculatorInput): PlateCalculatorRes
   const targetPerSide = Math.floor(remainder / 2);
   const searchLimit = targetPerSide + MATCH_TOLERANCE_G;
   const reachable = solve(searchLimit, denominations);
-  const chosenSum = reachable.has(targetPerSide) ? targetPerSide : bestBelow(reachable, searchLimit);
+  const chosenSum = reachable.has(targetPerSide)
+    ? targetPerSide
+    : bestBelow(reachable, searchLimit);
 
   if (chosenSum === null || chosenSum === 0) {
     return barOnlyResult(

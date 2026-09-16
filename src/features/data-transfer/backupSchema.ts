@@ -25,7 +25,13 @@ const exerciseSchema = z.object({
   secondaryMuscleGroups: z.array(muscleGroup).max(20).default([]),
   equipment: z.string().min(1).max(40),
   movementPattern: z.string().min(1).max(40),
-  trackingType: z.enum(['weight_reps', 'reps_only', 'duration', 'distance_duration', 'assisted_weight']),
+  trackingType: z.enum([
+    'weight_reps',
+    'reps_only',
+    'duration',
+    'distance_duration',
+    'assisted_weight',
+  ]),
   incrementG: count.optional(),
   isCustom: z.boolean(),
   isArchived: z.boolean(),
@@ -239,7 +245,9 @@ export function validateBackup(raw: unknown): BackupValidation {
   if (!result.success) {
     return {
       ok: false,
-      errors: result.error.issues.slice(0, 20).map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`),
+      errors: result.error.issues
+        .slice(0, 20)
+        .map((issue) => `${issue.path.join('.') || 'root'}: ${issue.message}`),
     };
   }
 
@@ -268,16 +276,22 @@ function findOrphans(payload: BackupPayload): string[] {
   const workoutIds = new Set(payload.data.workouts.map((workout) => workout.id));
   const workoutExerciseIds = new Set(payload.data.workoutExercises.map((row) => row.id));
 
-  const orphanExercises = payload.data.workoutExercises.filter((row) => !workoutIds.has(row.workoutId));
+  const orphanExercises = payload.data.workoutExercises.filter(
+    (row) => !workoutIds.has(row.workoutId),
+  );
   if (orphanExercises.length > 0) {
-    warnings.push(`${orphanExercises.length} logged exercises reference a missing workout and will be skipped.`);
+    warnings.push(
+      `${orphanExercises.length} logged exercises reference a missing workout and will be skipped.`,
+    );
   }
 
   const orphanSets = payload.data.workoutSets.filter(
     (row) => !workoutExerciseIds.has(row.workoutExerciseId) || !workoutIds.has(row.workoutId),
   );
   if (orphanSets.length > 0) {
-    warnings.push(`${orphanSets.length} sets reference a missing exercise entry and will be skipped.`);
+    warnings.push(
+      `${orphanSets.length} sets reference a missing exercise entry and will be skipped.`,
+    );
   }
 
   return warnings;
@@ -286,13 +300,17 @@ function findOrphans(payload: BackupPayload): string[] {
 /** Drops rows that failed referential checks so a restore cannot create dangling data. */
 export function pruneOrphans(payload: BackupPayload): BackupPayload {
   const workoutIds = new Set(payload.data.workouts.map((workout) => workout.id));
-  const workoutExercises = payload.data.workoutExercises.filter((row) => workoutIds.has(row.workoutId));
+  const workoutExercises = payload.data.workoutExercises.filter((row) =>
+    workoutIds.has(row.workoutId),
+  );
   const workoutExerciseIds = new Set(workoutExercises.map((row) => row.id));
   const workoutSets = payload.data.workoutSets.filter(
     (row) => workoutExerciseIds.has(row.workoutExerciseId) && workoutIds.has(row.workoutId),
   );
   const templateIds = new Set(payload.data.templates.map((template) => template.id));
-  const templateExercises = payload.data.templateExercises.filter((row) => templateIds.has(row.templateId));
+  const templateExercises = payload.data.templateExercises.filter((row) =>
+    templateIds.has(row.templateId),
+  );
 
   return {
     ...payload,

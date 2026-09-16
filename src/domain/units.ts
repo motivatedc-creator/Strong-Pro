@@ -39,7 +39,11 @@ export function fromGrams(grams: number, unit: WeightUnit): number {
  * Display weight rounded for humans: 2 decimals max, trailing zeros trimmed.
  * 2.5 kg stays "2.5"; 45 lb stays "45"; 60 kg shown in lb becomes "132.28".
  */
-export function formatWeight(grams: number, unit: WeightUnit, opts?: { decimals?: number }): string {
+export function formatWeight(
+  grams: number,
+  unit: WeightUnit,
+  opts?: { decimals?: number },
+): string {
   const decimals = opts?.decimals ?? 2;
   const value = fromGrams(grams, unit);
   const rounded = roundTo(value, decimals);
@@ -85,7 +89,11 @@ export function roundGramsToIncrement(
   if (incrementG <= 0) return Math.round(grams);
   const ratio = grams / incrementG;
   const steps =
-    mode === 'down' ? Math.floor(ratio + 1e-9) : mode === 'up' ? Math.ceil(ratio - 1e-9) : Math.round(ratio);
+    mode === 'down'
+      ? Math.floor(ratio + 1e-9)
+      : mode === 'up'
+        ? Math.ceil(ratio - 1e-9)
+        : Math.round(ratio);
   return Math.round(steps * incrementG);
 }
 
@@ -113,8 +121,12 @@ export function formatDurationLong(totalSeconds: number): string {
 
 export function formatDistance(metres: number, system: UnitSystem): string {
   if (system === 'metric') {
-    return metres >= 1000 ? `${trimNumber(roundTo(metres / 1000, 2))} km` : `${Math.round(metres)} m`;
+    return metres >= 1000
+      ? `${trimNumber(roundTo(metres / 1000, 2))} km`
+      : `${Math.round(metres)} m`;
   }
   const miles = metres / 1609.344;
-  return miles >= 0.1 ? `${trimNumber(roundTo(miles, 2))} mi` : `${Math.round(metres * 1.09361)} yd`;
+  return miles >= 0.1
+    ? `${trimNumber(roundTo(miles, 2))} mi`
+    : `${Math.round(metres * 1.09361)} yd`;
 }

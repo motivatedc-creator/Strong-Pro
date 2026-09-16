@@ -10,7 +10,10 @@ export function uuid(): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
   }
   // Last resort: time + Math.random. Only reachable in very old or locked-down runtimes.
-  const rand = () => Math.floor(Math.random() * 0xffff).toString(16).padStart(4, '0');
+  const rand = () =>
+    Math.floor(Math.random() * 0xffff)
+      .toString(16)
+      .padStart(4, '0');
   return `${rand()}${rand()}-${rand()}-4${rand().slice(1)}-a${rand().slice(1)}-${rand()}${rand()}${rand()}`;
 }
 

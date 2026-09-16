@@ -195,7 +195,9 @@ describe('buildImportBatch', () => {
       existingExercises: library,
       existingFingerprints: new Set(),
     });
-    const byName = Object.fromEntries(batch.newExercises.map((exercise) => [exercise.name, exercise]));
+    const byName = Object.fromEntries(
+      batch.newExercises.map((exercise) => [exercise.name, exercise]),
+    );
     expect(byName['Pull-Up']?.trackingType).toBe('reps_only');
     expect(byName['Rowing Machine']?.trackingType).toBe('distance_duration');
     expect(byName['Barbell Row']?.trackingType).toBe('weight_reps');
@@ -207,7 +209,9 @@ describe('buildImportBatch', () => {
       existingExercises: library,
       existingFingerprints: new Set(),
     });
-    const sets = batch.workouts.flatMap((workout) => workout.exercises.flatMap((entry) => entry.sets));
+    const sets = batch.workouts.flatMap((workout) =>
+      workout.exercises.flatMap((entry) => entry.sets),
+    );
     expect(sets.every((set) => set.isCompleted)).toBe(true);
     expect(batch.job.setsImported).toBe(sets.length);
     expect(batch.job.fileName).toBe('strong.csv');

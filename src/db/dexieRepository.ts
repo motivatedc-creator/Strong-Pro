@@ -73,7 +73,13 @@ export class DexieRepository implements RepForgeRepository {
     await this.db.open();
     await this.db.transaction(
       'rw',
-      [this.db.meta, this.db.exercises, this.db.settings, this.db.barProfiles, this.db.plateInventories],
+      [
+        this.db.meta,
+        this.db.exercises,
+        this.db.settings,
+        this.db.barProfiles,
+        this.db.plateInventories,
+      ],
       async () => {
         const meta = await this.db.meta.get('meta');
         if (!meta) {
@@ -93,7 +99,9 @@ export class DexieRepository implements RepForgeRepository {
         if ((current?.seededLibraryVersion ?? 0) < SEED_LIBRARY_VERSION) {
           // Seeding is additive: a user who edited or archived a seeded exercise keeps
           // their version, and custom exercises are never touched.
-          const existing = new Set((await this.db.exercises.toCollection().primaryKeys()) as string[]);
+          const existing = new Set(
+            (await this.db.exercises.toCollection().primaryKeys()) as string[],
+          );
           const missing = seedExercises(now).filter((exercise) => !existing.has(exercise.id));
           if (missing.length > 0) await this.db.exercises.bulkPut(missing);
           await this.db.meta.update('meta', {
@@ -239,9 +247,9 @@ export class DexieRepository implements RepForgeRepository {
   async getTemplateDetail(id: UUID): Promise<TemplateDetail | undefined> {
     const template = await this.db.templates.get(id);
     if (!template) return undefined;
-    const templateExercises = (await this.db.templateExercises.where('templateId').equals(id).toArray()).sort(
-      (a, b) => a.order - b.order,
-    );
+    const templateExercises = (
+      await this.db.templateExercises.where('templateId').equals(id).toArray()
+    ).sort((a, b) => a.order - b.order);
     const exercises = await this.db.exercises.bulkGet(templateExercises.map((t) => t.exerciseId));
     return {
       template,
@@ -274,7 +282,11 @@ export class DexieRepository implements RepForgeRepository {
       await this.db.templateExercises.where('templateId').equals(template.id).delete();
       if (exercises.length > 0) {
         await this.db.templateExercises.bulkPut(
-          exercises.map((exercise, index) => ({ ...exercise, templateId: template.id, order: index })),
+          exercises.map((exercise, index) => ({
+            ...exercise,
+            templateId: template.id,
+            order: index,
+          })),
         );
       }
     });
@@ -320,7 +332,9 @@ export class DexieRepository implements RepForgeRepository {
   async reorderTemplates(orderedIds: UUID[]): Promise<void> {
     await this.db.transaction('rw', this.db.templates, async () => {
       await Promise.all(
-        orderedIds.map((id, index) => this.db.templates.update(id, { order: index, updatedAt: nowIso() })),
+        orderedIds.map((id, index) =>
+          this.db.templates.update(id, { order: index, updatedAt: nowIso() }),
+        ),
       );
     });
   }
@@ -354,7 +368,9 @@ export class DexieRepository implements RepForgeRepository {
         if (existing) throw new ActiveWorkoutExistsError(existing.id);
 
         let name = input.name?.trim() || defaultWorkoutName(date);
-        const template = input.templateId ? await this.db.templates.get(input.templateId) : undefined;
+        const template = input.templateId
+          ? await this.db.templates.get(input.templateId)
+          : undefined;
         if (template && !input.name) name = template.name;
 
         const workout: Workout = {
@@ -376,7 +392,9 @@ export class DexieRepository implements RepForgeRepository {
           const templateExercises = (
             await this.db.templateExercises.where('templateId').equals(template.id).toArray()
           ).sort((a, b) => a.order - b.order);
-          const exercises = await this.db.exercises.bulkGet(templateExercises.map((t) => t.exerciseId));
+          const exercises = await this.db.exercises.bulkGet(
+            templateExercises.map((t) => t.exerciseId),
+          );
 
           const workoutExercises: WorkoutExercise[] = [];
           const sets: WorkoutSet[] = [];
@@ -485,17 +503,21 @@ export class DexieRepository implements RepForgeRepository {
 
   async completeWorkout(id: UUID): Promise<void> {
     const now = nowIso();
-    await this.db.transaction('rw', [this.db.workouts, this.db.workoutSets, this.db.timers], async () => {
-      const workout = await this.db.workouts.get(id);
-      // Idempotent: a duplicate tap on "Finish" must not produce a second completion.
-      if (!workout || workout.status === 'completed') return;
-      // Incomplete sets are dropped rather than silently counted as performed work.
-      const sets = await this.db.workoutSets.where('workoutId').equals(id).toArray();
-      const incomplete = sets.filter((set) => !set.isCompleted).map((set) => set.id);
-      if (incomplete.length > 0) await this.db.workoutSets.bulkDelete(incomplete);
-      await this.db.workouts.update(id, { status: 'completed', endedAt: now, updatedAt: now });
-      await this.db.timers.delete('rest-timer');
-    });
+    await this.db.transaction(
+      'rw',
+      [this.db.workouts, this.db.workoutSets, this.db.timers],
+      async () => {
+        const workout = await this.db.workouts.get(id);
+        // Idempotent: a duplicate tap on "Finish" must not produce a second completion.
+        if (!workout || workout.status === 'completed') return;
+        // Incomplete sets are dropped rather than silently counted as performed work.
+        const sets = await this.db.workoutSets.where('workoutId').equals(id).toArray();
+        const incomplete = sets.filter((set) => !set.isCompleted).map((set) => set.id);
+        if (incomplete.length > 0) await this.db.workoutSets.bulkDelete(incomplete);
+        await this.db.workouts.update(id, { status: 'completed', endedAt: now, updatedAt: now });
+        await this.db.timers.delete('rest-timer');
+      },
+    );
   }
 
   async discardWorkout(id: UUID): Promise<void> {
@@ -539,11 +561,13 @@ export class DexieRepository implements RepForgeRepository {
       if (!row) return;
       await this.db.workoutSets.where('workoutExerciseId').equals(workoutExerciseId).delete();
       await this.db.workoutExercises.delete(workoutExerciseId);
-      const remaining = (await this.db.workoutExercises.where('workoutId').equals(row.workoutId).toArray()).sort(
-        (a, b) => a.order - b.order,
-      );
+      const remaining = (
+        await this.db.workoutExercises.where('workoutId').equals(row.workoutId).toArray()
+      ).sort((a, b) => a.order - b.order);
       await Promise.all(
-        remaining.map((exercise, index) => this.db.workoutExercises.update(exercise.id, { order: index })),
+        remaining.map((exercise, index) =>
+          this.db.workoutExercises.update(exercise.id, { order: index }),
+        ),
       );
     });
   }
@@ -588,7 +612,10 @@ export class DexieRepository implements RepForgeRepository {
     await this.db.transaction('rw', [this.db.workoutSets, this.db.workouts], async () => {
       for (const input of inputs) {
         const siblings = (
-          await this.db.workoutSets.where('workoutExerciseId').equals(input.workoutExerciseId).toArray()
+          await this.db.workoutSets
+            .where('workoutExerciseId')
+            .equals(input.workoutExerciseId)
+            .toArray()
         ).sort((a, b) => a.order - b.order);
 
         const insertIndex = input.afterSetId
@@ -652,7 +679,10 @@ export class DexieRepository implements RepForgeRepository {
     await this.db.workoutSets.put(set);
   }
 
-  async getPreviousSetsForExercise(exerciseId: UUID, beforeWorkoutId?: UUID): Promise<WorkoutSet[]> {
+  async getPreviousSetsForExercise(
+    exerciseId: UUID,
+    beforeWorkoutId?: UUID,
+  ): Promise<WorkoutSet[]> {
     const links = await this.db.workoutExercises.where('exerciseId').equals(exerciseId).toArray();
     if (links.length === 0) return [];
     const workouts = await this.db.workouts.bulkGet(links.map((link) => link.workoutId));
@@ -661,7 +691,9 @@ export class DexieRepository implements RepForgeRepository {
       .map((link, index) => ({ link, workout: workouts[index] }))
       .filter(
         (entry): entry is { link: WorkoutExercise; workout: Workout } =>
-          !!entry.workout && entry.workout.status === 'completed' && entry.workout.id !== beforeWorkoutId,
+          !!entry.workout &&
+          entry.workout.status === 'completed' &&
+          entry.workout.id !== beforeWorkoutId,
       )
       .sort((a, b) => b.workout.startedAt.localeCompare(a.workout.startedAt));
 
@@ -806,7 +838,9 @@ export class DexieRepository implements RepForgeRepository {
   }
 
   listImportJobs(): Promise<ImportJob[]> {
-    return this.db.importJobs.toArray().then((rows) => rows.sort((a, b) => b.startedAt.localeCompare(a.startedAt)));
+    return this.db.importJobs
+      .toArray()
+      .then((rows) => rows.sort((a, b) => b.startedAt.localeCompare(a.startedAt)));
   }
 
   getImportIssues(jobId: UUID): Promise<ImportIssue[]> {
@@ -895,7 +929,8 @@ export class DexieRepository implements RepForgeRepository {
       await this.db.workoutSets.bulkPut(data.workoutSets);
       await this.db.measurements.bulkPut(data.measurements);
       if (data.barProfiles.length > 0) await this.db.barProfiles.bulkPut(data.barProfiles);
-      if (data.plateInventories.length > 0) await this.db.plateInventories.bulkPut(data.plateInventories);
+      if (data.plateInventories.length > 0)
+        await this.db.plateInventories.bulkPut(data.plateInventories);
       if (data.importJobs.length > 0) await this.db.importJobs.bulkPut(data.importJobs);
       if (data.settings) await this.db.settings.put({ ...data.settings, id: 'settings' });
     });
@@ -920,7 +955,9 @@ export class DexieRepository implements RepForgeRepository {
       if (newExercises.length > 0) await this.db.exercises.bulkPut(newExercises);
       result.exercisesAdded = newExercises.length;
 
-      const existingTemplates = new Set((await this.db.templates.toCollection().primaryKeys()) as string[]);
+      const existingTemplates = new Set(
+        (await this.db.templates.toCollection().primaryKeys()) as string[],
+      );
       const newTemplates = data.templates.filter((template) => !existingTemplates.has(template.id));
       if (newTemplates.length > 0) {
         await this.db.templates.bulkPut(newTemplates);
@@ -931,7 +968,9 @@ export class DexieRepository implements RepForgeRepository {
       }
       result.templatesAdded = newTemplates.length;
 
-      const existingWorkouts = new Set((await this.db.workouts.toCollection().primaryKeys()) as string[]);
+      const existingWorkouts = new Set(
+        (await this.db.workouts.toCollection().primaryKeys()) as string[],
+      );
       const newWorkouts = data.workouts.filter((workout) => !existingWorkouts.has(workout.id));
       result.workoutsSkipped = data.workouts.length - newWorkouts.length;
       if (newWorkouts.length > 0) {

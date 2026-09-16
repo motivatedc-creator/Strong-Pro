@@ -21,7 +21,11 @@ const perSideMap = (result: ReturnType<typeof calculatePlates>) =>
 
 describe('exact loading', () => {
   it('solves a standard 100 kg bar with the fewest plates, heaviest first', () => {
-    const result = calculatePlates({ targetTotalG: kg(100), barWeightG: kg(20), plates: fullKgGym });
+    const result = calculatePlates({
+      targetTotalG: kg(100),
+      barWeightG: kg(20),
+      plates: fullKgGym,
+    });
     expect(result.status).toBe('exact');
     expect(result.achievedTotalG).toBe(kg(100));
     // 40 kg per side in two plates; the documented tie-break loads the heavier plate first.
@@ -104,7 +108,11 @@ describe('finite inventory', () => {
 
 describe('closest lower results', () => {
   it('reports the shortfall when the target is unreachable', () => {
-    const result = calculatePlates({ targetTotalG: kg(101), barWeightG: kg(20), plates: fullKgGym });
+    const result = calculatePlates({
+      targetTotalG: kg(101),
+      barWeightG: kg(20),
+      plates: fullKgGym,
+    });
     expect(result.status).toBe('closest_lower');
     expect(result.achievedTotalG).toBe(kg(100));
     expect(result.differenceG).toBe(kg(100) - kg(101));
@@ -134,7 +142,9 @@ describe('edge cases', () => {
   });
 
   it('rejects a negative target', () => {
-    expect(calculatePlates({ targetTotalG: -1, barWeightG: kg(20), plates: fullKgGym }).status).toBe('invalid');
+    expect(
+      calculatePlates({ targetTotalG: -1, barWeightG: kg(20), plates: fullKgGym }).status,
+    ).toBe('invalid');
   });
 
   it('handles an empty inventory', () => {

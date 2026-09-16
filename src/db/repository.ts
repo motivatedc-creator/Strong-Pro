@@ -77,7 +77,9 @@ export interface RepForgeRepository {
   // --- exercises ---
   listExercises(options?: { includeArchived?: boolean }): Promise<Exercise[]>;
   getExercise(id: UUID): Promise<Exercise | undefined>;
-  createExercise(input: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt' | 'isCustom'> & { id?: UUID }): Promise<Exercise>;
+  createExercise(
+    input: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt' | 'isCustom'> & { id?: UUID },
+  ): Promise<Exercise>;
   updateExercise(id: UUID, patch: Partial<Exercise>): Promise<Exercise>;
   setExerciseArchived(id: UUID, archived: boolean): Promise<void>;
   /** Permanently removes a custom exercise. Refuses when workout history references it. */
@@ -104,7 +106,11 @@ export interface RepForgeRepository {
   discardWorkout(id: UUID): Promise<void>;
   deleteWorkout(id: UUID): Promise<void>;
 
-  addExerciseToWorkout(workoutId: UUID, exerciseId: UUID, options?: { supersetGroup?: string }): Promise<WorkoutExercise>;
+  addExerciseToWorkout(
+    workoutId: UUID,
+    exerciseId: UUID,
+    options?: { supersetGroup?: string },
+  ): Promise<WorkoutExercise>;
   removeWorkoutExercise(workoutExerciseId: UUID): Promise<void>;
   replaceWorkoutExercise(workoutExerciseId: UUID, newExerciseId: UUID): Promise<void>;
   reorderWorkoutExercises(workoutId: UUID, orderedIds: UUID[]): Promise<void>;
@@ -121,11 +127,15 @@ export interface RepForgeRepository {
   /** All completed, contextualised sets for an exercise, newest first. */
   getSetHistoryForExercise(exerciseId: UUID): Promise<SetWithContext[]>;
   /** All completed sets across history, for analytics. */
-  getAllCompletedSets(): Promise<Array<{ exercise: WorkoutExercise; sets: WorkoutSet[]; workout: Workout }>>;
+  getAllCompletedSets(): Promise<
+    Array<{ exercise: WorkoutExercise; sets: WorkoutSet[]; workout: Workout }>
+  >;
 
   // --- measurements ---
   listMeasurements(metric?: MeasurementMetric): Promise<BodyMeasurement[]>;
-  addMeasurement(input: Omit<BodyMeasurement, 'id' | 'createdAt' | 'updatedAt'> & { id?: UUID }): Promise<BodyMeasurement>;
+  addMeasurement(
+    input: Omit<BodyMeasurement, 'id' | 'createdAt' | 'updatedAt'> & { id?: UUID },
+  ): Promise<BodyMeasurement>;
   updateMeasurement(id: UUID, patch: Partial<BodyMeasurement>): Promise<void>;
   deleteMeasurement(id: UUID): Promise<void>;
 

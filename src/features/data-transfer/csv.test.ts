@@ -49,9 +49,12 @@ describe('parseCsv', () => {
 });
 
 describe('escapeCsvValue', () => {
-  it.each(['=1+1', '+1', '-1+1', '@SUM(A1)', '\tcmd'])('neutralises the formula prefix in %s', (value) => {
-    expect(escapeCsvValue(value).replace(/^"|"$/g, '').startsWith("'")).toBe(true);
-  });
+  it.each(['=1+1', '+1', '-1+1', '@SUM(A1)', '\tcmd'])(
+    'neutralises the formula prefix in %s',
+    (value) => {
+      expect(escapeCsvValue(value).replace(/^"|"$/g, '').startsWith("'")).toBe(true);
+    },
+  );
 
   it('quotes values containing separators or newlines', () => {
     expect(escapeCsvValue('a,b')).toBe('"a,b"');

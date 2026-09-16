@@ -27,7 +27,7 @@ export function detectDelimiter(sample: string): string {
 }
 
 export function parseCsv(input: string, delimiterOverride?: string): ParsedCsv {
-  const text = input.replace(/^﻿/, '');
+  const text = input.replace(/^\uFEFF/, '');
   const delimiter = delimiterOverride ?? detectDelimiter(text);
   const rows: string[][] = [];
   let row: string[] = [];
@@ -99,12 +99,14 @@ export function toCsv(header: readonly string[], rows: ReadonlyArray<readonly un
 
 /** Case/whitespace/punctuation-insensitive header key, used for column auto-mapping. */
 export function normaliseHeader(value: string): string {
-  return value
-    .toLowerCase()
-    // Strip diacritics so localised headers ("Übung", "Répétitions") match their aliases.
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/\(.*?\)/g, ' ')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/(^_|_$)/g, '');
+  return (
+    value
+      .toLowerCase()
+      // Strip diacritics so localised headers ("Übung", "Répétitions") match their aliases.
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/\(.*?\)/g, ' ')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/(^_|_$)/g, '')
+  );
 }

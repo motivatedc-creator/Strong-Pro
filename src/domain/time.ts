@@ -86,7 +86,9 @@ export function formatDate(value: string | Date, opts?: Intl.DateTimeFormatOptio
 export function formatDateTime(value: string | Date): string {
   const date = typeof value === 'string' ? parseIso(value) : value;
   if (!date) return '—';
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
+    date,
+  );
 }
 
 export function relativeDay(value: string | Date): string {
@@ -103,10 +105,17 @@ export function relativeDay(value: string | Date): string {
 }
 
 /** Seconds elapsed in a workout, excluding paused time. */
-export function elapsedSeconds(startedAt: string, endedAt: string | undefined, pausedSeconds = 0): number {
+export function elapsedSeconds(
+  startedAt: string,
+  endedAt: string | undefined,
+  pausedSeconds = 0,
+): number {
   const start = parseIso(startedAt);
   if (!start) return 0;
   const end = endedAt ? parseIso(endedAt) : new Date();
   if (!end) return 0;
-  return Math.max(0, Math.round((end.getTime() - start.getTime()) / 1000) - Math.max(0, pausedSeconds));
+  return Math.max(
+    0,
+    Math.round((end.getTime() - start.getTime()) / 1000) - Math.max(0, pausedSeconds),
+  );
 }

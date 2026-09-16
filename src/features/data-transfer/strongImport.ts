@@ -185,7 +185,11 @@ export function analyseStrongCsv(text: string, options: AnalyseOptions = {}): Im
 
       if (!startedAt) {
         skippedRows += 1;
-        issues.push({ row: rowNumber, severity: 'error', message: `Unreadable date "${rawDate}".` });
+        issues.push({
+          row: rowNumber,
+          severity: 'error',
+          message: `Unreadable date "${rawDate}".`,
+        });
         continue;
       }
       if (!exerciseName) {
@@ -240,7 +244,10 @@ export function analyseStrongCsv(text: string, options: AnalyseOptions = {}): Im
         setOrder: Number.isNaN(setOrder) ? workout.setCount : setOrder,
         weightG: weight === undefined ? undefined : toGrams(Math.max(0, weight), unit),
         reps: reps === undefined ? undefined : Math.max(0, Math.round(reps)),
-        distanceM: distance === undefined ? undefined : toDistanceMetres(distance, options.distanceUnit, header),
+        distanceM:
+          distance === undefined
+            ? undefined
+            : toDistanceMetres(distance, options.distanceUnit, header),
         durationSeconds: seconds === undefined ? undefined : Math.max(0, Math.round(seconds)),
         rpe: rpe !== undefined && rpe >= 1 && rpe <= 10 ? rpe : undefined,
         notes: cell(row, mapping.notes).trim() || undefined,
@@ -288,7 +295,9 @@ export function fingerprintWorkout(workout: ParsedWorkout): string {
   for (const entry of workout.exercises) {
     parts.push(entry.name);
     for (const set of entry.sets) {
-      parts.push(`${set.setOrder}|${set.weightG ?? ''}|${set.reps ?? ''}|${set.durationSeconds ?? ''}|${set.distanceM ?? ''}`);
+      parts.push(
+        `${set.setOrder}|${set.weightG ?? ''}|${set.reps ?? ''}|${set.durationSeconds ?? ''}|${set.distanceM ?? ''}`,
+      );
     }
   }
   return fingerprint(parts.join('~'));
@@ -368,7 +377,8 @@ export function buildImportBatch(analysis: ImportAnalysis, options: BuildBatchOp
           trackingType: inferTrackingType(entry.sets),
           isCustom: true,
           isArchived: false,
-          notes: 'Created automatically by a Strong CSV import — edit its muscle group and equipment to improve analytics.',
+          notes:
+            'Created automatically by a Strong CSV import — edit its muscle group and equipment to improve analytics.',
           createdAt: now,
           updatedAt: now,
         };
@@ -463,7 +473,14 @@ export function parseStrongDate(raw: string): string | null {
   const isoLike = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
   if (isoLike) {
     const [, y, m, d, hh, mm, ss] = isoLike;
-    const date = new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), Number(ss ?? 0));
+    const date = new Date(
+      Number(y),
+      Number(m) - 1,
+      Number(d),
+      Number(hh),
+      Number(mm),
+      Number(ss ?? 0),
+    );
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
 
@@ -489,7 +506,10 @@ export function parseStrongDate(raw: string): string | null {
 export function parseNumber(raw: string): number | undefined {
   const value = raw.trim();
   if (!value) return undefined;
-  const cleaned = value.replace(/\s/g, '').replace(/,(\d{1,3})$/, '.$1').replace(/,/g, '');
+  const cleaned = value
+    .replace(/\s/g, '')
+    .replace(/,(\d{1,3})$/, '.$1')
+    .replace(/,/g, '');
   const parsed = Number.parseFloat(cleaned);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
@@ -502,9 +522,7 @@ export function parseDuration(raw: string): number | undefined {
   const clock = /^(\d+):(\d{2})(?::(\d{2}))?$/.exec(value);
   if (clock) {
     const [, a, b, c] = clock;
-    return c
-      ? Number(a) * 3600 + Number(b) * 60 + Number(c)
-      : Number(a) * 3600 + Number(b) * 60;
+    return c ? Number(a) * 3600 + Number(b) * 60 + Number(c) : Number(a) * 3600 + Number(b) * 60;
   }
 
   let seconds = 0;

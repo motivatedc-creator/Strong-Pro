@@ -26,7 +26,10 @@ describe('active workouts', () => {
 
   it('completing a workout twice is idempotent', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
-    const workoutExercise = await repository.addExerciseToWorkout(detail.workout.id, 'seed-bench-press');
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-bench-press',
+    );
     await repository.addSet(detail.workout.id, {
       workoutExerciseId: workoutExercise.id,
       weightG: 80_000,
@@ -45,7 +48,10 @@ describe('active workouts', () => {
 
   it('drops unfinished sets when a workout is completed', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
-    const workoutExercise = await repository.addExerciseToWorkout(detail.workout.id, 'seed-bench-press');
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-bench-press',
+    );
     await repository.addSet(detail.workout.id, {
       workoutExerciseId: workoutExercise.id,
       weightG: 80_000,
@@ -61,9 +67,18 @@ describe('active workouts', () => {
 
   it('keeps set ordering contiguous after inserts and deletes', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
-    const workoutExercise = await repository.addExerciseToWorkout(detail.workout.id, 'seed-bench-press');
-    const a = await repository.addSet(detail.workout.id, { workoutExerciseId: workoutExercise.id, reps: 5 });
-    const b = await repository.addSet(detail.workout.id, { workoutExerciseId: workoutExercise.id, reps: 6 });
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-bench-press',
+    );
+    const a = await repository.addSet(detail.workout.id, {
+      workoutExerciseId: workoutExercise.id,
+      reps: 5,
+    });
+    const b = await repository.addSet(detail.workout.id, {
+      workoutExerciseId: workoutExercise.id,
+      reps: 6,
+    });
     await repository.addSet(detail.workout.id, {
       workoutExerciseId: workoutExercise.id,
       reps: 7,
@@ -81,7 +96,10 @@ describe('active workouts', () => {
 
   it('restores a deleted set verbatim for undo', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
-    const workoutExercise = await repository.addExerciseToWorkout(detail.workout.id, 'seed-bench-press');
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-bench-press',
+    );
     const set = await repository.addSet(detail.workout.id, {
       workoutExerciseId: workoutExercise.id,
       weightG: 100_000,
@@ -99,7 +117,10 @@ describe('active workouts', () => {
 
   it('reads previous-session values for an exercise', async () => {
     const first = await repository.startWorkout({ name: 'Week 1' });
-    const firstExercise = await repository.addExerciseToWorkout(first.workout.id, 'seed-bench-press');
+    const firstExercise = await repository.addExerciseToWorkout(
+      first.workout.id,
+      'seed-bench-press',
+    );
     await repository.addSet(first.workout.id, {
       workoutExerciseId: firstExercise.id,
       weightG: 80_000,
@@ -109,7 +130,10 @@ describe('active workouts', () => {
     await repository.completeWorkout(first.workout.id);
 
     const second = await repository.startWorkout({ name: 'Week 2' });
-    const previous = await repository.getPreviousSetsForExercise('seed-bench-press', second.workout.id);
+    const previous = await repository.getPreviousSetsForExercise(
+      'seed-bench-press',
+      second.workout.id,
+    );
     expect(previous).toHaveLength(1);
     expect(previous[0]?.weightG).toBe(80_000);
   });
@@ -118,7 +142,10 @@ describe('active workouts', () => {
 describe('exercise and template safety', () => {
   it('archiving an exercise never deletes history', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
-    const workoutExercise = await repository.addExerciseToWorkout(detail.workout.id, 'seed-bench-press');
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-bench-press',
+    );
     await repository.addSet(detail.workout.id, {
       workoutExerciseId: workoutExercise.id,
       weightG: 80_000,
@@ -252,7 +279,8 @@ describe('import batches', () => {
 
     const existing = new Set<string>();
     for (const workout of analysis.workouts) {
-      if (await repository.findWorkoutByFingerprint(workout.fingerprint)) existing.add(workout.fingerprint);
+      if (await repository.findWorkoutByFingerprint(workout.fingerprint))
+        existing.add(workout.fingerprint);
     }
     const second = buildImportBatch(analysis, {
       fileName: 'strong.csv',
@@ -268,7 +296,10 @@ describe('import batches', () => {
 describe('backup round trip', () => {
   async function seedHistory() {
     const detail = await repository.startWorkout({ name: 'Round trip' });
-    const workoutExercise = await repository.addExerciseToWorkout(detail.workout.id, 'seed-back-squat');
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-back-squat',
+    );
     await repository.addSet(detail.workout.id, {
       workoutExerciseId: workoutExercise.id,
       weightG: 140_000,

@@ -95,15 +95,17 @@ export function generateWarmup(input: WarmupInput): WarmupStep[] {
 
     // The empty bar is always the first warm-up set when the working weight justifies it.
     if (base > 0) {
-      steps.push({ percent: base / working, weightG: base, reps: working >= base * 2 ? 10 : 8, isBar: true });
+      steps.push({
+        percent: base / working,
+        weightG: base,
+        reps: working >= base * 2 ? 10 : 8,
+        isBar: true,
+      });
     }
 
     if (working < base * BAR_RAMP_THRESHOLD) return dedupe(steps, working);
 
-    const totals = reachableTotals(
-      { barWeightG, collarWeightG, plates: input.plates },
-      working,
-    );
+    const totals = reachableTotals({ barWeightG, collarWeightG, plates: input.plates }, working);
 
     for (const rung of ladder) {
       const target = working * rung.percent;
@@ -126,7 +128,12 @@ export function generateWarmup(input: WarmupInput): WarmupStep[] {
     const rounded = roundGramsToIncrement(working * rung.percent, increment, 'nearest');
     if (rounded < minimum) continue;
     if (rounded <= 0) continue;
-    steps.push({ percent: rung.percent, weightG: Math.min(rounded, working), reps: rung.reps, isBar: false });
+    steps.push({
+      percent: rung.percent,
+      weightG: Math.min(rounded, working),
+      reps: rung.reps,
+      isBar: false,
+    });
   }
   return dedupe(steps, working);
 }

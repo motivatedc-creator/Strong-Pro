@@ -59,7 +59,9 @@ describe('estimateOneRepMax boundaries', () => {
   });
 
   it('truncates fractional reps', () => {
-    expect(estimateOneRepMax(100, 5.9, 'epley')?.value).toBe(estimateOneRepMax(100, 5, 'epley')?.value);
+    expect(estimateOneRepMax(100, 5.9, 'epley')?.value).toBe(
+      estimateOneRepMax(100, 5, 'epley')?.value,
+    );
   });
 });
 

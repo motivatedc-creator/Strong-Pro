@@ -48,21 +48,28 @@ describe('setVolumeG', () => {
   });
 
   it('excludes incomplete sets', () => {
-    expect(setVolumeG(set({ weightG: 100_000, reps: 5, isCompleted: false }), 'weight_reps')).toBe(0);
+    expect(setVolumeG(set({ weightG: 100_000, reps: 5, isCompleted: false }), 'weight_reps')).toBe(
+      0,
+    );
   });
 
-  it.each<[TrackingType]>([['reps_only'], ['duration'], ['distance_duration'], ['assisted_weight']])(
-    'assigns no external tonnage to %s work',
-    (trackingType) => {
-      expect(setVolumeG(set({ weightG: 40_000, reps: 10 }), trackingType)).toBe(0);
-    },
-  );
+  it.each<[TrackingType]>([
+    ['reps_only'],
+    ['duration'],
+    ['distance_duration'],
+    ['assisted_weight'],
+  ])('assigns no external tonnage to %s work', (trackingType) => {
+    expect(setVolumeG(set({ weightG: 40_000, reps: 10 }), trackingType)).toBe(0);
+  });
 });
 
 describe('totalsForGroups', () => {
   it('counts each set exactly once even if a group repeats it', () => {
     const shared = set({ id: 'shared', weightG: 100_000, reps: 5 });
-    const totals = totalsForGroups([group('weight_reps', [shared]), group('weight_reps', [shared])]);
+    const totals = totalsForGroups([
+      group('weight_reps', [shared]),
+      group('weight_reps', [shared]),
+    ]);
     expect(totals.volumeG).toBe(500_000);
     expect(totals.completedSets).toBe(1);
   });
@@ -88,10 +95,15 @@ describe('totalsForGroups', () => {
 describe('muscle attribution', () => {
   it('gives the primary muscle full credit and secondaries the configured fraction', () => {
     const groups = [
-      group('weight_reps', [set({ weightG: 100_000, reps: 10 })], 'chest', ['triceps', 'shoulders']),
+      group('weight_reps', [set({ weightG: 100_000, reps: 10 })], 'chest', [
+        'triceps',
+        'shoulders',
+      ]),
     ];
     const attribution = attributeVolumeByMuscle(groups);
-    const byMuscle = Object.fromEntries(attribution.map((row) => [row.muscle, row.attributedVolumeG]));
+    const byMuscle = Object.fromEntries(
+      attribution.map((row) => [row.muscle, row.attributedVolumeG]),
+    );
 
     expect(byMuscle.chest).toBe(1_000_000);
     expect(byMuscle.triceps).toBe(500_000);
@@ -99,14 +111,22 @@ describe('muscle attribution', () => {
   });
 
   it('honours a custom secondary credit and clamps it to 0–1', () => {
-    const groups = [group('weight_reps', [set({ weightG: 100_000, reps: 10 })], 'chest', ['triceps'])];
-    expect(attributeVolumeByMuscle(groups, { secondaryCredit: 0.25 })[1]?.attributedVolumeG).toBe(250_000);
-    expect(attributeVolumeByMuscle(groups, { secondaryCredit: 5 })[1]?.attributedVolumeG).toBe(1_000_000);
+    const groups = [
+      group('weight_reps', [set({ weightG: 100_000, reps: 10 })], 'chest', ['triceps']),
+    ];
+    expect(attributeVolumeByMuscle(groups, { secondaryCredit: 0.25 })[1]?.attributedVolumeG).toBe(
+      250_000,
+    );
+    expect(attributeVolumeByMuscle(groups, { secondaryCredit: 5 })[1]?.attributedVolumeG).toBe(
+      1_000_000,
+    );
     expect(attributeVolumeByMuscle(groups, { secondaryCredit: -2 })[1]?.attributedVolumeG).toBe(0);
   });
 
   it('never double-credits a muscle listed as both primary and secondary', () => {
-    const groups = [group('weight_reps', [set({ weightG: 100_000, reps: 10 })], 'chest', ['chest'])];
+    const groups = [
+      group('weight_reps', [set({ weightG: 100_000, reps: 10 })], 'chest', ['chest']),
+    ];
     const attribution = attributeVolumeByMuscle(groups);
     expect(attribution).toHaveLength(1);
     expect(attribution[0]?.attributedVolumeG).toBe(1_000_000);

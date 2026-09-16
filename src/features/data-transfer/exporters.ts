@@ -1,5 +1,11 @@
 import { formatWeight, fromMillimetres, weightUnitFor, type WeightUnit } from '@/domain/units';
-import type { AppSettings, BodyMeasurement, Exercise, Template, TemplateExercise } from '@/domain/types';
+import type {
+  AppSettings,
+  BodyMeasurement,
+  Exercise,
+  Template,
+  TemplateExercise,
+} from '@/domain/types';
 import type { BackupPayload } from '@/db/repository';
 import { toCsv } from './csv';
 
@@ -25,9 +31,16 @@ export function buildCsvBundle(payload: BackupPayload, settings: AppSettings): C
     { fileName: 'repforge-exercises.csv', content: exercisesCsv(payload.data.exercises) },
     {
       fileName: 'repforge-templates.csv',
-      content: templatesCsv(payload.data.templates, payload.data.templateExercises, payload.data.exercises),
+      content: templatesCsv(
+        payload.data.templates,
+        payload.data.templateExercises,
+        payload.data.exercises,
+      ),
     },
-    { fileName: 'repforge-measurements.csv', content: measurementsCsv(payload.data.measurements, unit) },
+    {
+      fileName: 'repforge-measurements.csv',
+      content: measurementsCsv(payload.data.measurements, unit),
+    },
   ];
 }
 
@@ -204,7 +217,10 @@ export function templatesCsv(
   );
 }
 
-export function measurementsCsv(measurements: readonly BodyMeasurement[], unit: WeightUnit): string {
+export function measurementsCsv(
+  measurements: readonly BodyMeasurement[],
+  unit: WeightUnit,
+): string {
   const rows = [...measurements]
     .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
     .map((measurement) => {

@@ -96,7 +96,11 @@ export function accumulate(
 export interface ExerciseSetGroup {
   exercise: Pick<
     WorkoutExercise,
-    'exerciseId' | 'trackingTypeSnapshot' | 'primaryMuscleGroupSnapshot' | 'secondaryMuscleGroupsSnapshot' | 'exerciseNameSnapshot'
+    | 'exerciseId'
+    | 'trackingTypeSnapshot'
+    | 'primaryMuscleGroupSnapshot'
+    | 'secondaryMuscleGroupsSnapshot'
+    | 'exerciseNameSnapshot'
   >;
   sets: readonly WorkoutSet[];
 }
@@ -157,8 +161,8 @@ export function attributeVolumeByMuscle(
     }
   }
 
-  return [...map.values()].sort((a, b) =>
-    b.attributedVolumeG - a.attributedVolumeG || a.muscle.localeCompare(b.muscle),
+  return [...map.values()].sort(
+    (a, b) => b.attributedVolumeG - a.attributedVolumeG || a.muscle.localeCompare(b.muscle),
   );
 }
 
