@@ -1,0 +1,68 @@
+import { useEffect } from 'react';
+import { useAppStore, type Toast } from '@/app/store';
+import { Button, cx } from './ui';
+
+const TONES: Record<Toast['tone'], string> = {
+  info: 'border-line bg-surface-raised text-ink',
+  success: 'border-success/60 bg-surface-raised text-ink',
+  warning: 'border-warning/60 bg-surface-raised text-ink',
+  danger: 'border-danger/60 bg-surface-raised text-ink',
+};
+
+const ICONS: Record<Toast['tone'], string> = {
+  info: 'ℹ',
+  success: '✓',
+  warning: '⚠',
+  danger: '✕',
+};
+
+function ToastRow({ toast }: { toast: Toast }) {
+  const dismiss = useAppStore((state) => state.dismissToast);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => dismiss(toast.id), toast.durationMs);
+    return () => window.clearTimeout(id);
+  }, [toast.id, toast.durationMs, dismiss]);
+
+  return (
+    <div
+      className={cx(
+        'pointer-events-auto flex items-center gap-3 rounded-lg border px-3 py-2 shadow-card animate-rise',
+        TONES[toast.tone],
+      )}
+    >
+      <span aria-hidden="true" className="text-sm">
+        {ICONS[toast.tone]}
+      </span>
+      <p className="flex-1 text-sm">{toast.message}</p>
+      {toast.action && (
+        <Button
+          size="sm"
+          variant="primary"
+          onClick={() => {
+            toast.action?.onAction();
+            dismiss(toast.id);
+          }}
+        >
+          {toast.action.label}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** Live region for transient feedback, including the undo affordance for deletions. */
+export function Toaster() {
+  const toasts = useAppStore((state) => state.toasts);
+  return (
+    <div
+      aria-live="polite"
+      aria-atomic="false"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-[60] mx-auto flex w-full max-w-md flex-col gap-2 px-3 sm:bottom-4 lg:left-auto lg:right-4 lg:mx-0"
+    >
+      {toasts.map((toast) => (
+        <ToastRow key={toast.id} toast={toast} />
+      ))}
+    </div>
+  );
+}

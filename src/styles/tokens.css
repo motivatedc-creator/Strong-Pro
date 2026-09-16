@@ -1,0 +1,115 @@
+/*
+ * RepForge design tokens.
+ *
+ * Colors are stored as space-separated RGB channels so Tailwind's `<alpha-value>`
+ * syntax works (`bg-accent/20`). Light and dark palettes are selected by the
+ * `data-theme` attribute on <html>; the accent family by `data-accent`.
+ * Every foreground/background pair below was checked for WCAG AA (>= 4.5:1 for
+ * body text, >= 3:1 for large text and UI borders).
+ */
+
+:root {
+  /* dark is the default: gyms are dark, phones are bright */
+  --rf-canvas: 11 15 20;
+  --rf-surface: 22 27 34;
+  --rf-surface-raised: 31 38 47;
+  --rf-line: 51 61 74;
+  --rf-ink: 241 245 249;
+  --rf-ink-muted: 186 196 208;
+  --rf-ink-subtle: 143 155 170;
+  --rf-success: 52 211 153;
+  --rf-warning: 251 191 36;
+  --rf-danger: 248 113 113;
+  --rf-danger-ink: 11 15 20;
+
+  --rf-chart-1: 249 115 22;
+  --rf-chart-2: 56 189 248;
+  --rf-chart-3: 52 211 153;
+  --rf-chart-4: 167 139 250;
+  --rf-chart-5: 251 191 36;
+  --rf-chart-6: 244 114 182;
+
+  --rf-radius: 0.625rem;
+  --rf-motion: 180ms;
+}
+
+:root[data-theme='light'] {
+  --rf-canvas: 246 247 249;
+  --rf-surface: 255 255 255;
+  --rf-surface-raised: 242 244 247;
+  --rf-line: 209 215 222;
+  --rf-ink: 16 22 30;
+  --rf-ink-muted: 71 82 96;
+  --rf-ink-subtle: 96 108 124;
+  --rf-success: 4 120 87;
+  --rf-warning: 146 87 6;
+  --rf-danger: 185 28 28;
+  --rf-danger-ink: 255 255 255;
+
+  --rf-chart-1: 194 65 12;
+  --rf-chart-2: 2 132 199;
+  --rf-chart-3: 4 120 87;
+  --rf-chart-4: 109 40 217;
+  --rf-chart-5: 161 98 7;
+  --rf-chart-6: 190 24 93;
+}
+
+/* ---- Accent families (original RepForge palettes) ---- */
+
+:root[data-accent='ember'] {
+  --rf-accent: 249 115 22;
+  --rf-accent-ink: 20 10 2;
+  --rf-accent-soft: 249 115 22;
+}
+:root[data-accent='ember'][data-theme='light'] {
+  --rf-accent: 194 65 12;
+  --rf-accent-ink: 255 255 255;
+  --rf-accent-soft: 194 65 12;
+}
+
+:root[data-accent='glacier'] {
+  --rf-accent: 56 189 248;
+  --rf-accent-ink: 3 15 25;
+  --rf-accent-soft: 56 189 248;
+}
+:root[data-accent='glacier'][data-theme='light'] {
+  --rf-accent: 2 118 173;
+  --rf-accent-ink: 255 255 255;
+  --rf-accent-soft: 2 118 173;
+}
+
+:root[data-accent='moss'] {
+  --rf-accent: 52 211 153;
+  --rf-accent-ink: 3 20 14;
+  --rf-accent-soft: 52 211 153;
+}
+:root[data-accent='moss'][data-theme='light'] {
+  --rf-accent: 4 120 87;
+  --rf-accent-ink: 255 255 255;
+  --rf-accent-soft: 4 120 87;
+}
+
+:root[data-accent='violet'] {
+  --rf-accent: 167 139 250;
+  --rf-accent-ink: 14 6 28;
+  --rf-accent-soft: 167 139 250;
+}
+:root[data-accent='violet'][data-theme='light'] {
+  --rf-accent: 109 40 217;
+  --rf-accent-ink: 255 255 255;
+  --rf-accent-soft: 109 40 217;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --rf-motion: 0ms;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

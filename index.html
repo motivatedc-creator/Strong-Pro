@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-accent="ember">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5"
+    />
+    <meta name="theme-color" content="#0b0f14" id="rf-theme-color" />
+    <meta
+      name="description"
+      content="RepForge — a free, local-first strength training tracker. Templates, fast set logging, analytics, measurements, plate maths. Offline, on your device."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RepForge" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-default.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-default.svg" />
+    <title>RepForge</title>
+    <script>
+      // Apply the persisted theme before first paint to avoid a flash of the wrong palette.
+      (function () {
+        try {
+          var raw = localStorage.getItem('repforge.theme');
+          if (!raw) return;
+          var parsed = JSON.parse(raw);
+          var mode = parsed && parsed.mode;
+          var accent = parsed && parsed.accent;
+          var resolved =
+            mode === 'system' || !mode
+              ? window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark'
+              : mode;
+          document.documentElement.setAttribute('data-theme', resolved);
+          if (accent) document.documentElement.setAttribute('data-accent', accent);
+        } catch (e) {
+          /* storage unavailable — fall back to the default dark theme */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>RepForge needs JavaScript enabled to log workouts.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
