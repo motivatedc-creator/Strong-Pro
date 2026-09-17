@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Workout, WorkoutExercise, WorkoutSet } from '@/domain/types';
 import type { AnalyticsOptions, LoggedEntry } from './compute';
-import { weeklyVerdict } from './weeklyVerdict';
+import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
 
 const options: AnalyticsOptions = {
   formula: 'epley',
@@ -78,5 +78,46 @@ describe('weeklyVerdict', () => {
     );
 
     expect(result.hasFullBaseline).toBe(false);
+  });
+});
+
+describe('weeklyVerdictCopy', () => {
+  it('produces exactly three factual sentences when a full baseline exists', () => {
+    const reference = new Date('2026-09-17T12:00:00.000Z');
+    const verdict = weeklyVerdict(
+      [
+        entry('2026-08-17T10:00:00.000Z', 'baseline-start'),
+        entry('2026-08-24T10:00:00.000Z', 'w1'),
+        entry('2026-08-31T10:00:00.000Z', 'w2'),
+        entry('2026-09-07T10:00:00.000Z', 'w3'),
+        entry('2026-09-14T10:00:00.000Z', 'current-a'),
+        entry('2026-09-16T10:00:00.000Z', 'current-b'),
+      ],
+      options,
+      reference,
+    );
+
+    const copy = weeklyVerdictCopy(verdict, 'kg');
+
+    expect(copy.available).toBe(true);
+    expect(copy.lines).toHaveLength(3);
+    expect(copy.lines[0]).toContain('2 workouts');
+    expect(copy.lines[1]).toContain('100% above');
+    expect(copy.lines[2]).toContain('4-week baseline');
+  });
+
+  it('withholds the verdict until four complete baseline weeks exist', () => {
+    const reference = new Date('2026-09-17T12:00:00.000Z');
+    const verdict = weeklyVerdict(
+      [entry('2026-09-07T10:00:00.000Z', 'recent'), entry('2026-09-14T10:00:00.000Z', 'current')],
+      options,
+      reference,
+    );
+
+    const copy = weeklyVerdictCopy(verdict, 'kg');
+
+    expect(copy.available).toBe(false);
+    expect(copy.lines).toHaveLength(1);
+    expect(copy.lines[0]).toContain('four complete prior weeks');
   });
 });

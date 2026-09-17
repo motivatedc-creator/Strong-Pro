@@ -32,6 +32,7 @@ import {
   type LoggedEntry,
 } from './compute';
 import { MUSCLE_HELP, RECORDS_HELP, VOLUME_HELP, oneRepMaxHelp } from './help';
+import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
 
 /** Analytics overview: volume trends, muscle balance and per-exercise progression. */
 export function AnalyticsPage() {
@@ -62,6 +63,7 @@ export function AnalyticsPage() {
 
     const summary = summarise(current, options);
     const priorSummary = summarise(priorEntries, options);
+    const weekVerdict = weeklyVerdict(entries, options);
     const effectiveGranularity = range === 'all' ? 'month' : granularity;
     const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
@@ -74,6 +76,7 @@ export function AnalyticsPage() {
       current,
       summary,
       priorSummary,
+      weekVerdict,
       buckets,
       effectiveGranularity,
       muscles,
@@ -108,10 +111,36 @@ export function AnalyticsPage() {
   const volumeChange = percentChange(view.summary.volumeG, view.priorSummary.volumeG);
   const setsChange = percentChange(view.summary.completedSets, view.priorSummary.completedSets);
   const selectedExercise = view.exercises.find((entry) => entry.id === view.selectedId);
+  const verdictCopy = weeklyVerdictCopy(view.weekVerdict, weightUnit);
 
   return (
     <>
       <PageHeader title="Analytics" subtitle={RANGE_DESCRIPTIONS[range]} />
+
+      <section aria-labelledby="weekly-verdict-heading">
+        <Card className="mb-4 border-accent/30">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+                Weekly verdict
+              </p>
+              <h2 id="weekly-verdict-heading" className="text-sm font-semibold text-ink">
+                {verdictCopy.available ? 'This week vs your recent baseline' : 'Building your baseline'}
+              </h2>
+            </div>
+            {verdictCopy.available ? (
+              <Chip tone="accent">4-week baseline</Chip>
+            ) : (
+              <Chip>Needs 4 weeks</Chip>
+            )}
+          </div>
+          <div className="space-y-1.5 text-sm text-ink-muted">
+            {verdictCopy.lines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        </Card>
+      </section>
 
       <div className="mb-3">
         <Segmented
