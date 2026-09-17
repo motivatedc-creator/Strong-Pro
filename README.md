@@ -9,8 +9,9 @@ SDK, no telemetry and no server. It is not affiliated with any other fitness app
 
 ## What it does
 
-- **Log fast.** Start empty or from a template; previous-session values sit beside every
-  set, one tap copies them, one tap completes a set and starts the rest timer.
+- **Log fast.** Start empty or from a template; recently used exercises appear first, previous-
+  session values sit beside every set, one tap copies them, and one tap completes a set and
+  starts the rest timer.
 - **Templates without limits.** Target sets, rep ranges, RPE/RIR targets, rest times, set
   types and superset grouping. Duplicate, reorder, archive, delete.
 - **Real analytics.** Estimated 1RM (Epley or Brzycki), heaviest set, session and weekly
