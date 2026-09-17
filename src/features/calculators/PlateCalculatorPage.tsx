@@ -6,7 +6,7 @@ export function PlateCalculatorPage() {
     <>
       <PageHeader
         title="Plate calculator"
-        subtitle="Exact per-side loading, or the closest achievable weight below your target."
+        subtitle="Enter the total barbell weight. Get the plates to load on each side."
       />
       <PlateCalculatorPanel />
       <div className="h-8" aria-hidden="true" />

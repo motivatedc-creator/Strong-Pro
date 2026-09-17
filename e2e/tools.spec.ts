@@ -7,14 +7,16 @@ test.describe('tools', () => {
 
     // standalone
     await page.goto('/tools/plates');
-    await page.getByLabel('Target weight (kg)').fill('100');
+    await page.getByLabel('Total weight on the bar (kg)').fill('100');
     await expect(page.getByText('Exact match.')).toBeVisible();
     await expect(page.getByText(/Per side: .*Total 100 kg\./)).toBeVisible();
 
     // an unreachable target reports the closest lower load
     // 101 kg is reachable with the seeded 0.5 kg plates, so use a target that is not.
-    await page.getByLabel('Target weight (kg)').fill('100.2');
-    await expect(page.getByText('Closest achievable load below the target with this inventory.')).toBeVisible();
+    await page.getByLabel('Total weight on the bar (kg)').fill('100.2');
+    await expect(
+      page.getByText('Closest achievable load below the target with this inventory.'),
+    ).toBeVisible();
 
     // inside a workout, the result can be written straight into the set
     await page.goto('/');
@@ -22,7 +24,7 @@ test.describe('tools', () => {
     await addExercise(page, 'Back Squat');
     await page.getByRole('button', { name: 'Plates', exact: true }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Target weight (kg)').fill('140');
+    await dialog.getByLabel('Total weight on the bar (kg)').fill('140');
     await dialog.getByRole('button', { name: 'Put this weight in the set' }).click();
     await expect(page.getByLabel('Weight for set 1 in kg')).toHaveValue('140');
   });
@@ -87,14 +89,20 @@ test.describe('units and themes', () => {
     await page.goto('/settings');
     await page.getByRole('radio', { name: 'Pounds' }).click();
     await page.goto('/history');
-    await page.getByRole('link', { name: /Back Squat|workout/i }).first().click();
+    await page
+      .getByRole('link', { name: /Back Squat|workout/i })
+      .first()
+      .click();
     // 100 kg is 220.46 lb: the stored grams never changed, only the display.
     await expect(page.getByLabel('Weight for set 1 in lb')).toHaveValue('220.46');
 
     await page.goto('/settings');
     await page.getByRole('radio', { name: 'Kilograms' }).click();
     await page.goto('/history');
-    await page.getByRole('link', { name: /Back Squat|workout/i }).first().click();
+    await page
+      .getByRole('link', { name: /Back Squat|workout/i })
+      .first()
+      .click();
     await expect(page.getByLabel('Weight for set 1 in kg')).toHaveValue('100');
   });
 
@@ -103,7 +111,10 @@ test.describe('units and themes', () => {
     await page.goto('/settings');
     await page.getByRole('tab', { name: 'Appearance' }).click();
     await page.getByRole('radio', { name: 'Dark' }).click();
-    await page.getByRole('button', { name: /Ledger/ }).first().click();
+    await page
+      .getByRole('button', { name: /Ledger/ })
+      .first()
+      .click();
 
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.locator('html')).toHaveAttribute('data-accent', 'glacier');

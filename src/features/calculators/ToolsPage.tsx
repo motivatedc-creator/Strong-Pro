@@ -6,8 +6,7 @@ const TOOLS = [
     to: '/tools/plates',
     icon: '🥏',
     title: 'Plate calculator',
-    description:
-      'Balanced per-side loading from your own bar and plate inventory, including partial matches.',
+    description: 'Exact plates per side, based on your bar and the plates available.',
   },
   {
     to: '/tools/warmup',
