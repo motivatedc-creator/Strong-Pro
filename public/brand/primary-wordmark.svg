@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220">
+  
+  <g transform="translate(10,10) scale(0.5)">
+    <path d="M 122 118 L 245 118 L 282 155 L 282 282 L 118 282 L 118 155 Z" fill="none" stroke="#1C1B19" stroke-width="14" stroke-linejoin="round"/>
+    <circle cx="245" cy="155" r="10" fill="#1C1B19"/>
+    <text x="200" y="242" text-anchor="middle" font-size="128" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#1C1B19">C</text>
+  </g>
+  <text x="200" y="145" font-size="88" letter-spacing="-1" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#1C1B19">CERTIFIED</text>
+</svg>

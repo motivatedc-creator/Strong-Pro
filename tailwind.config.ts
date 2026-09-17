@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * RepForge design tokens.
+ * Certified design tokens.
  *
  * All colors are declared as CSS custom properties (see src/styles/tokens.css) holding
  * space-separated RGB channels, so that a single class (`bg-surface`) resolves correctly
@@ -29,15 +29,16 @@ const config: Config = {
         'danger-ink': 'rgb(var(--rf-danger-ink) / <alpha-value>)',
       },
       borderRadius: {
-        sm: '0.375rem',
-        DEFAULT: '0.625rem',
-        lg: '0.875rem',
+        sm: '0.125rem',
+        DEFAULT: '0.25rem',
+        lg: '0.375rem',
         xl: '1.125rem',
         '2xl': '1.5rem',
       },
       fontFamily: {
-        sans: ['"Inter var"', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Archivo', 'Arial Black', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', '"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
       fontSize: {
         'data-lg': ['1.75rem', { lineHeight: '2rem', fontWeight: '700' }],

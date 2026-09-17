@@ -27,20 +27,24 @@ export function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
-        <img src="/icons/icon-default.svg" alt="" className="h-12 w-12 rounded-lg" />
+        <img
+          src="/brand/app-icon-master.svg"
+          alt="Certified"
+          className="h-14 w-14 rounded-lg"
+        />
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">RepForge</h1>
-          <p className="text-sm text-ink-muted">Free, offline, and yours.</p>
+          <h1 className="font-mono text-2xl font-bold tracking-tight text-ink">CERTIFIED</h1>
+          <p className="text-sm text-ink-muted">Your reps. Your receipts.</p>
         </div>
       </div>
 
       {step === 0 && (
         <Card>
-          <h2 className="text-base font-semibold text-ink">Everything stays on this device</h2>
+          <h2 className="text-base font-semibold text-ink">Your record stays on this device</h2>
           <ul className="mt-2 space-y-2 text-sm text-ink-muted">
-            <li>• No account, no subscription, no ads, no tracking.</li>
+            <li>• Certified logs what you actually did — no cap, no vibes-based bench maxes.</li>
             <li>• Your workouts live in this browser&apos;s local database.</li>
-            <li>• Nothing is uploaded — exports only happen when you ask for them.</li>
+            <li>• Nothing is uploaded — your aura lives on your device.</li>
             <li>• Everything works in airplane mode once installed.</li>
           </ul>
           <Button variant="primary" block className="mt-4" onClick={() => setStep(1)}>

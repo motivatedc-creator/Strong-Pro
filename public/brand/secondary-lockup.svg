@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520">
+  
+  <g transform="translate(60,40) scale(0.75)">
+    <path d="M 122 118 L 245 118 L 282 155 L 282 282 L 118 282 L 118 155 Z" fill="none" stroke="#1C1B19" stroke-width="12" stroke-linejoin="round"/>
+    <circle cx="245" cy="155" r="9" fill="#1C1B19"/>
+    <text x="200" y="240" text-anchor="middle" font-size="124" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#1C1B19">C</text>
+  </g>
+  <text x="210" y="430" text-anchor="middle" font-size="56" letter-spacing="-0.5" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#1C1B19">CERTIFIED</text>
+  <text x="210" y="470" text-anchor="middle" font-size="22" letter-spacing="2" font-family="Inter, system-ui, sans-serif" fill="#1C1B19" opacity="0.7">WORKOUT TRACKER</text>
+</svg>

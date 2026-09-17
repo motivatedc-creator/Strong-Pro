@@ -80,7 +80,7 @@ function DatabaseGate({ children }: { children: React.ReactNode }) {
         <span className="text-3xl" aria-hidden="true">
           🗄
         </span>
-        <h1 className="text-lg font-bold text-ink">RepForge could not open its local database</h1>
+        <h1 className="text-lg font-bold text-ink">Certified could not open its local database</h1>
         <p className="text-sm text-ink-muted">
           This usually means the browser is blocking storage (private browsing, or site data
           disabled), or a migration was interrupted. Your existing data has not been deleted.
