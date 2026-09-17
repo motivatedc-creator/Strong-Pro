@@ -8,12 +8,12 @@ import type { OneRepMaxFormula, WorkoutSet } from './types';
  *  - Warm-up sets are excluded unless the caller explicitly opts in.
  *  - A set needs a positive load and at least 1 rep; zero-load and bodyweight-only
  *    sets produce no estimate rather than a misleading 0.
- *  - Brzycki is undefined at 37 reps and negative beyond it, so it is only applied at
- *    <= 36 reps; above that RepForge falls back to Epley and says so in the UI.
+ *  - Estimates only use sets of 12 reps or fewer. Higher-rep sets are useful training
+ *    data, but they are too noisy to present as a trustworthy strength estimate.
  *  - Both formulas return the estimate in the same canonical unit as the input (grams).
  */
 
-export const BRZYCKI_MAX_REPS = 36;
+export const MAX_E1RM_REPS = 12;
 
 /** Epley: weight * (1 + reps / 30). Exact at 1 rep. */
 export function epley(weight: number, reps: number): number {
@@ -45,17 +45,15 @@ export function estimateOneRepMax(
   if (weight <= 0 || reps <= 0) return null;
   const wholeReps = Math.floor(reps);
   if (wholeReps < 1) return null;
+  if (wholeReps > MAX_E1RM_REPS) return null;
   if (wholeReps === 1) return { value: Math.round(weight), formulaUsed: formula, fellBack: false };
 
   if (formula === 'brzycki') {
-    if (wholeReps <= BRZYCKI_MAX_REPS) {
-      return {
-        value: Math.round(brzycki(weight, wholeReps)),
-        formulaUsed: 'brzycki',
-        fellBack: false,
-      };
-    }
-    return { value: Math.round(epley(weight, wholeReps)), formulaUsed: 'epley', fellBack: true };
+    return {
+      value: Math.round(brzycki(weight, wholeReps)),
+      formulaUsed: 'brzycki',
+      fellBack: false,
+    };
   }
 
   return { value: Math.round(epley(weight, wholeReps)), formulaUsed: 'epley', fellBack: false };

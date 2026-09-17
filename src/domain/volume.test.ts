@@ -23,7 +23,7 @@ const set = (partial: Partial<WorkoutSet> = {}): WorkoutSet => ({
 const group = (
   trackingType: TrackingType,
   sets: WorkoutSet[],
-  primary = 'chest' as const,
+  primary: ExerciseSetGroup['exercise']['primaryMuscleGroupSnapshot'] = 'chest',
   secondary: ExerciseSetGroup['exercise']['secondaryMuscleGroupsSnapshot'] = [],
 ): ExerciseSetGroup => ({
   exercise: {
@@ -130,6 +130,16 @@ describe('muscle attribution', () => {
     const attribution = attributeVolumeByMuscle(groups);
     expect(attribution).toHaveLength(1);
     expect(attribution[0]?.attributedVolumeG).toBe(1_000_000);
+  });
+
+  it('keeps missing mappings visible in an Unmapped row', () => {
+    const attribution = attributeVolumeByMuscle([
+      group('weight_reps', [set({ weightG: 100_000, reps: 5 })], 'unmapped'),
+    ]);
+
+    expect(attribution).toEqual([
+      { muscle: 'unmapped', attributedVolumeG: 500_000, attributedSets: 1 },
+    ]);
   });
 });
 

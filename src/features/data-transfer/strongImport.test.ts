@@ -187,6 +187,9 @@ describe('buildImportBatch', () => {
       'Rowing Machine',
     ]);
     expect(batch.newExercises.every((exercise) => exercise.isCustom)).toBe(true);
+    expect(batch.newExercises.every((exercise) => exercise.primaryMuscleGroup === 'unmapped')).toBe(
+      true,
+    );
   });
 
   it('infers a tracking type for created exercises', () => {

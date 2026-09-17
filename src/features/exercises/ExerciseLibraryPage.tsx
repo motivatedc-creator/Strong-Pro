@@ -60,7 +60,7 @@ export function ExerciseLibraryPage() {
   return (
     <>
       <PageHeader
-        title="Exercises"
+        title="Library"
         subtitle={`${data?.length ?? 0} in your library · ${customCount} custom`}
         actions={
           <Button variant="primary" onClick={() => setCreating(true)}>

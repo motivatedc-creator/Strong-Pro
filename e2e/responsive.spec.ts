@@ -17,7 +17,16 @@ const VIEWPORTS = [
   { width: 1440, height: 900, name: '1440' },
 ];
 
-const ROUTES = ['/', '/templates', '/history', '/analytics', '/measurements', '/tools', '/settings', '/more'];
+const ROUTES = [
+  '/',
+  '/templates',
+  '/history',
+  '/analytics',
+  '/measurements',
+  '/tools',
+  '/settings',
+  '/more',
+];
 
 async function seed(page: Page) {
   await freshApp(page);
@@ -56,10 +65,13 @@ test('the active workout screen fits the smallest supported phone', async ({ pag
 
   // The primary logging controls must all meet the 44px touch target minimum.
   for (const name of ['Complete set 1', 'Increase weight', 'Decrease weight']) {
-    const box = await page.getByRole('button', { name: new RegExp(name) }).first().boundingBox();
+    const box = await page
+      .getByRole('button', { name: new RegExp(name) })
+      .first()
+      .boundingBox();
     expect(box, name).not.toBeNull();
-    expect(box!.height, `${name} height`).toBeGreaterThanOrEqual(36);
-    expect(box!.width, `${name} width`).toBeGreaterThanOrEqual(36);
+    expect(box!.height, `${name} height`).toBeGreaterThanOrEqual(44);
+    expect(box!.width, `${name} width`).toBeGreaterThanOrEqual(44);
   }
 });
 
@@ -75,7 +87,9 @@ test('dark and light themes both render the core screens', async ({ page }) => {
       await page.goto(route);
       await page.waitForLoadState('networkidle');
       await expectNoHorizontalOverflow(page);
-      await page.screenshot({ path: `e2e/screenshots/theme-${mode}${route.replace(/\//g, '_') || '-home'}.png` });
+      await page.screenshot({
+        path: `e2e/screenshots/theme-${mode}${route.replace(/\//g, '_') || '-home'}.png`,
+      });
     }
   }
 });
@@ -88,4 +102,12 @@ test('every page exposes a main landmark, a heading and a primary navigation', a
     await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'Primary' }).first()).toBeVisible();
   }
+});
+
+test('the product calls reusable workout plans Routines', async ({ page }) => {
+  await freshApp(page);
+  await page.goto('/templates');
+  await expect(page.getByRole('heading', { name: 'Routines', level: 1 })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Routines' }).first()).toBeVisible();
+  await expect(page.getByText('Templates', { exact: true })).toHaveCount(0);
 });

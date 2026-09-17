@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Button, IconButton, NumberInput, cx } from '@/components/ui';
 import { SET_TYPES, usesDistance, usesDuration, usesReps, usesWeight } from '@/domain/taxonomy';
 import type { IntensityMode, SetType, TrackingType, WorkoutSet } from '@/domain/types';
 import { formatWeight, fromGrams, toGrams, trimNumber, type WeightUnit } from '@/domain/units';
+import { previousSetPatch } from './setPrefill';
 
 /**
  * One logged set.
@@ -23,7 +24,6 @@ export function SetRow({
   onChange,
   onToggleComplete,
   onDelete,
-  onCopyPrevious,
   onCycleType,
 }: {
   set: WorkoutSet;
@@ -35,11 +35,15 @@ export function SetRow({
   previous?: WorkoutSet;
   isPr?: boolean;
   onChange: (patch: Partial<WorkoutSet>) => void;
-  onToggleComplete: () => void;
+  onToggleComplete: (prefill: Partial<WorkoutSet>) => void;
   onDelete: () => void;
-  onCopyPrevious?: () => void;
   onCycleType: (setType: SetType) => void;
 }) {
+  const previousDescriptionId = useId();
+  const repsInputRef = useRef<HTMLInputElement>(null);
+  const durationInputRef = useRef<HTMLInputElement>(null);
+  const distanceInputRef = useRef<HTMLInputElement>(null);
+  const completionButtonRef = useRef<HTMLButtonElement>(null);
   const [weightText, setWeightText] = useState(() =>
     set.weightG === undefined ? '' : formatWeight(set.weightG, weightUnit),
   );
@@ -90,6 +94,39 @@ export function SetRow({
         .filter(Boolean)
         .join(' ')
     : '—';
+  const completionPatch = () => {
+    // A click moves focus before its handler runs. Read the visible draft directly so a
+    // just-typed value cannot be overwritten by the previous-set fallback while the blur
+    // persistence is still in flight.
+    const draft = { ...set };
+    const displayWeight = Number.parseFloat(weightText.trim().replace(',', '.'));
+    const reps = Number.parseInt(repsText.trim(), 10);
+    const duration = Number.parseInt(durationInputRef.current?.value.trim() ?? '', 10);
+    const distance = Number.parseInt(distanceInputRef.current?.value.trim() ?? '', 10);
+    const patch: Partial<WorkoutSet> = {};
+
+    if (usesWeight(trackingType) && Number.isFinite(displayWeight) && displayWeight >= 0) {
+      draft.weightG = toGrams(displayWeight, weightUnit);
+      patch.weightG = draft.weightG;
+    }
+    if (usesReps(trackingType) && Number.isFinite(reps) && reps >= 0) {
+      draft.reps = reps;
+      patch.reps = reps;
+    }
+    if (usesDuration(trackingType) && Number.isFinite(duration) && duration >= 0) {
+      draft.durationSeconds = duration;
+      patch.durationSeconds = duration;
+    }
+    if (usesDistance(trackingType) && Number.isFinite(distance) && distance >= 0) {
+      draft.distanceM = distance;
+      patch.distanceM = distance;
+    }
+
+    return { ...previousSetPatch(draft, previous, trackingType), ...patch };
+  };
+  const previousWeightPlaceholder =
+    previous?.weightG === undefined ? undefined : formatWeight(previous.weightG, weightUnit);
+  const previousRepsPlaceholder = previous?.reps === undefined ? undefined : String(previous.reps);
 
   return (
     <li
@@ -100,6 +137,11 @@ export function SetRow({
         set.isCompleted ? 'border-success/50 bg-success/10' : 'border-line bg-surface-raised',
       )}
     >
+      {previous && (
+        <span id={previousDescriptionId} className="rf-sr-only">
+          Previous set: {previousLabel}. Empty fields will use these values when completed.
+        </span>
+      )}
       <div className="flex flex-col items-center">
         <button
           type="button"
@@ -122,17 +164,8 @@ export function SetRow({
       </div>
 
       <div className="hidden text-xs text-ink-subtle sm:block">
-        <span className="block text-[10px] uppercase tracking-wide">Previous</span>
+        <span className="block text-[10px] uppercase tracking-wide">Last time</span>
         <span className="tabular-nums">{previousLabel}</span>
-        {onCopyPrevious && previous && (
-          <button
-            type="button"
-            onClick={onCopyPrevious}
-            className="mt-0.5 block text-[11px] font-semibold text-accent"
-          >
-            Copy
-          </button>
-        )}
       </div>
 
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -149,11 +182,23 @@ export function SetRow({
             <NumberInput
               value={weightText}
               aria-label={`Weight for set ${index + 1} in ${weightUnit}`}
+              aria-describedby={previous ? previousDescriptionId : undefined}
               step="any"
               min={0}
+              placeholder={previousWeightPlaceholder}
               className="h-11 w-[4.5rem] min-h-0 px-2 sm:w-20"
               onChange={(event) => setWeightText(event.target.value)}
               onBlur={(event) => commitWeight(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                (
+                  repsInputRef.current ??
+                  durationInputRef.current ??
+                  distanceInputRef.current ??
+                  completionButtonRef.current
+                )?.focus();
+              }}
             />
             <IconButton
               label="Increase weight"
@@ -168,48 +213,75 @@ export function SetRow({
 
         {usesReps(trackingType) && (
           <NumberInput
+            ref={repsInputRef}
             value={repsText}
             aria-label={`Reps for set ${index + 1}`}
+            aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
             className="h-11 w-14 min-h-0 px-2 sm:w-16"
-            placeholder="reps"
+            placeholder={previousRepsPlaceholder ?? 'reps'}
             onChange={(event) => setRepsText(event.target.value)}
             onBlur={(event) => {
               const value = Number.parseInt(event.target.value, 10);
               onChange({ reps: Number.isFinite(value) && value >= 0 ? value : undefined });
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return;
+              event.preventDefault();
+              (
+                durationInputRef.current ??
+                distanceInputRef.current ??
+                completionButtonRef.current
+              )?.focus();
             }}
           />
         )}
 
         {usesDuration(trackingType) && (
           <NumberInput
+            ref={durationInputRef}
             defaultValue={set.durationSeconds ?? ''}
             aria-label={`Duration in seconds for set ${index + 1}`}
+            aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
             className="h-11 w-16 min-h-0 px-2 sm:w-20"
-            placeholder="secs"
+            placeholder={
+              previous?.durationSeconds === undefined ? 'secs' : String(previous.durationSeconds)
+            }
             onBlur={(event) => {
               const value = Number.parseInt(event.target.value, 10);
               onChange({
                 durationSeconds: Number.isFinite(value) && value >= 0 ? value : undefined,
               });
             }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return;
+              event.preventDefault();
+              (distanceInputRef.current ?? completionButtonRef.current)?.focus();
+            }}
           />
         )}
 
         {usesDistance(trackingType) && (
           <NumberInput
+            ref={distanceInputRef}
             defaultValue={set.distanceM ?? ''}
             aria-label={`Distance in metres for set ${index + 1}`}
+            aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
             className="h-11 w-16 min-h-0 px-2 sm:w-20"
-            placeholder="m"
+            placeholder={previous?.distanceM === undefined ? 'm' : String(previous.distanceM)}
             onBlur={(event) => {
               const value = Number.parseInt(event.target.value, 10);
               onChange({ distanceM: Number.isFinite(value) && value >= 0 ? value : undefined });
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter') return;
+              event.preventDefault();
+              completionButtonRef.current?.focus();
             }}
           />
         )}
@@ -248,6 +320,7 @@ export function SetRow({
           </span>
         )}
         <Button
+          ref={completionButtonRef}
           size="sm"
           variant={set.isCompleted ? 'success' : 'secondary'}
           aria-pressed={set.isCompleted}
@@ -255,7 +328,7 @@ export function SetRow({
             set.isCompleted ? `Mark set ${index + 1} as not done` : `Complete set ${index + 1}`
           }
           className="h-11 w-12 px-0"
-          onClick={onToggleComplete}
+          onClick={() => onToggleComplete(set.isCompleted ? {} : completionPatch())}
         >
           <span aria-hidden="true" className="text-base">
             ✓
@@ -268,12 +341,7 @@ export function SetRow({
 
       {/* Mobile: previous-set reference sits under the inputs where there is room. */}
       <p className="col-span-2 -mt-1 flex flex-wrap items-center gap-2 text-[11px] text-ink-subtle sm:hidden">
-        <span>Prev: {previousLabel}</span>
-        {onCopyPrevious && previous && (
-          <button type="button" onClick={onCopyPrevious} className="font-semibold text-accent">
-            Copy
-          </button>
-        )}
+        <span>Last: {previousLabel}</span>
         {set.weightG !== undefined && set.reps ? (
           <span className="ml-auto tabular-nums">
             {trimNumber(Math.round(fromGrams(set.weightG, weightUnit) * set.reps))} {weightUnit}{' '}

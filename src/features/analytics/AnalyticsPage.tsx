@@ -20,7 +20,7 @@ import { FORMULA_EXPRESSION, FORMULA_LABEL } from '@/domain/oneRepMax';
 import { RANGE_DESCRIPTIONS, previousRange, resolveRange, type RangeKey } from '@/domain/time';
 import { titleCase } from '@/domain/taxonomy';
 import type { OneRepMaxFormula } from '@/domain/types';
-import { formatCount, formatWeight } from '@/domain/units';
+import { formatCompactNumber, formatCount, formatWeight, fromGrams } from '@/domain/units';
 import {
   bucketVolume,
   exerciseOptions,
@@ -36,7 +36,7 @@ import { MUSCLE_HELP, RECORDS_HELP, VOLUME_HELP, oneRepMaxHelp } from './help';
 /** Analytics overview: volume trends, muscle balance and per-exercise progression. */
 export function AnalyticsPage() {
   const { settings, weightUnit } = useSettings();
-  const [range, setRange] = useState<RangeKey>('3m');
+  const [range, setRange] = useState<RangeKey>('12w');
   const [formulaOverride, setFormulaOverride] = useState<OneRepMaxFormula | null>(null);
   const [includeWarmups, setIncludeWarmups] = useState(!settings.excludeWarmupsFromAnalytics);
   const [exerciseId, setExerciseId] = useState<string>('');
@@ -62,7 +62,8 @@ export function AnalyticsPage() {
 
     const summary = summarise(current, options);
     const priorSummary = summarise(priorEntries, options);
-    const buckets = bucketVolume(current, granularity, options);
+    const effectiveGranularity = range === 'all' ? 'month' : granularity;
+    const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
     const exercises = exerciseOptions(entries);
     const selectedId = exerciseId || exercises[0]?.id || '';
@@ -74,6 +75,7 @@ export function AnalyticsPage() {
       summary,
       priorSummary,
       buckets,
+      effectiveGranularity,
       muscles,
       exercises,
       selectedId,
@@ -81,8 +83,7 @@ export function AnalyticsPage() {
     };
   }, [data, range, options, granularity, exerciseId]);
 
-  const formatWeightValue = (grams: number) =>
-    `${formatWeight(grams, weightUnit, { decimals: 0 })}`;
+  const formatWeightValue = (grams: number) => formatCompactNumber(fromGrams(grams, weightUnit));
 
   if (loading && !data) return <Spinner label="Crunching your numbers" />;
 
@@ -119,9 +120,10 @@ export function AnalyticsPage() {
           value={range}
           onChange={setRange}
           options={[
-            { value: '1w', label: '1W' },
-            { value: '1m', label: '1M' },
-            { value: '3m', label: '3M' },
+            { value: 'this_week', label: 'This week' },
+            { value: '4w', label: '4W' },
+            { value: '8w', label: '8W' },
+            { value: '12w', label: '12W' },
             { value: '6m', label: '6M' },
             { value: '1y', label: '1Y' },
             { value: 'all', label: 'All' },
@@ -194,10 +196,10 @@ export function AnalyticsPage() {
 
       <div className="mb-4">
         <ChartCard
-          title={`${granularity === 'week' ? 'Weekly' : 'Monthly'} volume`}
+          title={`${view.effectiveGranularity === 'week' ? 'Weekly' : 'Monthly'} volume`}
           summary={summariseBuckets(view.buckets, weightUnit)}
           valueLabel={`Volume (${weightUnit})`}
-          xAxisLabel={granularity === 'week' ? 'Week starting' : 'Month'}
+          xAxisLabel={view.effectiveGranularity === 'week' ? 'Week starting' : 'Month'}
           kind="bar"
           formatValue={formatWeightValue}
           series={[
@@ -206,6 +208,7 @@ export function AnalyticsPage() {
               name: `Volume (${weightUnit})`,
               color: CHART_COLORS[0]!,
               points: view.buckets.map((bucket) => ({
+                date: bucket.date,
                 label: bucket.label,
                 value: bucket.volumeG,
                 detail: `${bucket.sets} sets across ${bucket.workouts} workouts`,
@@ -214,16 +217,18 @@ export function AnalyticsPage() {
           ]}
           actions={
             <>
-              <Segmented
-                label="Bucket size"
-                size="sm"
-                value={granularity}
-                onChange={setGranularity}
-                options={[
-                  { value: 'week', label: 'Weekly' },
-                  { value: 'month', label: 'Monthly' },
-                ]}
-              />
+              {range !== 'all' && (
+                <Segmented
+                  label="Bucket size"
+                  size="sm"
+                  value={granularity}
+                  onChange={setGranularity}
+                  options={[
+                    { value: 'week', label: 'Weekly' },
+                    { value: 'month', label: 'Monthly' },
+                  ]}
+                />
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -282,6 +287,11 @@ export function AnalyticsPage() {
                         />
                         {titleCase(row.muscle)}
                       </span>
+                      {row.muscle === 'unmapped' && (
+                        <Link to="/exercises" className="text-xs font-medium text-accent">
+                          Fix in Library
+                        </Link>
+                      )}
                     </th>
                     <td className="py-1.5 text-right tabular-nums text-ink-muted">
                       {formatWeightValue(row.attributedVolumeG)}
@@ -348,6 +358,7 @@ export function AnalyticsPage() {
                 name: `Estimated 1RM (${weightUnit})`,
                 color: CHART_COLORS[0]!,
                 points: view.progress.oneRepMax.map((point) => ({
+                  date: point.date,
                   label: point.label,
                   value: point.value,
                   detail: point.detail ? describeSource(point.detail, weightUnit) : undefined,
@@ -379,6 +390,7 @@ export function AnalyticsPage() {
                 name: `Heaviest set (${weightUnit})`,
                 color: CHART_COLORS[1]!,
                 points: view.progress.bestWeight.map((point) => ({
+                  date: point.date,
                   label: point.label,
                   value: point.value,
                   detail: point.detail,
@@ -402,6 +414,7 @@ export function AnalyticsPage() {
                 name: `Volume (${weightUnit})`,
                 color: CHART_COLORS[2]!,
                 points: view.progress.volume.map((point) => ({
+                  date: point.date,
                   label: point.label,
                   value: point.value,
                 })),

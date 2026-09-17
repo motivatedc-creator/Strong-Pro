@@ -170,7 +170,7 @@ export function TodayPage() {
       <section className="mb-6">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-subtle">
-            Templates
+            Routines
           </h2>
           <Link to="/templates" className="text-sm font-medium text-accent">
             Manage
@@ -179,12 +179,12 @@ export function TodayPage() {
 
         {templates.length === 0 ? (
           <EmptyState
-            title="No templates on record"
-            description="Build a template once and start it in a single tap on every future session."
+            title="No routines on record"
+            description="Build a routine once and start it in a single tap on every future session."
             icon="▤"
             action={
               <Button variant="primary" onClick={() => navigate('/templates/new')}>
-                Create a template
+                Create a routine
               </Button>
             }
           />

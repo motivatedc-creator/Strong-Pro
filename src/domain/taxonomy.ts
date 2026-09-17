@@ -10,6 +10,7 @@ import type {
 /** Display names and option lists shared by the pickers, editors and filters. */
 
 export const MUSCLE_GROUPS: MuscleGroup[] = [
+  'unmapped',
   'chest',
   'back',
   'lats',

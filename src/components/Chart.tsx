@@ -21,6 +21,8 @@ import { Button, cx, EmptyState } from './ui';
  */
 
 export interface ChartPoint {
+  /** Real ISO timestamp used to place the point on the time axis. */
+  date: string;
   /** X-axis label, already formatted for display. */
   label: string;
   value: number;
@@ -52,13 +54,13 @@ function ChartTooltip({
 }: {
   active?: boolean;
   payload?: Array<{ value?: number; payload?: ChartPoint & { detail?: string }; name?: string }>;
-  label?: string;
+  label?: string | number;
   formatValue: (value: number) => string;
 }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded border border-line bg-surface px-3 py-2 text-xs shadow-card">
-      <p className="font-semibold text-ink">{label}</p>
+      <p className="font-semibold text-ink">{payload[0]?.payload?.label ?? label}</p>
       {payload.map((entry, index) => (
         <p key={index} className="mt-1 text-ink-muted">
           <span className="font-medium text-ink">{formatValue(entry.value ?? 0)}</span>
@@ -110,17 +112,21 @@ export function ChartCard({
 
   // Recharts wants one row per x value with a key per series.
   const rows = useMemo(() => {
-    const byLabel = new Map<string, Record<string, string | number | undefined>>();
+    const byTimestamp = new Map<number, Record<string, string | number | undefined>>();
     for (const entry of series) {
       for (const point of entry.points) {
-        const row = byLabel.get(point.label) ?? { label: point.label };
+        const timestamp = new Date(point.date).getTime();
+        if (Number.isNaN(timestamp)) continue;
+        const row = byTimestamp.get(timestamp) ?? { timestamp, label: point.label };
         row[entry.id] = point.value;
         if (point.detail) row[`${entry.id}__detail`] = point.detail;
         row.detail = point.detail;
-        byLabel.set(point.label, row);
+        byTimestamp.set(timestamp, row);
       }
     }
-    return [...byLabel.values()];
+    return [...byTimestamp.values()].sort(
+      (a, b) => Number(a.timestamp ?? 0) - Number(b.timestamp ?? 0),
+    );
   }, [series]);
 
   // A chart with many points (e.g. weekly volume over "All time") gets crowded and
@@ -155,7 +161,11 @@ export function ChartCard({
                     vertical={false}
                   />
                   <XAxis
-                    dataKey="label"
+                    dataKey="timestamp"
+                    type="number"
+                    scale="time"
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={formatAxisDate}
                     tick={{ fontSize: 11, fill: 'rgb(var(--rf-ink-subtle))' }}
                     tickLine={false}
                     axisLine={{ stroke: 'rgb(var(--rf-line))' }}
@@ -212,7 +222,11 @@ export function ChartCard({
                     vertical={false}
                   />
                   <XAxis
-                    dataKey="label"
+                    dataKey="timestamp"
+                    type="number"
+                    scale="time"
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={formatAxisDate}
                     tick={{ fontSize: 11, fill: 'rgb(var(--rf-ink-subtle))' }}
                     tickLine={false}
                     axisLine={{ stroke: 'rgb(var(--rf-line))' }}
@@ -326,5 +340,11 @@ export function ChartCard({
         </>
       )}
     </section>
+  );
+}
+
+function formatAxisDate(timestamp: number): string {
+  return new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' }).format(
+    new Date(timestamp),
   );
 }

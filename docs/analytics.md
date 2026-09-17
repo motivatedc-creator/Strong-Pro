@@ -26,8 +26,9 @@ Rules:
    no estimate rather than a misleading zero.
 2. At exactly one rep the load is taken at face value, not extrapolated.
 3. Fractional reps are truncated.
-4. Brzycki is undefined at 37 reps and negative beyond it, so RepForge applies it only up
-   to 36 reps and falls back to Epley above that, labelling the point as a fallback.
+4. Sets above **12 reps are excluded** from estimated 1RM for both formulas. Higher-rep
+   work remains in volume, set and rep totals, where it is useful without pretending the
+   estimate is precise.
 5. Each plotted point is the **best** estimate from that session; the tooltip shows the
    set it came from and the formula used.
 6. Estimates are computed in canonical grams, so kg/lb display never changes the result.
@@ -65,6 +66,10 @@ A **different** measure from tonnage, and labelled as such everywhere it appears
 Because secondary muscles add credit, attributed volume across all muscles deliberately
 sums to more than the weight you actually moved. It never feeds the overall tonnage total.
 
+Exercises without a trusted mapping appear in an explicit **Unmapped** row. Editing that
+exercise in Library updates its historical workout snapshots, so the attribution becomes
+useful without rewriting the workout itself.
+
 ## Records
 
 Derived on read, for each exercise, from completed non-warm-up sets with a positive load
@@ -82,12 +87,15 @@ in the same session raise the bar for later ones.
 
 ## Time ranges and comparisons
 
-Ranges are 1 month (30 days), 3 months (91), 6 months (182), 1 year (365) and all time.
-Where a comparison is shown, it is against the immediately preceding window of the same
-length; with no prior data the app says "no prior period" instead of showing a fake 0%.
+Ranges are This week, 4 weeks, 8 weeks, 12 weeks, 6 months, 1 year and all time. This week
+starts on Monday; rolling ranges use exact week lengths. Where a comparison is shown, it
+is against the immediately preceding window of the same length; with no prior data the app
+says "no prior period" instead of showing a fake 0%.
 
 ## Charts
 
 Every chart carries a text summary (always read by screen readers) and a data table that
 can be revealed with a button, so no information exists only as pixels. Series values are
-computed before rendering; nothing is calculated inside a chart component.
+computed before rendering; nothing is calculated inside a chart component. Points use a
+real time-scaled horizontal axis. All-time views aggregate by calendar month; shorter
+ranges aggregate by ISO week.

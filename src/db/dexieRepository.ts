@@ -207,7 +207,22 @@ export class DexieRepository implements RepForgeRepository {
     const existing = await this.db.exercises.get(id);
     if (!existing) throw new Error(`Exercise ${id} not found`);
     const next: Exercise = { ...existing, ...patch, id, updatedAt: nowIso() };
-    await this.db.exercises.put(next);
+    await this.db.transaction('rw', [this.db.exercises, this.db.workoutExercises], async () => {
+      await this.db.exercises.put(next);
+
+      // An imported exercise starts as Unmapped. Correcting that classification is not
+      // changing performed training data, so update its analytics snapshots as well.
+      if (existing.primaryMuscleGroup === 'unmapped' && next.primaryMuscleGroup !== 'unmapped') {
+        await this.db.workoutExercises
+          .where('exerciseId')
+          .equals(id)
+          .modify((row) => {
+            if (row.primaryMuscleGroupSnapshot !== 'unmapped') return;
+            row.primaryMuscleGroupSnapshot = next.primaryMuscleGroup;
+            row.secondaryMuscleGroupsSnapshot = next.secondaryMuscleGroups;
+          });
+      }
+    });
     return next;
   }
 

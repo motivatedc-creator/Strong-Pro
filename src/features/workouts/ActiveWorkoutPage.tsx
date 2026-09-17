@@ -107,14 +107,16 @@ export function ActiveWorkoutPage() {
     reload();
   });
 
-  const [completeSet] = useWrite(async (set: WorkoutSet, restSeconds: number, label: string) => {
-    const next = !set.isCompleted;
-    await repository.updateSet(set.id, { isCompleted: next });
-    reload();
-    if (next && settings.restTimerAutoStart && restSeconds > 0) {
-      await startTimer(restSeconds, { workoutId: set.workoutId, setId: set.id, label });
-    }
-  });
+  const [completeSet] = useWrite(
+    async (set: WorkoutSet, prefill: Partial<WorkoutSet>, restSeconds: number, label: string) => {
+      const next = !set.isCompleted;
+      await repository.updateSet(set.id, { ...(next ? prefill : {}), isCompleted: next });
+      reload();
+      if (next && settings.restTimerAutoStart && restSeconds > 0) {
+        await startTimer(restSeconds, { workoutId: set.workoutId, setId: set.id, label });
+      }
+    },
+  );
 
   const [deleteSet] = useWrite(async (set: WorkoutSet) => {
     await repository.deleteSet(set.id);
@@ -298,27 +300,16 @@ export function ActiveWorkoutPage() {
                       quickIncrementG={settings.quickIncrementG}
                       previous={previous[index] ?? previous[previous.length - 1]}
                       onChange={(patch) => void updateSet(set.id, patch)}
-                      onToggleComplete={() =>
+                      onToggleComplete={(prefill) =>
                         void completeSet(
                           set,
+                          prefill,
                           entry.exercise.restSeconds,
                           entry.exercise.exerciseNameSnapshot,
                         )
                       }
                       onDelete={() => void deleteSet(set)}
                       onCycleType={(setType: SetType) => void updateSet(set.id, { setType })}
-                      onCopyPrevious={
-                        previous.length > 0
-                          ? () => {
-                              const source = previous[index] ?? previous[previous.length - 1];
-                              if (!source) return;
-                              void updateSet(set.id, {
-                                weightG: source.weightG,
-                                reps: source.reps,
-                              });
-                            }
-                          : undefined
-                      }
                     />
                   ))}
                 </ul>

@@ -95,6 +95,15 @@ export function formatCount(value: number): string {
   return countFormatter.format(Math.round(value));
 }
 
+/** Compact display for large analytics values, e.g. 5,160,000 -> 5.16M. */
+export function formatCompactNumber(value: number, maximumFractionDigits = 2): string {
+  if (!Number.isFinite(value)) return '0';
+  return new Intl.NumberFormat(undefined, {
+    notation: 'compact',
+    maximumFractionDigits,
+  }).format(value);
+}
+
 /** Round canonical grams to the nearest multiple of `incrementG` (used for equipment steps). */
 export function roundGramsToIncrement(
   grams: number,

@@ -82,7 +82,11 @@ export function exerciseProgress(
   options: AnalyticsOptions,
 ): ExerciseProgress {
   const relevant = entries
-    .filter((entry) => entry.exercise.exerciseId === exerciseId)
+    .filter(
+      (entry) =>
+        entry.exercise.exerciseId === exerciseId &&
+        !Number.isNaN(new Date(entry.workout.startedAt).getTime()),
+    )
     .sort((a, b) => a.workout.startedAt.localeCompare(b.workout.startedAt));
 
   const oneRepMax: SeriesPoint[] = [];
@@ -163,6 +167,8 @@ export function exerciseProgress(
 
 export interface PeriodBucket {
   key: string;
+  /** ISO timestamp at the start of the represented week or month. */
+  date: string;
   label: string;
   volumeG: number;
   sets: number;
@@ -183,6 +189,7 @@ export function bucketVolume(
     const key = granularity === 'week' ? isoWeekKey(date) : monthKey(date);
     const bucket = buckets.get(key) ?? {
       key,
+      date: periodStart(date, granularity).toISOString(),
       label: granularity === 'week' ? weekLabel(date) : monthLabel(date),
       volumeG: 0,
       sets: 0,
@@ -202,6 +209,18 @@ export function bucketVolume(
   return [...buckets.values()]
     .map(({ workoutIds, ...bucket }) => ({ ...bucket, workouts: workoutIds.size }))
     .sort((a, b) => a.key.localeCompare(b.key));
+}
+
+function periodStart(date: Date, granularity: 'week' | 'month'): Date {
+  const start = new Date(date);
+  if (granularity === 'month') {
+    start.setDate(1);
+  } else {
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() - (day - 1));
+  }
+  start.setHours(0, 0, 0, 0);
+  return start;
 }
 
 function weekLabel(date: Date): string {

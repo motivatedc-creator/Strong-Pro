@@ -22,7 +22,7 @@ import { MeasurementEntrySheet } from './MeasurementsPage';
 export function MeasurementDetailPage() {
   const { metric } = useParams<{ metric: string }>();
   const { weightUnit, lengthUnit } = useSettings();
-  const [range, setRange] = useState<RangeKey>('3m');
+  const [range, setRange] = useState<RangeKey>('12w');
   const [editing, setEditing] = useState<BodyMeasurement | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -89,9 +89,10 @@ export function MeasurementDetailPage() {
           value={range}
           onChange={setRange}
           options={[
-            { value: '1w', label: '1W' },
-            { value: '1m', label: '1M' },
-            { value: '3m', label: '3M' },
+            { value: 'this_week', label: 'This week' },
+            { value: '4w', label: '4W' },
+            { value: '8w', label: '8W' },
+            { value: '12w', label: '12W' },
             { value: '6m', label: '6M' },
             { value: '1y', label: '1Y' },
             { value: 'all', label: 'All' },
@@ -140,6 +141,7 @@ export function MeasurementDetailPage() {
                 name: `${metricLabel(metricValue)} (${unit})`,
                 color: CHART_COLORS[1]!,
                 points: view.inRange.map((entry) => ({
+                  date: entry.recordedAt,
                   label: formatDate(entry.recordedAt, { day: 'numeric', month: 'short' }),
                   value: entry.value,
                   detail: entry.note,

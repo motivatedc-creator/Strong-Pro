@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultQuickIncrementG,
+  formatCompactNumber,
   formatDuration,
   formatWeight,
   fromGrams,
@@ -84,6 +85,17 @@ describe('rounding', () => {
     expect(trimNumber(1.5)).toBe('1.5');
     expect(trimNumber(1.0)).toBe('1');
     expect(trimNumber(-0)).toBe('0');
+  });
+});
+
+describe('compact display numbers', () => {
+  it('keeps small values readable and compacts large values', () => {
+    expect(formatCompactNumber(999)).toBe('999');
+    expect(formatCompactNumber(5_160_000)).toBe('5.16M');
+  });
+
+  it('guards against non-finite values', () => {
+    expect(formatCompactNumber(Number.NaN)).toBe('0');
   });
 });
 

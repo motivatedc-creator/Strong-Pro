@@ -186,6 +186,30 @@ describe('exercise and template safety', () => {
     expect((await repository.deleteExercise('seed-bench-press')).deleted).toBe(false);
   });
 
+  it('propagates an Unmapped muscle correction into historical analytics snapshots', async () => {
+    const custom = await repository.createExercise({
+      name: 'Imported Cable Press',
+      primaryMuscleGroup: 'unmapped',
+      secondaryMuscleGroups: [],
+      equipment: 'cable',
+      movementPattern: 'horizontal push',
+      trackingType: 'weight_reps',
+      isArchived: false,
+    });
+    const workout = await repository.startWorkout({ name: 'Imported session' });
+    await repository.addExerciseToWorkout(workout.workout.id, custom.id);
+    await repository.completeWorkout(workout.workout.id);
+
+    await repository.updateExercise(custom.id, {
+      primaryMuscleGroup: 'chest',
+      secondaryMuscleGroups: ['triceps'],
+    });
+
+    const corrected = await repository.getWorkoutDetail(workout.workout.id);
+    expect(corrected?.exercises[0]?.exercise.primaryMuscleGroupSnapshot).toBe('chest');
+    expect(corrected?.exercises[0]?.exercise.secondaryMuscleGroupsSnapshot).toEqual(['triceps']);
+  });
+
   it('deleting a template keeps the workouts started from it', async () => {
     const template = await repository.createTemplate('Push day');
     await repository.saveTemplate(template, [

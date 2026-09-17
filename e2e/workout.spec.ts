@@ -1,30 +1,33 @@
 import { expect, test } from '@playwright/test';
 import { addExercise, freshApp, logSet } from './helpers';
 
-test.describe('template to history', () => {
-  test('create a template, run it, survive a reload, finish, and see it in history and analytics', async ({
+test.describe('routine to history', () => {
+  test('create a routine, run it, survive a reload, finish, and see it in history and analytics', async ({
     page,
   }) => {
     await freshApp(page);
 
-    // --- build a template ---
-    await page.getByRole('link', { name: 'Templates' }).first().click();
-    await page.getByRole('link', { name: 'New template' }).first().click();
-    await page.getByLabel('Template name').fill('Push A');
+    // --- build a routine ---
+    await page.getByRole('link', { name: 'Routines' }).first().click();
+    await page.getByRole('link', { name: 'New routine' }).first().click();
+    await page.getByLabel('Routine name').fill('Push A');
     await page.getByRole('button', { name: 'Add exercises' }).click();
     const picker = page.getByRole('dialog');
     await picker.getByLabel('Search exercises').fill('Bench Press');
-    await picker.getByRole('button', { name: /^Bench Press/ }).first().click();
+    await picker
+      .getByRole('button', { name: /^Bench Press/ })
+      .first()
+      .click();
     await picker.getByRole('button', { name: /^Add selected/ }).click();
     await expect(page.getByRole('heading', { name: 'Bench Press', level: 2 })).toBeVisible();
-    await page.getByRole('button', { name: 'Save template' }).click();
-    await expect(page.getByRole('heading', { name: 'Templates', level: 1 })).toBeVisible();
+    await page.getByRole('button', { name: 'Save routine' }).click();
+    await expect(page.getByRole('heading', { name: 'Routines', level: 1 })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Push A', level: 2 })).toBeVisible();
 
     // --- start it ---
     await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     await expect(page.getByRole('button', { name: 'Finish' })).toBeVisible();
-    // The template seeded three target sets.
+    // The routine seeded three target sets.
     await expect(page.getByRole('button', { name: /Complete set 1/ })).toBeVisible();
 
     await logSet(page, 1, '60', '8');
@@ -54,9 +57,7 @@ test.describe('template to history', () => {
     // --- analytics use the real data ---
     await page.goto('/analytics');
     await expect(page.getByRole('heading', { name: 'Analytics', level: 1 })).toBeVisible();
-    await expect(
-      page.getByRole('heading', { name: 'Estimated 1RM — Bench Press' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Estimated 1RM — Bench Press' })).toBeVisible();
     await page.getByRole('button', { name: 'Show data table' }).first().click();
     await expect(page.getByRole('table').first()).toBeVisible();
   });

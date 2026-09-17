@@ -30,16 +30,8 @@ describe('brzycki', () => {
     expect(brzycki(100, 10)).toBeCloseTo(133.333, 3);
   });
 
-  it('falls back to Epley beyond 36 reps where it is undefined or negative', () => {
-    const result = estimateOneRepMax(100, 40, 'brzycki');
-    expect(result).not.toBeNull();
-    expect(result?.formulaUsed).toBe('epley');
-    expect(result?.fellBack).toBe(true);
-    expect(result?.value).toBe(Math.round(epley(100, 40)));
-  });
-
-  it('is applied at exactly 36 reps', () => {
-    const result = estimateOneRepMax(100, 36, 'brzycki');
+  it('is applied at the highest trustworthy rep count', () => {
+    const result = estimateOneRepMax(100, 12, 'brzycki');
     expect(result?.formulaUsed).toBe('brzycki');
     expect(result?.fellBack).toBe(false);
   });
@@ -62,6 +54,13 @@ describe('estimateOneRepMax boundaries', () => {
     expect(estimateOneRepMax(100, 5.9, 'epley')?.value).toBe(
       estimateOneRepMax(100, 5, 'epley')?.value,
     );
+  });
+
+  it('caps estimates at 12 reps for every formula', () => {
+    expect(estimateOneRepMax(100, 12, 'epley')).not.toBeNull();
+    expect(estimateOneRepMax(100, 12, 'brzycki')).not.toBeNull();
+    expect(estimateOneRepMax(100, 13, 'epley')).toBeNull();
+    expect(estimateOneRepMax(100, 13, 'brzycki')).toBeNull();
   });
 });
 

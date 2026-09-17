@@ -11,7 +11,7 @@ export function oneRepMaxHelp(formula: OneRepMaxFormula): string[] {
     `${FORMULA_LABEL[formula]}: ${FORMULA_EXPRESSION[formula]}.`,
     'Only completed sets with a positive load and at least one rep are estimated.',
     'A single rep is taken at face value rather than extrapolated.',
-    'Brzycki is undefined at 37 reps and negative beyond it, so above 36 reps RepForge falls back to Epley and labels the point.',
+    'Sets above 12 reps are excluded because high-rep estimates are too noisy to present as trustworthy strength data.',
     'Warm-up sets are excluded unless you turn them on.',
     'Each point is the best estimate from that session; the tooltip shows the set behind it.',
   ];
@@ -28,6 +28,7 @@ export const VOLUME_HELP = [
 export const MUSCLE_HELP = [
   'Attributed volume gives the primary muscle full credit for a set and each secondary muscle a configurable fraction (50% by default).',
   'It is deliberately not a tonnage total: the attributed numbers add up to more than the weight you actually moved.',
+  'Imported exercises stay in Unmapped until you classify them in the Library; that correction updates their historical analytics mapping.',
   'Change the secondary credit in Settings → Analytics.',
 ];
 

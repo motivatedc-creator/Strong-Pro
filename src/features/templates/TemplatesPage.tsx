@@ -83,7 +83,7 @@ export function TemplatesPage() {
 
   const [remove] = useWrite(async (templateId: string) => {
     await repository.deleteTemplate(templateId);
-    toast.info('Template deleted. Workouts started from it are untouched.');
+    toast.info('Routine deleted. Workouts started from it are untouched.');
     reload();
   });
 
@@ -93,7 +93,7 @@ export function TemplatesPage() {
     const order = (data?.templates ?? []).length;
     const { template, exercises } = buildStarterTemplate(preset, order);
     await repository.saveTemplate(template, exercises);
-    toast.success(`"${preset.name}" added to your templates.`);
+    toast.success(`"${preset.name}" added to your routines.`);
     reload();
   });
 
@@ -105,24 +105,24 @@ export function TemplatesPage() {
   return (
     <>
       <PageHeader
-        title="Templates"
+        title="Routines"
         subtitle="Reusable session plans. Create as many as you like."
         actions={
           <>
             <Button onClick={() => setBrowsingStarters(true)}>Preset routines</Button>
             <Link to="/templates/new" className={buttonClasses('primary')}>
-              New template
+              New routine
             </Link>
           </>
         }
       />
 
-      {loading && !data && <Spinner label="Loading templates" />}
+      {loading && !data && <Spinner label="Loading routines" />}
 
       {!loading && activeTemplates.length === 0 && archivedTemplates.length === 0 && (
         <EmptyState
-          title="No templates yet"
-          description="A template holds your exercises, target sets, rep ranges and rest times so a session starts in one tap. Build your own, or add one of ours to get moving today."
+          title="No custom routines yet"
+          description="A routine holds your exercises, target sets, rep ranges and rest times so a session starts in one tap. Build your own, or add one of ours to get moving today."
           icon="▤"
           action={
             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -203,7 +203,7 @@ export function TemplatesPage() {
         <div className="mt-6">
           <Toggle
             label={`Show archived (${archivedTemplates.length})`}
-            description="Archived templates stay out of your way but keep their contents."
+            description="Archived routines stay out of your way but keep their contents."
             checked={showArchived}
             onChange={setShowArchived}
           />
@@ -260,7 +260,7 @@ export function TemplatesPage() {
                   className="mt-2"
                   onClick={() => void addStarter(preset.id)}
                 >
-                  Add to my templates
+                  Add to my routines
                 </Button>
               </Card>
             </li>
@@ -271,10 +271,10 @@ export function TemplatesPage() {
       <ConfirmDialog
         open={!!confirmDelete}
         title={`Delete "${confirmDelete?.name ?? ''}"?`}
-        confirmLabel="Delete template"
+        confirmLabel="Delete routine"
         body={
           <p>
-            The template and its planned exercises are removed. Workouts you already logged from it
+            The routine and its planned exercises are removed. Workouts you already logged from it
             stay in your history, untouched. This cannot be undone.
           </p>
         }

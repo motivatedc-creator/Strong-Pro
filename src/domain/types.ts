@@ -19,6 +19,7 @@ export type ISODate = string;
 export type UnitSystem = 'metric' | 'imperial';
 
 export type MuscleGroup =
+  | 'unmapped'
   | 'chest'
   | 'back'
   | 'shoulders'

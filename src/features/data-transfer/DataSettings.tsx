@@ -91,7 +91,7 @@ export function DataSettings() {
       <Card className="mb-3">
         <h3 className="text-sm font-semibold text-ink">Export</h3>
         <p className="mt-1 text-xs text-ink-muted">
-          A JSON backup contains everything: workouts, sets, exercises, templates, measurements,
+          A JSON backup contains everything: workouts, sets, exercises, routines, measurements,
           equipment and settings. CSV export is a clean, spreadsheet-safe copy of the same data.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -147,7 +147,7 @@ export function DataSettings() {
       <Card className="border-danger/40">
         <h3 className="text-sm font-semibold text-danger">Delete all local data</h3>
         <p className="mt-1 text-xs text-ink-muted">
-          Erases every workout, template, custom exercise and measurement stored in this browser,
+          Erases every workout, routine, custom exercise and measurement stored in this browser,
           then re-seeds the starter exercise library. Export a backup first if you might want any of
           it back.
         </p>
@@ -254,9 +254,9 @@ export function DataSettings() {
         confirmLabel="Back up, then replace"
         body={
           <p>
-            Every workout, template, exercise and measurement currently on this device is deleted
-            and replaced by the contents of this file. RepForge will download a backup of your
-            current data first so the step is reversible.
+            Every workout, routine, exercise and measurement currently on this device is deleted and
+            replaced by the contents of this file. RepForge will download a backup of your current
+            data first so the step is reversible.
           </p>
         }
         onCancel={() => setConfirmReplace(false)}
@@ -275,7 +275,7 @@ export function DataSettings() {
         body={
           <div>
             <p>
-              This erases every workout, set, template, custom exercise and measurement stored in
+              This erases every workout, set, routine, custom exercise and measurement stored in
               this browser. It cannot be undone, and RepForge keeps no copy anywhere else.
             </p>
             <label className="rf-label mt-3" htmlFor="confirm-delete">

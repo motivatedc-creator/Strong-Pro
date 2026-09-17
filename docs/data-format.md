@@ -31,7 +31,7 @@ telemetry.
 | Key                                             | Contents                                                          |
 | ----------------------------------------------- | ----------------------------------------------------------------- |
 | `exercises`                                     | Every exercise, seeded and custom, including archived ones.       |
-| `templates` / `templateExercises`               | Templates and their ordered exercises.                            |
+| `templates` / `templateExercises`               | Routines and their ordered exercises (legacy storage-key names).  |
 | `workouts` / `workoutExercises` / `workoutSets` | Logged sessions. Discarded workouts are not exported.             |
 | `measurements`                                  | Body measurements.                                                |
 | `barProfiles` / `plateInventories`              | Equipment definitions.                                            |
@@ -66,10 +66,10 @@ parents are missing, and prunes those rows rather than writing dangling referenc
 
 ## Restore semantics
 
-| Mode        | Behaviour                                                                                                                                                          |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Merge**   | Adds exercises, templates, workouts and measurements whose ids are not already present. Nothing is deleted, and workouts you already have are skipped and counted. |
-| **Replace** | Clears every user store, then writes the backup. A safety backup of the current data is downloaded first.                                                          |
+| Mode        | Behaviour                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Merge**   | Adds exercises, routines, workouts and measurements whose ids are not already present. Nothing is deleted, and workouts you already have are skipped and counted. |
+| **Replace** | Clears every user store, then writes the backup. A safety backup of the current data is downloaded first.                                                         |
 
 Both modes run inside a single transaction.
 

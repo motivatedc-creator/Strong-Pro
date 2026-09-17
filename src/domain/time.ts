@@ -22,31 +22,33 @@ export function parseIso(value: string | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export type RangeKey = '1w' | '1m' | '3m' | '6m' | '1y' | 'all';
+export type RangeKey = 'this_week' | '4w' | '8w' | '12w' | '6m' | '1y' | 'all';
 
 export const RANGE_LABELS: Record<RangeKey, string> = {
-  '1w': '1W',
-  '1m': '1M',
-  '3m': '3M',
+  this_week: 'This week',
+  '4w': '4W',
+  '8w': '8W',
+  '12w': '12W',
   '6m': '6M',
   '1y': '1Y',
   all: 'All',
 };
 
 export const RANGE_DESCRIPTIONS: Record<RangeKey, string> = {
-  '1w': 'Last week',
-  '1m': 'Last month',
-  '3m': 'Last 3 months',
+  this_week: 'Monday through today',
+  '4w': 'Last 4 weeks',
+  '8w': 'Last 8 weeks',
+  '12w': 'Last 12 weeks',
   '6m': 'Last 6 months',
   '1y': 'Last year',
   all: 'All time',
 };
 
 // A week-based range is useful because most training programs run on weekly cycles.
-const RANGE_DAYS: Record<Exclude<RangeKey, 'all'>, number> = {
-  '1w': 7,
-  '1m': 30,
-  '3m': 91,
+const RANGE_DAYS: Record<Exclude<RangeKey, 'all' | 'this_week'>, number> = {
+  '4w': 28,
+  '8w': 56,
+  '12w': 84,
   '6m': 182,
   '1y': 365,
 };
@@ -58,6 +60,7 @@ export interface DateRange {
 
 export function resolveRange(key: RangeKey, reference: Date = new Date()): DateRange {
   if (key === 'all') return { from: null, to: reference };
+  if (key === 'this_week') return { from: startOfIsoWeek(reference), to: reference };
   const from = new Date(reference);
   from.setDate(from.getDate() - RANGE_DAYS[key]);
   from.setHours(0, 0, 0, 0);
@@ -67,13 +70,26 @@ export function resolveRange(key: RangeKey, reference: Date = new Date()): DateR
 /** The equivalent window immediately before `range`, used for period-over-period deltas. */
 export function previousRange(key: RangeKey, reference: Date = new Date()): DateRange | null {
   if (key === 'all') return null;
+  if (key === 'this_week') {
+    const currentFrom = startOfIsoWeek(reference);
+    const from = new Date(currentFrom);
+    from.setDate(from.getDate() - 7);
+    return { from, to: new Date(currentFrom.getTime() - 1) };
+  }
   const days = RANGE_DAYS[key];
-  const to = new Date(reference);
-  to.setDate(to.getDate() - days);
-  const from = new Date(to);
+  const currentFrom = resolveRange(key, reference).from!;
+  const from = new Date(currentFrom);
   from.setDate(from.getDate() - days);
   from.setHours(0, 0, 0, 0);
-  return { from, to };
+  return { from, to: new Date(currentFrom.getTime() - 1) };
+}
+
+function startOfIsoWeek(reference: Date): Date {
+  const start = new Date(reference);
+  const day = start.getDay() || 7;
+  start.setDate(start.getDate() - (day - 1));
+  start.setHours(0, 0, 0, 0);
+  return start;
 }
 
 export function isWithin(range: DateRange, value: Date): boolean {

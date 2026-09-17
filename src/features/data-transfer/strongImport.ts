@@ -370,7 +370,7 @@ export function buildImportBatch(analysis: ImportAnalysis, options: BuildBatchOp
           id: uuid(),
           // Imported names are kept verbatim so history reads the way the user wrote it.
           name: entry.name,
-          primaryMuscleGroup: 'full body',
+          primaryMuscleGroup: 'unmapped',
           secondaryMuscleGroups: [],
           equipment: 'other',
           movementPattern: 'isolation',

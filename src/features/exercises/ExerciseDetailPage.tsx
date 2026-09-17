@@ -129,6 +129,7 @@ export function ExerciseDetailPage() {
                   name: `Estimated 1RM (${weightUnit})`,
                   color: CHART_COLORS[0]!,
                   points: view.progress.oneRepMax.map((point) => ({
+                    date: point.date,
                     label: point.label,
                     value: point.value,
                   })),
@@ -149,6 +150,7 @@ export function ExerciseDetailPage() {
                   name: `Volume (${weightUnit})`,
                   color: CHART_COLORS[2]!,
                   points: view.progress.volume.map((point) => ({
+                    date: point.date,
                     label: point.label,
                     value: point.value,
                   })),

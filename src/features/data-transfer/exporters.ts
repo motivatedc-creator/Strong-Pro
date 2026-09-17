@@ -30,7 +30,7 @@ export function buildCsvBundle(payload: BackupPayload, settings: AppSettings): C
     { fileName: 'repforge-workouts.csv', content: workoutsCsv(payload) },
     { fileName: 'repforge-exercises.csv', content: exercisesCsv(payload.data.exercises) },
     {
-      fileName: 'repforge-templates.csv',
+      fileName: 'repforge-routines.csv',
       content: templatesCsv(
         payload.data.templates,
         payload.data.templateExercises,
@@ -200,7 +200,7 @@ export function templatesCsv(
 
   return toCsv(
     [
-      'Template',
+      'Routine',
       'State',
       'Position',
       'Exercise',

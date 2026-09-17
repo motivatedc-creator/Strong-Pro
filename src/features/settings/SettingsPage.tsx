@@ -170,7 +170,7 @@ export function SettingsPage() {
       {section === 'timers' && (
         <Card>
           <h2 className="mb-2 text-sm font-semibold text-ink">Rest timer</h2>
-          <Field label="Default rest (seconds)" hint="Used for exercises added outside a template.">
+          <Field label="Default rest (seconds)" hint="Used for exercises added outside a routine.">
             {({ id, describedBy }) => (
               <NumberInput
                 id={id}
@@ -336,10 +336,10 @@ export function SettingsPage() {
             </div>
           </dl>
           <p className="mt-3 text-xs text-ink-muted">
-            Certified is free and subscription-free: no accounts, no ads, no analytics, no telemetry,
-            no server. Your training data never leaves this device unless you export it yourself.
-            Certified is an independent, original product and is not affiliated with any other
-            fitness app.
+            Certified is free and subscription-free: no accounts, no ads, no analytics, no
+            telemetry, no server. Your training data never leaves this device unless you export it
+            yourself. Certified is an independent, original product and is not affiliated with any
+            other fitness app.
           </p>
         </Card>
       )}

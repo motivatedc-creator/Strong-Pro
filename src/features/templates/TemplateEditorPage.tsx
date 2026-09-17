@@ -98,7 +98,7 @@ export function TemplateEditorPage() {
   const [save, saving] = useWrite(async () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Give this template a name.');
+      setError('Give this routine a name.');
       return;
     }
     setError('');
@@ -115,16 +115,16 @@ export function TemplateEditorPage() {
       })),
     );
 
-    toast.success(isNew ? 'Template created.' : 'Template saved.');
+    toast.success(isNew ? 'Routine created.' : 'Routine saved.');
     navigate('/templates');
   });
 
-  if (!isNew && loading && !data) return <Spinner label="Loading template" />;
+  if (!isNew && loading && !data) return <Spinner label="Loading routine" />;
 
   return (
     <>
       <PageHeader
-        title={isNew ? 'New template' : 'Edit template'}
+        title={isNew ? 'New routine' : 'Edit routine'}
         subtitle={`${rows.length} exercise${rows.length === 1 ? '' : 's'}`}
         actions={
           <Button variant="primary" disabled={saving} onClick={() => void save()}>
@@ -133,7 +133,7 @@ export function TemplateEditorPage() {
         }
       />
 
-      <Field label="Template name" error={error}>
+      <Field label="Routine name" error={error}>
         {({ id: fieldId, describedBy }) => (
           <TextInput
             id={fieldId}
@@ -381,7 +381,7 @@ export function TemplateEditorPage() {
           Cancel
         </Button>
         <Button block variant="primary" disabled={saving} onClick={() => void save()}>
-          {saving ? 'Saving…' : 'Save template'}
+          {saving ? 'Saving…' : 'Save routine'}
         </Button>
       </div>
 

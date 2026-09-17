@@ -166,8 +166,8 @@ export function WorkoutDetailPage() {
                     intensityMode={settings.intensityMode}
                     quickIncrementG={settings.quickIncrementG}
                     onChange={(patch) => void updateSet(set.id, patch)}
-                    onToggleComplete={() =>
-                      void updateSet(set.id, { isCompleted: !set.isCompleted })
+                    onToggleComplete={(prefill) =>
+                      void updateSet(set.id, { ...prefill, isCompleted: !set.isCompleted })
                     }
                     onDelete={() => void deleteSet(set)}
                     onCycleType={(setType: SetType) => void updateSet(set.id, { setType })}
