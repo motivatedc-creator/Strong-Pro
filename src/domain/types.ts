@@ -17,6 +17,7 @@ export type ISODateTime = string;
 export type ISODate = string;
 
 export type UnitSystem = 'metric' | 'imperial';
+export type WeekStartDay = 'saturday' | 'sunday' | 'monday';
 
 export type MuscleGroup =
   | 'unmapped'
@@ -237,6 +238,8 @@ export interface AppSettings {
   unitSystem: UnitSystem;
   oneRepMaxFormula: OneRepMaxFormula;
   intensityMode: IntensityMode;
+  /** Start day for weekly analytics. Missing on older installs/backups means Monday. */
+  weekStartDay?: WeekStartDay;
   /** Quick-adjust step shown beside weight inputs, in grams (default 2.5 kg / 5 lb). */
   quickIncrementG: number;
   defaultRestSeconds: number;
