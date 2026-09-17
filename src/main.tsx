@@ -20,7 +20,7 @@ createRoot(container).render(
 // Service worker: prompt rather than reload under the user's hands mid-set.
 const updateSW = registerSW({
   onNeedRefresh() {
-    toast.info('A new version of RepForge is ready.');
+    toast.info('A new version of Certified is ready.');
     // The update applies on the next launch; never interrupt an in-progress session.
     window.addEventListener(
       'rf-apply-update',
@@ -31,6 +31,6 @@ const updateSW = registerSW({
     );
   },
   onOfflineReady() {
-    toast.success('RepForge is ready to work offline.');
+    toast.success('Certified is ready to work offline.');
   },
 });

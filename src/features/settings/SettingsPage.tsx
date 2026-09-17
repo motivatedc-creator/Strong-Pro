@@ -31,7 +31,7 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 const APP_ICONS: Array<{ id: AppIcon; name: string }> = [
-  { id: 'default', name: 'RepForge' },
+  { id: 'default', name: 'Certified' },
   { id: 'ember', name: 'Ember' },
   { id: 'glacier', name: 'Glacier' },
   { id: 'moss', name: 'Moss' },
@@ -206,7 +206,7 @@ export function SettingsPage() {
           />
           <Toggle
             label="Notification"
-            description="Best effort. On the web this only fires while RepForge is open; native builds schedule a real local notification."
+            description="Best effort. On the web this only fires while Certified is open; native builds schedule a real local notification."
             checked={settings.restTimerNotification}
             onChange={async (value) => {
               if (value) {
@@ -320,7 +320,7 @@ export function SettingsPage() {
 
       {section === 'about' && (
         <Card>
-          <h2 className="mb-2 text-sm font-semibold text-ink">About RepForge</h2>
+          <h2 className="mb-2 text-sm font-semibold text-ink">About Certified</h2>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-ink-muted">Version</dt>
@@ -336,9 +336,9 @@ export function SettingsPage() {
             </div>
           </dl>
           <p className="mt-3 text-xs text-ink-muted">
-            RepForge is free and subscription-free: no accounts, no ads, no analytics, no telemetry,
+            Certified is free and subscription-free: no accounts, no ads, no analytics, no telemetry,
             no server. Your training data never leaves this device unless you export it yourself.
-            RepForge is an independent, original product and is not affiliated with any other
+            Certified is an independent, original product and is not affiliated with any other
             fitness app.
           </p>
         </Card>

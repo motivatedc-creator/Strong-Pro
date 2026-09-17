@@ -102,8 +102,8 @@ export function SideNav() {
       className="hidden w-60 shrink-0 border-r border-line bg-surface px-3 py-5 lg:block"
     >
       <div className="mb-6 flex items-center gap-2 px-2">
-        <img src="/icons/icon-default.svg" alt="" aria-hidden="true" className="h-8 w-8 rounded" />
-        <span className="text-lg font-bold tracking-tight text-ink">RepForge</span>
+        <img src="/brand/symbol.svg" alt="" aria-hidden="true" className="h-8 w-8" />
+        <span className="font-mono text-lg font-bold tracking-tight text-ink">CERTIFIED</span>
       </div>
       <ul className="space-y-1">
         {NAV_ITEMS.map((item) => (
@@ -129,7 +129,7 @@ export function SideNav() {
         ))}
       </ul>
       <p className="mt-6 px-3 text-xs text-ink-subtle">
-        Free, offline and private. Your data never leaves this device.
+        Your reps. Your receipts. Local-first, always.
       </p>
     </nav>
   );

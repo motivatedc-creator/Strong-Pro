@@ -149,16 +149,22 @@ export function TodayPage() {
           </div>
         </Card>
       ) : (
-        <Button
-          variant="primary"
-          size="lg"
-          block
-          className="mb-4"
-          disabled={starting}
-          onClick={() => void start(undefined)}
-        >
-          Start empty workout
-        </Button>
+        <>
+          <Button
+            variant="primary"
+            size="lg"
+            block
+            className="mb-4"
+            aria-label="Start empty workout"
+            disabled={starting}
+            onClick={() => void start(undefined)}
+          >
+            Let&apos;s cook 🔥
+          </Button>
+          <p className="-mt-2 mb-5 text-center text-xs text-ink-subtle">
+            Bar&apos;s loaded. Log it or it didn&apos;t happen.
+          </p>
+        </>
       )}
 
       <section className="mb-6">
@@ -173,7 +179,7 @@ export function TodayPage() {
 
         {templates.length === 0 ? (
           <EmptyState
-            title="No templates yet"
+            title="No templates on record"
             description="Build a template once and start it in a single tap on every future session."
             icon="▤"
             action={
@@ -273,8 +279,8 @@ export function TodayPage() {
         </div>
         {recent.length === 0 ? (
           <EmptyState
-            title="Nothing logged yet"
-            description="Finish your first session and it will show up here, along with your records and analytics."
+            title="No aura on file yet"
+            description="Log set one and start building a case. Your records and analytics will follow."
             icon="⏱"
           />
         ) : (

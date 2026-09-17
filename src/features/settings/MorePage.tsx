@@ -32,8 +32,7 @@ export function MorePage() {
         ))}
       </ul>
       <p className="mt-6 text-center text-xs text-ink-subtle">
-        RepForge is free and subscription-free. Everything you log stays on this device unless you
-        export it.
+        Certified is subscription-free. Everything you log stays on this device unless you export it.
       </p>
     </>
   );

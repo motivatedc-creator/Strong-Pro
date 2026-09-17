@@ -103,7 +103,7 @@ test.describe('units and themes', () => {
     await page.goto('/settings');
     await page.getByRole('tab', { name: 'Appearance' }).click();
     await page.getByRole('radio', { name: 'Dark' }).click();
-    await page.getByRole('button', { name: /Glacier/ }).first().click();
+    await page.getByRole('button', { name: /Ledger/ }).first().click();
 
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.locator('html')).toHaveAttribute('data-accent', 'glacier');
