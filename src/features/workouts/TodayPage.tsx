@@ -90,7 +90,20 @@ export function TodayPage() {
         heaviestG: record.heaviestSet?.weightG ?? 0,
       }));
 
-    return { totals, weekTotals, weekWorkouts, topRecords };
+    const sessionStats = new Map<string, { exercises: number; sets: number; volumeG: number }>();
+    for (const entry of data?.completed ?? []) {
+      const current = sessionStats.get(entry.workout.id) ?? { exercises: 0, sets: 0, volumeG: 0 };
+      const exerciseTotals = totalsForGroups([{ exercise: entry.exercise, sets: entry.sets }], {
+        includeWarmups: !settings.excludeWarmupsFromAnalytics,
+      });
+      sessionStats.set(entry.workout.id, {
+        exercises: current.exercises + 1,
+        sets: current.sets + exerciseTotals.completedSets,
+        volumeG: current.volumeG + exerciseTotals.volumeG,
+      });
+    }
+
+    return { totals, weekTotals, weekWorkouts, topRecords, sessionStats };
   }, [data, settings.excludeWarmupsFromAnalytics, settings.oneRepMaxFormula]);
 
   if (ready && !settings.onboardingCompletedAt) return <Navigate to="/onboarding" replace />;
@@ -278,6 +291,14 @@ export function TodayPage() {
                     </span>
                     <span className="block text-xs text-ink-subtle">
                       {relativeDay(workout.startedAt)} · {formatDate(workout.startedAt)}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-ink-muted">
+                      {stats.sessionStats.get(workout.id)?.exercises ?? 0} exercises ·{' '}
+                      {stats.sessionStats.get(workout.id)?.sets ?? 0} sets ·{' '}
+                      {formatWeight(stats.sessionStats.get(workout.id)?.volumeG ?? 0, weightUnit, {
+                        decimals: 0,
+                      })}{' '}
+                      {weightUnit}
                     </span>
                   </span>
                   <span className="shrink-0 text-xs text-ink-muted">

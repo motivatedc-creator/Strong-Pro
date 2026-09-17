@@ -30,14 +30,29 @@ export function ExercisePicker({
   const [selected, setSelected] = useState<Exercise[]>([]);
   const [creating, setCreating] = useState(false);
 
-  const { data: exercises, loading } = useRepositoryData(
-    (repository) => repository.listExercises(),
-    [],
-  );
+  const { data, loading } = useRepositoryData(async (repository) => {
+    const [exercises, completed] = await Promise.all([
+      repository.listExercises(),
+      repository.getAllCompletedSets(),
+    ]);
+
+    // The picker is used in the gym, so the useful default order is "what I
+    // used most recently", with the library's name order as the stable tie-breaker.
+    // This mirrors the fast-start behaviour of the Site build without adding a
+    // second source of truth or storing extra recency state.
+    const lastUsedAt = new Map<string, number>();
+    for (const entry of completed) {
+      const timestamp = Date.parse(entry.workout.startedAt);
+      const previous = lastUsedAt.get(entry.exercise.exerciseId) ?? 0;
+      if (timestamp > previous) lastUsedAt.set(entry.exercise.exerciseId, timestamp);
+    }
+
+    return { exercises, lastUsedAt };
+  }, []);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return (exercises ?? [])
+    return (data?.exercises ?? [])
       .filter((exercise) => !excludeIds.includes(exercise.id))
       .filter((exercise) => (muscle === 'all' ? true : exercise.primaryMuscleGroup === muscle))
       .filter((exercise) => (equipment === 'all' ? true : exercise.equipment === equipment))
@@ -48,7 +63,15 @@ export function ExercisePicker({
             exercise.equipment.includes(query)
           : true,
       );
-  }, [exercises, search, muscle, equipment, excludeIds]);
+  }, [data, search, muscle, equipment, excludeIds]);
+
+  const orderedExercises = useMemo(() => {
+    const lastUsedAt = data?.lastUsedAt;
+    return [...filtered].sort((a, b) => {
+      const recencyDifference = (lastUsedAt?.get(b.id) ?? 0) - (lastUsedAt?.get(a.id) ?? 0);
+      return recencyDifference || a.name.localeCompare(b.name);
+    });
+  }, [data?.lastUsedAt, filtered]);
 
   const toggle = (exercise: Exercise) => {
     if (!multi) {
@@ -154,7 +177,7 @@ export function ExercisePicker({
         )}
 
         <ul className="space-y-1.5">
-          {filtered.map((exercise) => {
+          {orderedExercises.map((exercise) => {
             const isSelected = selected.some((entry) => entry.id === exercise.id);
             return (
               <li key={exercise.id}>
