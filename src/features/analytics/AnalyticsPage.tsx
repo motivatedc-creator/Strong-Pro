@@ -32,7 +32,8 @@ import {
   type LoggedEntry,
 } from './compute';
 import { MUSCLE_HELP, RECORDS_HELP, VOLUME_HELP, oneRepMaxHelp } from './help';
-import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
+import { WeeklyVerdictCard } from './WeeklyVerdictCard';
+import { weeklyVerdict } from './weeklyVerdict';
 
 /** Analytics overview: volume trends, muscle balance and per-exercise progression. */
 export function AnalyticsPage() {
@@ -57,13 +58,14 @@ export function AnalyticsPage() {
 
   const view = useMemo(() => {
     const entries = data ?? [];
-    const current = filterByRange(entries, resolveRange(range));
-    const previous = previousRange(range);
+    const weekStart = settings.weekStartDay ?? 'monday';
+    const current = filterByRange(entries, resolveRange(range, new Date(), weekStart));
+    const previous = previousRange(range, new Date(), weekStart);
     const priorEntries = previous ? filterByRange(entries, previous) : [];
 
     const summary = summarise(current, options);
     const priorSummary = summarise(priorEntries, options);
-    const weekVerdict = weeklyVerdict(entries, options);
+    const weekVerdict = weeklyVerdict(entries, options, weekStart);
     const effectiveGranularity = range === 'all' ? 'month' : granularity;
     const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
@@ -84,7 +86,7 @@ export function AnalyticsPage() {
       selectedId,
       progress,
     };
-  }, [data, range, options, granularity, exerciseId]);
+  }, [data, range, options, granularity, exerciseId, settings.weekStartDay]);
 
   const formatWeightValue = (grams: number) => formatCompactNumber(fromGrams(grams, weightUnit));
 
@@ -111,36 +113,11 @@ export function AnalyticsPage() {
   const volumeChange = percentChange(view.summary.volumeG, view.priorSummary.volumeG);
   const setsChange = percentChange(view.summary.completedSets, view.priorSummary.completedSets);
   const selectedExercise = view.exercises.find((entry) => entry.id === view.selectedId);
-  const verdictCopy = weeklyVerdictCopy(view.weekVerdict, weightUnit);
-
   return (
     <>
       <PageHeader title="Analytics" subtitle={RANGE_DESCRIPTIONS[range]} />
 
-      <section aria-labelledby="weekly-verdict-heading">
-        <Card className="mb-4 border-accent/30">
-          <div className="mb-2 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-                Weekly verdict
-              </p>
-              <h2 id="weekly-verdict-heading" className="text-sm font-semibold text-ink">
-                {verdictCopy.available ? 'This week vs your recent baseline' : 'Building your baseline'}
-              </h2>
-            </div>
-            {verdictCopy.available ? (
-              <Chip tone="accent">4-week baseline</Chip>
-            ) : (
-              <Chip>Needs 4 weeks</Chip>
-            )}
-          </div>
-          <div className="space-y-1.5 text-sm text-ink-muted">
-            {verdictCopy.lines.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-        </Card>
-      </section>
+      <WeeklyVerdictCard verdict={view.weekVerdict} weightUnit={weightUnit} />
 
       <div className="mb-3">
         <Segmented
