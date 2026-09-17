@@ -16,11 +16,11 @@ import {
   StatTile,
   Toggle,
 } from '@/components/ui';
-import { FORMULA_LABEL } from '@/domain/oneRepMax';
+import { FORMULA_EXPRESSION, FORMULA_LABEL } from '@/domain/oneRepMax';
 import { RANGE_DESCRIPTIONS, previousRange, resolveRange, type RangeKey } from '@/domain/time';
 import { titleCase } from '@/domain/taxonomy';
 import type { OneRepMaxFormula } from '@/domain/types';
-import { formatWeight } from '@/domain/units';
+import { formatCount, formatWeight } from '@/domain/units';
 import {
   bucketVolume,
   exerciseOptions,
@@ -119,6 +119,7 @@ export function AnalyticsPage() {
           value={range}
           onChange={setRange}
           options={[
+            { value: '1w', label: '1W' },
             { value: '1m', label: '1M' },
             { value: '3m', label: '3M' },
             { value: '6m', label: '6M' },
@@ -140,6 +141,9 @@ export function AnalyticsPage() {
               <option value="epley">Epley</option>
               <option value="brzycki">Brzycki</option>
             </Select>
+            <span className="mt-1 block text-[11px] text-ink-subtle">
+              {FORMULA_EXPRESSION[formula]}
+            </span>
           </label>
           <Toggle
             label="Include warm-up sets"
@@ -157,19 +161,19 @@ export function AnalyticsPage() {
       </Card>
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile label="Workouts" value={String(view.summary.workouts)} />
+        <StatTile label="Workouts" value={formatCount(view.summary.workouts)} />
         <StatTile
           label="Sets"
-          value={String(view.summary.completedSets)}
+          value={formatCount(view.summary.completedSets)}
           sub={changeLabel(setsChange)}
         />
         <StatTile
           label="Volume"
           value={formatWeightValue(view.summary.volumeG)}
-          sub={`${weightUnit}${volumeChange === null ? '' : ` · ${changeLabel(volumeChange)}`}`}
+          sub={`${weightUnit} (weight × reps)${volumeChange === null ? '' : ` · ${changeLabel(volumeChange)}`}`}
           tone="accent"
         />
-        <StatTile label="Reps" value={String(view.summary.totalReps)} />
+        <StatTile label="Reps" value={formatCount(view.summary.totalReps)} />
       </div>
 
       {(view.summary.repsOnlySets > 0 ||
@@ -193,6 +197,7 @@ export function AnalyticsPage() {
           title={`${granularity === 'week' ? 'Weekly' : 'Monthly'} volume`}
           summary={summariseBuckets(view.buckets, weightUnit)}
           valueLabel={`Volume (${weightUnit})`}
+          xAxisLabel={granularity === 'week' ? 'Week starting' : 'Month'}
           kind="bar"
           formatValue={formatWeightValue}
           series={[
@@ -291,6 +296,15 @@ export function AnalyticsPage() {
           </table>
         )}
       </Card>
+
+      <div className="mb-2 mt-6 border-t border-line pt-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-subtle">
+          Per-exercise detail
+        </h2>
+        <p className="text-xs text-ink-subtle">
+          Everything below tracks one exercise at a time, separate from the totals above.
+        </p>
+      </div>
 
       <Card className="mb-3">
         <label className="text-xs text-ink-muted">

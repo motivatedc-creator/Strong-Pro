@@ -84,6 +84,7 @@ export function HistoryPage() {
             setLimit(PAGE_SIZE);
           }}
           options={[
+            { value: '1w', label: '1W' },
             { value: '1m', label: '1M' },
             { value: '3m', label: '3M' },
             { value: '6m', label: '6M' },

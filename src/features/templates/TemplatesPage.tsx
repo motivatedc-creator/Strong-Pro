@@ -10,11 +10,13 @@ import {
   EmptyState,
   IconButton,
   PageHeader,
+  Sheet,
   Spinner,
   Toggle,
   buttonClasses,
 } from '@/components/ui';
 import { ActiveWorkoutExistsError } from '@/db/dexieRepository';
+import { STARTER_TEMPLATES, buildStarterTemplate } from '@/db/starterTemplates';
 import type { Template } from '@/domain/types';
 
 /** Template list: create, reorder, duplicate, archive, delete — with no limit on how many. */
@@ -23,6 +25,7 @@ export function TemplatesPage() {
   const repository = useRepository();
   const [showArchived, setShowArchived] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Template | null>(null);
+  const [browsingStarters, setBrowsingStarters] = useState(false);
 
   const { data, loading, reload } = useRepositoryData(
     async (repo) => ({
@@ -84,6 +87,16 @@ export function TemplatesPage() {
     reload();
   });
 
+  const [addStarter] = useWrite(async (presetId: string) => {
+    const preset = STARTER_TEMPLATES.find((entry) => entry.id === presetId);
+    if (!preset) return;
+    const order = (data?.templates ?? []).length;
+    const { template, exercises } = buildStarterTemplate(preset, order);
+    await repository.saveTemplate(template, exercises);
+    toast.success(`"${preset.name}" added to your templates.`);
+    reload();
+  });
+
   const templates = data?.templates ?? [];
   const activeTemplates = templates.filter((template) => !template.isArchived);
   const archivedTemplates = templates.filter((template) => template.isArchived);
@@ -95,9 +108,12 @@ export function TemplatesPage() {
         title="Templates"
         subtitle="Reusable session plans. Create as many as you like."
         actions={
-          <Link to="/templates/new" className={buttonClasses('primary')}>
-            New template
-          </Link>
+          <>
+            <Button onClick={() => setBrowsingStarters(true)}>Preset routines</Button>
+            <Link to="/templates/new" className={buttonClasses('primary')}>
+              New template
+            </Link>
+          </>
         }
       />
 
@@ -106,12 +122,17 @@ export function TemplatesPage() {
       {!loading && activeTemplates.length === 0 && archivedTemplates.length === 0 && (
         <EmptyState
           title="No templates yet"
-          description="A template holds your exercises, target sets, rep ranges and rest times so a session starts in one tap."
+          description="A template holds your exercises, target sets, rep ranges and rest times so a session starts in one tap. Build your own, or add one of ours to get moving today."
           icon="▤"
           action={
-            <Link to="/templates/new" className={buttonClasses('primary')}>
-              Create your first template
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button variant="primary" onClick={() => setBrowsingStarters(true)}>
+                Browse preset routines
+              </Button>
+              <Link to="/templates/new" className={buttonClasses('secondary')}>
+                Create from scratch
+              </Link>
+            </div>
           }
         />
       )}
@@ -217,6 +238,35 @@ export function TemplatesPage() {
           )}
         </div>
       )}
+
+      <Sheet
+        open={browsingStarters}
+        onClose={() => setBrowsingStarters(false)}
+        title="Preset routines"
+        description="Add one in a tap, then edit it however you like — nothing here is fixed."
+      >
+        <ul className="space-y-2">
+          {STARTER_TEMPLATES.map((preset) => (
+            <li key={preset.id}>
+              <Card className="p-3">
+                <h3 className="text-sm font-semibold text-ink">{preset.name}</h3>
+                <p className="mt-0.5 text-xs text-ink-muted">{preset.description}</p>
+                <p className="mt-1 text-xs text-ink-subtle">
+                  {preset.exercises.map((entry) => entry.exerciseName).join(' · ')}
+                </p>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  className="mt-2"
+                  onClick={() => void addStarter(preset.id)}
+                >
+                  Add to my templates
+                </Button>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      </Sheet>
 
       <ConfirmDialog
         open={!!confirmDelete}

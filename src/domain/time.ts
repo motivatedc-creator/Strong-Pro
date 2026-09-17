@@ -22,9 +22,10 @@ export function parseIso(value: string | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export type RangeKey = '1m' | '3m' | '6m' | '1y' | 'all';
+export type RangeKey = '1w' | '1m' | '3m' | '6m' | '1y' | 'all';
 
 export const RANGE_LABELS: Record<RangeKey, string> = {
+  '1w': '1W',
   '1m': '1M',
   '3m': '3M',
   '6m': '6M',
@@ -33,6 +34,7 @@ export const RANGE_LABELS: Record<RangeKey, string> = {
 };
 
 export const RANGE_DESCRIPTIONS: Record<RangeKey, string> = {
+  '1w': 'Last week',
   '1m': 'Last month',
   '3m': 'Last 3 months',
   '6m': 'Last 6 months',
@@ -40,7 +42,9 @@ export const RANGE_DESCRIPTIONS: Record<RangeKey, string> = {
   all: 'All time',
 };
 
+// A week-based range is useful because most training programs run on weekly cycles.
 const RANGE_DAYS: Record<Exclude<RangeKey, 'all'>, number> = {
+  '1w': 7,
   '1m': 30,
   '3m': 91,
   '6m': 182,
