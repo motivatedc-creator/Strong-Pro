@@ -69,7 +69,7 @@ export function ExerciseEditor({
       name: exercise?.name ?? initialName ?? '',
     });
     setError('');
-  }, [open, exercise?.id, initialName]);
+  }, [open, exercise, initialName]);
 
   const [save, saving] = useWrite(async () => {
     const name = draft.name.trim();

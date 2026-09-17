@@ -15,6 +15,7 @@ import type {
   OneRepMaxFormula,
   ThemeMode,
   UnitSystem,
+  WeekStartDay,
 } from '@/domain/types';
 import { EquipmentSettings } from './EquipmentSettings';
 
@@ -127,6 +128,20 @@ export function SettingsPage() {
 
           <Card>
             <h2 className="mb-2 text-sm font-semibold text-ink">Analytics</h2>
+            <Segmented
+              label="Training week starts"
+              value={settings.weekStartDay ?? 'monday'}
+              onChange={(value: WeekStartDay) => void update({ weekStartDay: value })}
+              options={[
+                { value: 'saturday', label: 'Saturday' },
+                { value: 'sunday', label: 'Sunday' },
+                { value: 'monday', label: 'Monday' },
+              ]}
+            />
+            <p className="mb-4 mt-2 text-xs text-ink-subtle">
+              Used by Weekly Verdict and the “This week” analytics range. Older installs default to
+              Monday until you choose otherwise.
+            </p>
             <Segmented
               label="One rep max formula"
               value={settings.oneRepMaxFormula}
@@ -254,7 +269,7 @@ export function SettingsPage() {
                   className={
                     settings.accentTheme === theme.id
                       ? 'flex min-h-tap items-center gap-2 rounded border border-accent bg-accent/10 px-3 text-sm font-semibold text-ink'
-                      : 'flex min-h-tap items-center gap-2 rounded border border-line bg-surface-raised px-3 text-sm text-ink-muted'
+                      : 'flex min-h-tap items-center gap-2 rounded border border-line bg-surface-raised px-3 text-sm font-medium text-ink-muted'
                   }
                 >
                   <span

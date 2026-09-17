@@ -171,6 +171,7 @@ export const settingsSchema = z.object({
   unitSystem: z.enum(['metric', 'imperial']),
   oneRepMaxFormula: z.enum(['epley', 'brzycki']),
   intensityMode: z.enum(['rpe', 'rir', 'none']),
+  weekStartDay: z.enum(['saturday', 'sunday', 'monday']).optional(),
   quickIncrementG: count,
   defaultRestSeconds: count,
   restTimerAutoStart: z.boolean(),
