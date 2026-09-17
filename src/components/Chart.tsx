@@ -81,9 +81,16 @@ export interface ChartCardProps {
   height?: number;
   actions?: ReactNode;
   emptyMessage?: string;
-  /** Column header for the data table's value column. */
+  /** Column header for the data table's value column, and the chart's Y-axis label. */
   valueLabel?: string;
+  /** The chart's X-axis label. Every RepForge chart plots against time, so this defaults to "Date". */
+  xAxisLabel?: string;
 }
+
+/** Above this many points, X-axis ticks are thinned and rotated so labels stop overlapping. */
+const DENSE_POINT_THRESHOLD = 12;
+/** Target number of visible X-axis ticks once a chart is dense. */
+const TARGET_TICK_COUNT = 8;
 
 export function ChartCard({
   title,
@@ -95,6 +102,7 @@ export function ChartCard({
   actions,
   emptyMessage = 'Log a few sessions and this chart will fill in.',
   valueLabel = 'Value',
+  xAxisLabel = 'Date',
 }: ChartCardProps) {
   const [showTable, setShowTable] = useState(false);
   const tableId = useId();
@@ -115,6 +123,15 @@ export function ChartCard({
     return [...byLabel.values()];
   }, [series]);
 
+  // A chart with many points (e.g. weekly volume over "All time") gets crowded and
+  // illegible if every tick tries to render — thin them out and angle what remains.
+  const isDense = rows.length > DENSE_POINT_THRESHOLD;
+  const tickInterval = isDense ? Math.max(0, Math.ceil(rows.length / TARGET_TICK_COUNT) - 1) : 0;
+  const chartHeight = isDense ? height + 26 : height;
+  const xAxisProps = isDense
+    ? { interval: tickInterval, angle: -35, textAnchor: 'end' as const, height: 52, dy: 8 }
+    : { interval: 0 as const, height: 30 };
+
   return (
     <section className="rf-card p-4">
       <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -128,10 +145,10 @@ export function ChartCard({
         <EmptyState title="No data in this range" description={emptyMessage} icon="📈" />
       ) : (
         <>
-          <div style={{ height }} className="w-full">
+          <div style={{ height: chartHeight }} className="w-full">
             <ResponsiveContainer width="100%" height="100%">
               {kind === 'line' ? (
-                <LineChart data={rows} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
+                <LineChart data={rows} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
                   <CartesianGrid
                     stroke="rgb(var(--rf-line))"
                     strokeDasharray="3 3"
@@ -142,7 +159,19 @@ export function ChartCard({
                     tick={{ fontSize: 11, fill: 'rgb(var(--rf-ink-subtle))' }}
                     tickLine={false}
                     axisLine={{ stroke: 'rgb(var(--rf-line))' }}
-                    minTickGap={24}
+                    minTickGap={isDense ? 4 : 24}
+                    {...xAxisProps}
+                    label={
+                      isDense
+                        ? undefined
+                        : {
+                            value: xAxisLabel,
+                            position: 'insideBottom',
+                            offset: -2,
+                            fontSize: 11,
+                            fill: 'rgb(var(--rf-ink-subtle))',
+                          }
+                    }
                   />
                   <YAxis
                     tick={{ fontSize: 11, fill: 'rgb(var(--rf-ink-subtle))' }}
@@ -150,6 +179,14 @@ export function ChartCard({
                     axisLine={false}
                     width={56}
                     tickFormatter={(value: number) => formatValue(value)}
+                    label={{
+                      value: valueLabel,
+                      angle: -90,
+                      position: 'insideLeft',
+                      offset: 8,
+                      fontSize: 11,
+                      fill: 'rgb(var(--rf-ink-subtle))',
+                    }}
                   />
                   <Tooltip content={<ChartTooltip formatValue={formatValue} />} />
                   {series.map((entry) => (
@@ -168,7 +205,7 @@ export function ChartCard({
                   ))}
                 </LineChart>
               ) : (
-                <BarChart data={rows} margin={{ top: 4, right: 8, bottom: 0, left: -12 }}>
+                <BarChart data={rows} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
                   <CartesianGrid
                     stroke="rgb(var(--rf-line))"
                     strokeDasharray="3 3"
@@ -179,7 +216,19 @@ export function ChartCard({
                     tick={{ fontSize: 11, fill: 'rgb(var(--rf-ink-subtle))' }}
                     tickLine={false}
                     axisLine={{ stroke: 'rgb(var(--rf-line))' }}
-                    minTickGap={16}
+                    minTickGap={isDense ? 4 : 16}
+                    {...xAxisProps}
+                    label={
+                      isDense
+                        ? undefined
+                        : {
+                            value: xAxisLabel,
+                            position: 'insideBottom',
+                            offset: -2,
+                            fontSize: 11,
+                            fill: 'rgb(var(--rf-ink-subtle))',
+                          }
+                    }
                   />
                   <YAxis
                     tick={{ fontSize: 11, fill: 'rgb(var(--rf-ink-subtle))' }}
@@ -187,6 +236,14 @@ export function ChartCard({
                     axisLine={false}
                     width={56}
                     tickFormatter={(value: number) => formatValue(value)}
+                    label={{
+                      value: valueLabel,
+                      angle: -90,
+                      position: 'insideLeft',
+                      offset: 8,
+                      fontSize: 11,
+                      fill: 'rgb(var(--rf-ink-subtle))',
+                    }}
                   />
                   <Tooltip
                     cursor={{ fill: 'rgb(var(--rf-surface-raised))' }}
@@ -208,20 +265,18 @@ export function ChartCard({
             </ResponsiveContainer>
           </div>
 
-          {series.length > 1 && (
-            <ul className="mt-2 flex flex-wrap gap-3">
-              {series.map((entry) => (
-                <li key={entry.id} className="flex items-center gap-1.5 text-xs text-ink-muted">
-                  <span
-                    aria-hidden="true"
-                    className="inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: entry.color }}
-                  />
-                  {entry.name}
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul className="mt-2 flex flex-wrap gap-3">
+            {series.map((entry) => (
+              <li key={entry.id} className="flex items-center gap-1.5 text-xs text-ink-muted">
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                {entry.name}
+              </li>
+            ))}
+          </ul>
 
           <Button
             size="sm"

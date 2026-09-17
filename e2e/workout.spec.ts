@@ -22,7 +22,7 @@ test.describe('template to history', () => {
     await expect(page.getByRole('heading', { name: 'Push A', level: 2 })).toBeVisible();
 
     // --- start it ---
-    await page.getByRole('button', { name: 'Start' }).first().click();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
     await expect(page.getByRole('button', { name: 'Finish' })).toBeVisible();
     // The template seeded three target sets.
     await expect(page.getByRole('button', { name: /Complete set 1/ })).toBeVisible();

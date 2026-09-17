@@ -74,10 +74,25 @@ export function roundTo(value: number, decimals: number): number {
   return Math.round((value + Number.EPSILON * Math.sign(value || 1)) * factor) / factor;
 }
 
+/** Locale-aware grouping (1,234.5) shared by every place a rounded number is displayed. */
+const groupedNumberFormatter = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 6,
+  useGrouping: true,
+});
+
 export function trimNumber(value: number): string {
   if (!Number.isFinite(value)) return '0';
   if (Object.is(value, -0)) return '0';
-  return String(parseFloat(value.toFixed(6)));
+  // toFixed(6) first strips float artefacts (e.g. 1.0000000001) before grouping.
+  return groupedNumberFormatter.format(parseFloat(value.toFixed(6)));
+}
+
+/** Locale-formatted whole-number count (sets, reps, workouts) — e.g. "13,319". */
+const countFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+
+export function formatCount(value: number): string {
+  if (!Number.isFinite(value)) return '0';
+  return countFormatter.format(Math.round(value));
 }
 
 /** Round canonical grams to the nearest multiple of `incrementG` (used for equipment steps). */
