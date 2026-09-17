@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
-import { Button, Field, NumberInput, Select, Toggle, cx } from '@/components/ui';
+import { Button, Card, Field, NumberInput, Select, Toggle, cx } from '@/components/ui';
 import { calculatePlates, type PlateCalculatorResult } from '@/domain/plateCalculator';
 import type { BarProfile, PlateInventory } from '@/domain/types';
 import { formatWeight, fromGrams, toGrams, trimNumber } from '@/domain/units';
+import {
+  BarPicker,
+  BarbellDiagram,
+  BeginnerPlateGuide,
+  UnknownBarHelper,
+} from './PlateCalculatorVisuals';
 
 /**
  * Plate calculator UI. The maths lives in domain/plateCalculator.ts; this panel only
@@ -36,6 +42,7 @@ export function PlateCalculatorPanel({
   const [inventoryId, setInventoryId] = useState<string>('');
   const [useCollars, setUseCollars] = useState(false);
   const [collarText, setCollarText] = useState('2.5');
+  const [barHelpOpen, setBarHelpOpen] = useState(false);
   const [targetText, setTargetText] = useState(() =>
     initialTargetG !== undefined ? formatWeight(initialTargetG, weightUnit) : '',
   );
@@ -96,7 +103,36 @@ export function PlateCalculatorPanel({
 
   return (
     <div>
-      <Field label={`Target weight (${weightUnit})`}>
+      <Card className="mb-4 border-accent/30 bg-accent/5">
+        <p className="text-sm font-semibold text-ink">Build the weight on the bar</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+          Enter the <strong className="text-ink">total weight</strong> you want to lift, including
+          the bar. Choose the equipment available, and the calculator will show what to load on each
+          side.
+        </p>
+      </Card>
+
+      <BeginnerPlateGuide weightUnit={weightUnit} />
+
+      <BarPicker
+        bars={bars}
+        value={barId}
+        weightUnit={weightUnit}
+        onChange={(nextBarId) => {
+          setBarId(nextBarId);
+          const nextBar = bars.find((entry) => entry.id === nextBarId);
+          if (nextBar?.collarWeightG) {
+            setCollarText(formatWeight(nextBar.collarWeightG, weightUnit));
+          }
+          void update({ defaultBarProfileId: nextBarId });
+        }}
+      />
+
+      <Button variant="ghost" className="mb-4 -mt-2" onClick={() => setBarHelpOpen(true)}>
+        I don't know which bar I'm using
+      </Button>
+
+      <Field label={`Total weight on the bar (${weightUnit})`} hint="Bar + collars + all plates">
         {({ id }) => (
           <NumberInput
             id={id}
@@ -110,27 +146,8 @@ export function PlateCalculatorPanel({
         )}
       </Field>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Bar">
-          {({ id }) => (
-            <Select
-              id={id}
-              value={barId}
-              onChange={(event) => {
-                setBarId(event.target.value);
-                void update({ defaultBarProfileId: event.target.value });
-              }}
-            >
-              {bars.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.name} · {formatWeight(entry.weightG, weightUnit)} {weightUnit}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-
-        <Field label="Plate inventory">
+      <div className="grid gap-3">
+        <Field label="Available plates" hint="Choose the plate set at this rack or gym">
           {({ id }) => (
             <Select
               id={id}
@@ -151,13 +168,13 @@ export function PlateCalculatorPanel({
       </div>
 
       <Toggle
-        label="Collars"
-        description="Adds one collar per side to the loaded weight."
+        label="Include collars"
+        description="Optional. Adds one collar to each side of the bar."
         checked={useCollars}
         onChange={setUseCollars}
       />
       {useCollars && (
-        <Field label={`Collar weight, each (${weightUnit})`}>
+        <Field label={`Weight of one collar (${weightUnit})`} hint="The calculator adds two">
           {({ id }) => (
             <NumberInput
               id={id}
@@ -172,7 +189,8 @@ export function PlateCalculatorPanel({
 
       {inventory && (
         <p className="mb-4 text-xs text-ink-subtle">
-          Counts are <strong>total physical plates</strong>, not pairs — {inventory.name} holds{' '}
+          Counts mean <strong>individual plates</strong>, not pairs. The calculator pairs them
+          automatically. {inventory.name} has{' '}
           {inventory.plates
             .map((plate) => `${plate.count} × ${formatWeight(plate.weightG, weightUnit)}`)
             .join(', ')}{' '}
@@ -206,31 +224,19 @@ export function PlateCalculatorPanel({
           </p>
           <p className="mt-1 text-xs text-ink-muted">{result.message}</p>
 
-          {result.perSide.length > 0 && (
-            <div className="mt-3" aria-hidden="true">
-              <p className="mb-1 text-[11px] uppercase tracking-wide text-ink-subtle">
-                Per side, from the collar out
-              </p>
-              <div className="flex items-end gap-1 overflow-x-auto pb-1">
-                <span className="mr-1 h-3 w-8 shrink-0 rounded bg-ink-subtle" title="Bar" />
-                {result.perSide.flatMap((item) =>
-                  Array.from({ length: item.countPerSide }, (_, index) => (
-                    <span
-                      key={`${item.weightG}-${index}`}
-                      className="flex w-10 shrink-0 items-center justify-center rounded bg-accent text-[10px] font-bold text-accent-ink"
-                      style={{
-                        height: `${Math.max(28, Math.min(84, 28 + fromGrams(item.weightG, 'kg') * 2.2))}px`,
-                      }}
-                    >
-                      {formatWeight(item.weightG, weightUnit)}
-                    </span>
-                  )),
-                )}
-              </div>
-            </div>
-          )}
+          <BarbellDiagram
+            perSide={result.perSide}
+            barWeightG={result.barWeightG + result.collarWeightG * 2}
+            achievedTotalG={result.achievedTotalG}
+            weightUnit={weightUnit}
+          />
 
-          <p className="mt-3 text-sm text-ink">{textResult}</p>
+          <div className="mt-3 rounded border border-line bg-surface px-3 py-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-subtle">
+              Load on each side
+            </p>
+            <p className="mt-1 text-sm text-ink">{textResult}</p>
+          </div>
 
           {onApply && result.status !== 'invalid' && (
             <Button
@@ -244,6 +250,22 @@ export function PlateCalculatorPanel({
           )}
         </div>
       )}
+
+      <UnknownBarHelper
+        open={barHelpOpen}
+        bars={bars}
+        weightUnit={weightUnit}
+        onClose={() => setBarHelpOpen(false)}
+        onChoose={(nextBarId) => {
+          setBarId(nextBarId);
+          setBarHelpOpen(false);
+          const nextBar = bars.find((entry) => entry.id === nextBarId);
+          if (nextBar?.collarWeightG) {
+            setCollarText(formatWeight(nextBar.collarWeightG, weightUnit));
+          }
+          void update({ defaultBarProfileId: nextBarId });
+        }}
+      />
     </div>
   );
 }
