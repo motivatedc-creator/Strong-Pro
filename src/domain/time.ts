@@ -1,4 +1,4 @@
-import type { ISODate, ISODateTime } from './types';
+import type { ISODate, ISODateTime, WeekStartDay } from './types';
 
 export function nowIso(): ISODateTime {
   return new Date().toISOString();
@@ -35,7 +35,7 @@ export const RANGE_LABELS: Record<RangeKey, string> = {
 };
 
 export const RANGE_DESCRIPTIONS: Record<RangeKey, string> = {
-  this_week: 'Monday through today',
+  this_week: 'Your training week through today',
   '4w': 'Last 4 weeks',
   '8w': 'Last 8 weeks',
   '12w': 'Last 12 weeks',
@@ -58,9 +58,26 @@ export interface DateRange {
   to: Date;
 }
 
-export function resolveRange(key: RangeKey, reference: Date = new Date()): DateRange {
+/** Start of the user's configured training week at local midnight. */
+export function startOfTrainingWeek(
+  reference: Date,
+  weekStart: WeekStartDay = 'monday',
+): Date {
+  const targetDay = weekStart === 'saturday' ? 6 : weekStart === 'sunday' ? 0 : 1;
+  const start = new Date(reference);
+  const delta = (start.getDay() - targetDay + 7) % 7;
+  start.setDate(start.getDate() - delta);
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+export function resolveRange(
+  key: RangeKey,
+  reference: Date = new Date(),
+  weekStart: WeekStartDay = 'monday',
+): DateRange {
   if (key === 'all') return { from: null, to: reference };
-  if (key === 'this_week') return { from: startOfIsoWeek(reference), to: reference };
+  if (key === 'this_week') return { from: startOfTrainingWeek(reference, weekStart), to: reference };
   const from = new Date(reference);
   from.setDate(from.getDate() - RANGE_DAYS[key]);
   from.setHours(0, 0, 0, 0);
@@ -68,28 +85,24 @@ export function resolveRange(key: RangeKey, reference: Date = new Date()): DateR
 }
 
 /** The equivalent window immediately before `range`, used for period-over-period deltas. */
-export function previousRange(key: RangeKey, reference: Date = new Date()): DateRange | null {
+export function previousRange(
+  key: RangeKey,
+  reference: Date = new Date(),
+  weekStart: WeekStartDay = 'monday',
+): DateRange | null {
   if (key === 'all') return null;
   if (key === 'this_week') {
-    const currentFrom = startOfIsoWeek(reference);
+    const currentFrom = startOfTrainingWeek(reference, weekStart);
     const from = new Date(currentFrom);
     from.setDate(from.getDate() - 7);
     return { from, to: new Date(currentFrom.getTime() - 1) };
   }
   const days = RANGE_DAYS[key];
-  const currentFrom = resolveRange(key, reference).from!;
+  const currentFrom = resolveRange(key, reference, weekStart).from!;
   const from = new Date(currentFrom);
   from.setDate(from.getDate() - days);
   from.setHours(0, 0, 0, 0);
   return { from, to: new Date(currentFrom.getTime() - 1) };
-}
-
-function startOfIsoWeek(reference: Date): Date {
-  const start = new Date(reference);
-  const day = start.getDay() || 7;
-  start.setDate(start.getDate() - (day - 1));
-  start.setHours(0, 0, 0, 0);
-  return start;
 }
 
 export function isWithin(range: DateRange, value: Date): boolean {
