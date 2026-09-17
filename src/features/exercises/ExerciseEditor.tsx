@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRepository, useWrite } from '@/app/hooks';
 import { toast } from '@/app/store';
 import { Button, Field, Select, Sheet, TextArea, TextInput, Toggle } from '@/components/ui';
@@ -61,6 +61,15 @@ export function ExerciseEditor({
     name: exercise?.name ?? initialName ?? '',
   }));
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!open) return;
+    setDraft({
+      ...toDraft(exercise),
+      name: exercise?.name ?? initialName ?? '',
+    });
+    setError('');
+  }, [open, exercise?.id, initialName]);
 
   const [save, saving] = useWrite(async () => {
     const name = draft.name.trim();
