@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -160,11 +160,12 @@ describe('MuscleSetsCard', () => {
 
     expect(screen.queryByText(/doi:/i)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Why this range' }));
-    expect(screen.getByRole('heading', { name: 'Why 10–20 credited sets' })).toBeInTheDocument();
-    expect(screen.getByText('Research default')).toBeInTheDocument();
+    const sheet = screen.getByRole('dialog');
+    expect(within(sheet).getByRole('heading', { name: 'Why 10–20 credited sets' })).toBeInTheDocument();
+    expect(within(sheet).getByText('Research default')).toBeInTheDocument();
     expect(
-      screen.getByText(/does not cleanly underwrite a discrete upper bound of 20/i),
+      within(sheet).getByText(/does not cleanly underwrite a discrete upper bound of 20/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/doi:10\.1080\/02640414\.2016\.1210197/i)).toBeInTheDocument();
+    expect(within(sheet).getByText(/doi:10\.1080\/02640414\.2016\.1210197/i)).toBeInTheDocument();
   });
 });
