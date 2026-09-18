@@ -17,12 +17,14 @@ import {
   summarise,
   type LoggedEntry,
 } from './compute';
+import { ChangeFlagsCard } from './ChangeFlagsCard';
 import { DataLabQuestions, type DataLabQuestion } from './DataLabQuestions';
 import { AskLabEntry } from './AskLabEntry';
 import { AnalyticsDetailedCharts } from './AnalyticsDetailedCharts';
 import { MuscleSetsCard } from './MuscleSetsCard';
 import { muscleBandBalance } from './muscleSets';
 import { WeeklyVerdictCard } from './WeeklyVerdictCard';
+import { trainingFlags } from './trainingFlags';
 import { weeklyVerdict } from './weeklyVerdict';
 
 /** Data Lab: answers first, with the existing analytics available as inspectable evidence. */
@@ -58,6 +60,7 @@ export function AnalyticsPage() {
     const summary = summarise(current, options);
     const priorSummary = summarise(priorEntries, options);
     const weekVerdict = weeklyVerdict(entries, options, weekStart);
+    const changeFlags = trainingFlags(entries, options, weekStart);
     const effectiveGranularity = range === 'all' ? 'month' : granularity;
     const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
@@ -87,6 +90,7 @@ export function AnalyticsPage() {
       summary,
       priorSummary,
       weekVerdict,
+      changeFlags,
       subjectWeekBalance,
       buckets,
       effectiveGranularity,
@@ -158,6 +162,10 @@ export function AnalyticsPage() {
             void update({ personalMuscleTargets })
           }
         />
+      )}
+
+      {selectedQuestion === 'change' && (
+        <ChangeFlagsCard flags={view.changeFlags} weightUnit={weightUnit} />
       )}
 
       <AskLabEntry
