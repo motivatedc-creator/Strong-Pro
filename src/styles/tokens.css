@@ -1,5 +1,5 @@
 /*
- * Lock'd design tokens.
+ * Lock’d design tokens.
  *
  * Colors are stored as space-separated RGB channels so Tailwind's `<alpha-value>`
  * syntax works (`bg-accent/20`). Light and dark palettes are selected by the
@@ -62,14 +62,14 @@
 /* Dark accents are lifted so primary actions read on near-black. */
 
 :root[data-accent='stamp'] {
-  --rf-accent: 176 48 58;
-  --rf-accent-ink: 252 249 243;
-  --rf-accent-soft: 176 48 58;
+  --rf-accent: 194 74 50;
+  --rf-accent-ink: 250 247 241;
+  --rf-accent-soft: 194 74 50;
 }
 :root[data-accent='stamp'][data-theme='light'] {
-  --rf-accent: 96 28 36;
-  --rf-accent-ink: 252 249 243;
-  --rf-accent-soft: 96 28 36;
+  --rf-accent: 194 74 50;
+  --rf-accent-ink: 250 247 241;
+  --rf-accent-soft: 194 74 50;
 }
 
 :root[data-accent='ember'] {
