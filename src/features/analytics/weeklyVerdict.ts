@@ -69,7 +69,8 @@ export type VerdictEvidenceKey =
   | 'direction_change'
   | 'pulse_hard_sets'
   | 'e1rm'
-  | 'baseline_weeks';
+  | 'baseline_weeks'
+  | 'muscle_balance';
 
 export interface SentencePart {
   type: 'text' | 'metric';
@@ -87,6 +88,10 @@ export interface WeeklyVerdictCopy {
   title: string;
   baselineLabel: string;
   lines: VerdictSentence[];
+  /** Dedicated muscle-band balance slot for the subject (last completed) week. */
+  balance?: VerdictSentence;
+  /** Stable id for the balance sentence (tests / a11y). */
+  balanceId?: string;
   pulse?: VerdictSentence;
 }
 
