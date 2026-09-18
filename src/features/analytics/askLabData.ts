@@ -8,7 +8,7 @@ import {
   filterByRange,
   type AnalyticsOptions,
 } from './compute';
-import { muscleSetInsight } from './muscleSets';
+import { muscleBandBalance, muscleBandBalanceSentence } from './muscleSets';
 import { shiftLocalDate, startOfTrainingWeekDate } from './trainingWeeks';
 import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
 import {
@@ -45,15 +45,21 @@ function analyticsOptions(context: AskLabContext): AnalyticsOptions {
 export function answerTrainingEnough(query: string, context: AskLabContext): AskLabAnswer {
   const reference = context.reference ?? new Date();
   const referenceLocalDate = localDateOf(reference);
-  const weekStartDate = startOfTrainingWeekDate(referenceLocalDate, context.weekStart);
-  const weekEndDate = shiftLocalDate(weekStartDate, 6);
-  const insights = muscleSetInsight(context.entries, {
+  const balance = muscleBandBalance(context.entries, {
     referenceLocalDate,
     weekStart: context.weekStart,
     secondaryCredit: context.secondaryCredit,
     personalTargetBands: context.personalTargetBands,
   });
-  const matches = claimLinks('weekly-credited-sets-10-20', 'secondary-set-credit-default');
+  const weekStartDate = balance.weekStartDate;
+  const weekEndDate = balance.weekEndDate;
+  const insights = balance.insights;
+  const balanceSentence = muscleBandBalanceSentence(balance);
+  const matches = claimLinks(
+    'weekly-credited-sets-10-20',
+    'secondary-set-credit-default',
+    'personal-muscle-targets',
+  );
 
   if (insights.length === 0) {
     return {
@@ -71,6 +77,9 @@ export function answerTrainingEnough(query: string, context: AskLabContext): Ask
         weekEndDate,
         muscles: [],
         evidence: [],
+        balanceId: balanceSentence.id,
+        balancePlain: balanceSentence.plain,
+        insufficientMapping: true,
       },
     };
   }
@@ -114,18 +123,34 @@ export function answerTrainingEnough(query: string, context: AskLabContext): Ask
     );
   }
 
+  const lead =
+    balance.insufficientMapping
+      ? balanceSentence.plain
+      : balanceSentence.plain;
   return {
     query,
-    tier: 'computed',
+    tier: balance.insufficientMapping ? 'partial' : 'computed',
     intent: 'training_enough',
-    call: `Current training week ${weekStartDate} → ${weekEndDate}: ${summaryParts.join('; ') || `${muscles.length} muscle totals from logged working sets`}.`,
+    call: `Current training week ${weekStartDate} → ${weekEndDate}: ${lead}`,
     matches,
+    known: balance.insufficientMapping
+      ? `Logged sets this week do not map to targetable muscles (or lack targets).`
+      : undefined,
+    missing: balance.insufficientMapping
+      ? 'Mapped working sets on targetable muscles, or personal targets where needed.'
+      : undefined,
+    nextStep: balance.insufficientMapping
+      ? 'Map exercises to muscles in Library, or ask again after logging targetable work.'
+      : undefined,
     payload: {
       kind: 'training_enough',
       weekStartDate,
       weekEndDate,
       muscles,
       evidence,
+      balanceId: balanceSentence.id,
+      balancePlain: balanceSentence.plain,
+      insufficientMapping: balance.insufficientMapping,
     },
   };
 }
@@ -151,12 +176,13 @@ export function answerMuscleContribution(query: string, context: AskLabContext):
     };
   }
 
-  const insights = muscleSetInsight(context.entries, {
+  const balance = muscleBandBalance(context.entries, {
     referenceLocalDate,
     weekStart: context.weekStart,
     secondaryCredit: context.secondaryCredit,
     personalTargetBands: context.personalTargetBands,
   });
+  const insights = balance.insights;
   const row = insights.find((insight) => insight.muscle === muscle);
   if (!row || row.evidence.length === 0) {
     return {
