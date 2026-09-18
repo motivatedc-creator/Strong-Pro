@@ -77,6 +77,7 @@ export const ACCENT_THEMES: Array<{
   description: string;
   swatch: string;
 }> = [
+  { id: 'stamp', name: 'Stamp', description: 'Ink seal on paper', swatch: '#b0303a' },
   { id: 'ember', name: 'Seal', description: 'Stamp amber on ink', swatch: '#f2b044' },
   { id: 'glacier', name: 'Ledger', description: 'Trust blue for data', swatch: '#8cbacc' },
   { id: 'moss', name: 'Success', description: 'Completed-session green', swatch: '#7ab08a' },
