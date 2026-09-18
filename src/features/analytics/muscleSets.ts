@@ -128,3 +128,109 @@ function validBand(band: MuscleTargetBand | undefined): MuscleTargetBand | undef
   if (band.min < 0 || band.max > 100 || band.max < band.min) return undefined;
   return band;
 }
+
+export const MUSCLE_BAND_LIST_CAP = 3;
+
+export type MuscleBandBalanceSentenceId =
+  | 'balance_insufficient_mapping'
+  | 'balance_judged';
+
+export interface MuscleBandBalance {
+  weekStartDate: string;
+  weekEndDate: string;
+  /** Full insight rows from muscleSetInsight (same totals everywhere). */
+  insights: MuscleSetInsight[];
+  /** Targetable muscles with a comparable band state. */
+  judged: MuscleSetInsight[];
+  below: MuscleSetInsight[];
+  inRange: MuscleSetInsight[];
+  above: MuscleSetInsight[];
+  /** Empty week, or only unmapped / not_set rows — no honest band judgment. */
+  insufficientMapping: boolean;
+}
+
+export interface MuscleBandBalanceSentence {
+  id: MuscleBandBalanceSentenceId;
+  plain: string;
+}
+
+/**
+ * Shared muscle-band compute for Data Lab, Weekly Verdict balance, and Ask the Lab.
+ * Always delegates credited-set math to muscleSetInsight — never forks totals.
+ */
+export function muscleBandBalance(
+  entries: readonly LoggedEntry[],
+  options: MuscleSetInsightOptions,
+): MuscleBandBalance {
+  const weekStartDate = startOfTrainingWeekDate(options.referenceLocalDate, options.weekStart);
+  const weekEndDate = shiftLocalDate(weekStartDate, 6);
+  const insights = muscleSetInsight(entries, options);
+  const below = insights.filter((row) => row.state === 'below');
+  const inRange = insights.filter((row) => row.state === 'in_range');
+  const above = insights.filter((row) => row.state === 'above');
+  const judged = [...below, ...inRange, ...above].sort(
+    (a, b) => b.sets - a.sets || a.muscle.localeCompare(b.muscle),
+  );
+
+  return {
+    weekStartDate,
+    weekEndDate,
+    insights,
+    judged,
+    below,
+    inRange,
+    above,
+    insufficientMapping: judged.length === 0,
+  };
+}
+
+/** Caps a muscle name list: top N, then "+K more". */
+export function formatMuscleNameList(
+  rows: readonly MuscleSetInsight[],
+  cap: number = MUSCLE_BAND_LIST_CAP,
+): string {
+  if (rows.length === 0) return '';
+  const names = rows.map((row) => titleCaseMuscle(row.muscle));
+  if (names.length <= cap) return names.join(', ');
+  const shown = names.slice(0, cap).join(', ');
+  const more = names.length - cap;
+  return `${shown} + ${more} more`;
+}
+
+/**
+ * One receipt-like balance sentence for the subject training week.
+ * Stable ids for Verdict tests; never invents percentages.
+ */
+export function muscleBandBalanceSentence(
+  balance: MuscleBandBalance,
+): MuscleBandBalanceSentence {
+  if (balance.insufficientMapping) {
+    return {
+      id: 'balance_insufficient_mapping',
+      plain: 'Not enough mapped volume to judge balance.',
+    };
+  }
+
+  const parts: string[] = [];
+  if (balance.below.length > 0) {
+    parts.push(`${formatMuscleNameList(balance.below)} below`);
+  }
+  if (balance.inRange.length > 0) {
+    parts.push(`${formatMuscleNameList(balance.inRange)} in range`);
+  }
+  if (balance.above.length > 0) {
+    parts.push(`${formatMuscleNameList(balance.above)} above`);
+  }
+
+  return {
+    id: 'balance_judged',
+    plain: `Balance: ${parts.join('; ')}.`,
+  };
+}
+
+function titleCaseMuscle(muscle: MuscleGroup): string {
+  return muscle
+    .split(' ')
+    .map((part) => (part.length === 0 ? part : part[0]!.toUpperCase() + part.slice(1)))
+    .join(' ');
+}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, Chip } from '@/components/ui';
 import type { WeightUnit } from '@/domain/units';
 import { VerdictEvidenceSheet, formatDateRange } from './VerdictEvidenceSheet';
+import type { MuscleBandBalance } from './muscleSets';
 import {
   weeklyVerdictCopy,
   type SentencePart,
@@ -12,12 +13,15 @@ import {
 export function WeeklyVerdictCard({
   verdict,
   weightUnit,
+  muscleBalance = null,
 }: {
   verdict: WeeklyVerdict;
   weightUnit: WeightUnit;
+  /** Subject-week muscle-band balance from shared muscleBandBalance helper. */
+  muscleBalance?: MuscleBandBalance | null;
 }) {
   const [evidenceKey, setEvidenceKey] = useState<VerdictEvidenceKey | null>(null);
-  const copy = weeklyVerdictCopy(verdict, weightUnit);
+  const copy = weeklyVerdictCopy(verdict, weightUnit, muscleBalance);
 
   return (
     <section aria-labelledby="weekly-verdict-heading">
@@ -45,6 +49,17 @@ export function WeeklyVerdictCard({
           ))}
         </div>
 
+        {copy.balance && (
+          <div
+            className="mt-2 flex min-h-11 flex-wrap items-center px-1 py-1 text-sm text-ink-muted"
+            role="region"
+            aria-label="Muscle balance"
+            data-balance-id={copy.balanceId}
+          >
+            <SentenceParts parts={copy.balance.parts} onOpen={setEvidenceKey} />
+          </div>
+        )}
+
         {copy.pulse && (
           <div className="mt-3 flex min-h-11 flex-wrap items-center border-t border-line px-1 pt-3 text-xs text-ink-subtle">
             <SentenceParts parts={copy.pulse.parts} onOpen={setEvidenceKey} />
@@ -58,6 +73,7 @@ export function WeeklyVerdictCard({
         verdict={verdict}
         weightUnit={weightUnit}
         focusKey={evidenceKey ?? undefined}
+        muscleBalance={muscleBalance}
       />
     </section>
   );

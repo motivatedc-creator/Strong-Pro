@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { MuscleGroup, SetType, Workout, WorkoutExercise, WorkoutSet } from '@/domain/types';
 import type { LoggedEntry } from './compute';
-import { muscleSetInsight } from './muscleSets';
+import {
+  muscleBandBalance,
+  muscleBandBalanceSentence,
+  muscleSetInsight,
+} from './muscleSets';
 
 let id = 0;
 
@@ -199,5 +203,117 @@ describe('muscleSetInsight', () => {
       'full body': 'not_set',
       unmapped: 'unmapped',
     });
+  });
+});
+
+describe('muscleBandBalance', () => {
+  it('classifies a below / in_range / above mix from shared insight totals', () => {
+    const entries = [
+      entry({ date: '2026-09-15', primary: 'chest', secondary: [], setTypes: Array(5).fill('working') }),
+      entry({ date: '2026-09-16', primary: 'back', secondary: [], setTypes: Array(12).fill('working') }),
+      entry({ date: '2026-09-17', primary: 'quads', secondary: [], setTypes: Array(22).fill('working') }),
+    ];
+    const balance = muscleBandBalance(entries, {
+      referenceLocalDate: '2026-09-17',
+      weekStart: 'monday',
+      secondaryCredit: 0.5,
+    });
+
+    expect(balance.below.map((row) => row.muscle)).toEqual(['chest']);
+    expect(balance.inRange.map((row) => row.muscle)).toEqual(['back']);
+    expect(balance.above.map((row) => row.muscle)).toEqual(['quads']);
+    expect(balance.insufficientMapping).toBe(false);
+    expect(muscleBandBalanceSentence(balance)).toEqual({
+      id: 'balance_judged',
+      plain: 'Balance: Chest below; Back in range; Quads above.',
+    });
+    // Same totals as muscleSetInsight for the same week/options
+    const insights = muscleSetInsight(entries, {
+      referenceLocalDate: '2026-09-17',
+      weekStart: 'monday',
+      secondaryCredit: 0.5,
+    });
+    expect(balance.insights).toEqual(insights);
+  });
+
+  it('honours a personal override for band state and source', () => {
+    const entries = [
+      entry({ date: '2026-09-15', primary: 'chest', secondary: [], setTypes: Array(3).fill('working') }),
+    ];
+    const balance = muscleBandBalance(entries, {
+      referenceLocalDate: '2026-09-17',
+      weekStart: 'monday',
+      secondaryCredit: 0.5,
+      personalTargetBands: { chest: { min: 2, max: 4 } },
+    });
+    expect(balance.inRange).toHaveLength(1);
+    expect(balance.inRange[0]).toMatchObject({
+      muscle: 'chest',
+      sets: 3,
+      targetSource: 'personal',
+      target: { min: 2, max: 4 },
+    });
+  });
+
+  it('returns insufficient mapping for an unmapped-only week', () => {
+    const balance = muscleBandBalance(
+      [entry({ date: '2026-09-15', primary: 'unmapped', secondary: [], setTypes: ['working'] })],
+      { referenceLocalDate: '2026-09-17', weekStart: 'monday', secondaryCredit: 0.5 },
+    );
+    expect(balance.insufficientMapping).toBe(true);
+    expect(balance.judged).toEqual([]);
+    expect(muscleBandBalanceSentence(balance)).toEqual({
+      id: 'balance_insufficient_mapping',
+      plain: 'Not enough mapped volume to judge balance.',
+    });
+  });
+
+  it.each([
+    ['saturday' as const, '2026-09-12', 2],
+    ['sunday' as const, '2026-09-13', 1],
+    ['monday' as const, '2026-09-14', 0],
+  ])('respects %s weekStart for credited sets', (weekStart, includedDate, expectedChest) => {
+    const balance = muscleBandBalance(
+      [entry({ date: '2026-09-12', secondary: [] }), entry({ date: '2026-09-13', secondary: [] })],
+      { referenceLocalDate: includedDate, weekStart, secondaryCredit: 0.5 },
+    );
+    expect(balance.insights.find((row) => row.muscle === 'chest')?.sets ?? 0).toBe(expectedChest);
+  });
+
+  it('applies secondary credit in the shared balance path', () => {
+    const balance = muscleBandBalance(
+      [entry({ date: '2026-09-15', primary: 'chest', secondary: ['triceps'], setTypes: ['working', 'working'] })],
+      { referenceLocalDate: '2026-09-17', weekStart: 'monday', secondaryCredit: 0.5 },
+    );
+    expect(balance.insights.find((row) => row.muscle === 'chest')?.sets).toBe(2);
+    expect(balance.insights.find((row) => row.muscle === 'triceps')?.sets).toBe(1);
+  });
+
+  it('caps long muscle lists with +N more', () => {
+    const setTypes = Array(12).fill('working') as Array<'working'>;
+    const entries = [
+      entry({ date: '2026-09-15', primary: 'chest', secondary: [], setTypes }),
+      entry({ date: '2026-09-15', primary: 'back', secondary: [], setTypes, exerciseName: 'Row' }),
+      entry({ date: '2026-09-15', primary: 'lats', secondary: [], setTypes, exerciseName: 'Pulldown' }),
+      entry({ date: '2026-09-15', primary: 'traps', secondary: [], setTypes, exerciseName: 'Shrug' }),
+      entry({ date: '2026-09-15', primary: 'shoulders', secondary: [], setTypes, exerciseName: 'OHP' }),
+    ];
+    // Force below via personal high mins
+    const personalTargetBands = {
+      chest: { min: 20, max: 30 },
+      back: { min: 20, max: 30 },
+      lats: { min: 20, max: 30 },
+      traps: { min: 20, max: 30 },
+      shoulders: { min: 20, max: 30 },
+    };
+    const balance = muscleBandBalance(entries, {
+      referenceLocalDate: '2026-09-17',
+      weekStart: 'monday',
+      secondaryCredit: 0.5,
+      personalTargetBands,
+    });
+    const sentence = muscleBandBalanceSentence(balance);
+    expect(sentence.id).toBe('balance_judged');
+    expect(sentence.plain).toContain('+ 2 more below');
   });
 });
