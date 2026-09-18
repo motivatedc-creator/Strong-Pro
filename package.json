@@ -1,9 +1,9 @@
 {
-  "name": "repforge",
+  "name": "lockd",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "RepForge — a free, local-first, offline-first strength training tracker.",
+  "description": "Lock’d — a free, local-first, offline-first strength training tracker.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

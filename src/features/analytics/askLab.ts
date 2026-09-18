@@ -246,9 +246,10 @@ function answerExplore(query: string): AskLabAnswer {
     call: EXPLORE_BADGE,
     matches: [],
     known: 'Ask the Lab answers from your logged training or the shared evidence catalog.',
-    missing: 'A data question (training enough, muscle contribution, verdict, strength) or a catalog claim.',
+    missing:
+      'A data question (training enough, muscle contribution, verdict, strength) or a catalog claim.',
     nextStep:
-      "Try a starter chip, or ask about a Lock'd default (10–20 sets, 0.5 secondary, e1RM).",
+      'Try a starter chip, or ask about a Lock’d default (10–20 sets, 0.5 secondary, e1RM).',
   };
 }
 
@@ -263,7 +264,7 @@ export function answerAskLab(query: string, context?: AskLabContext): AskLabAnsw
       query,
       tier: 'partial',
       intent: null,
-      call: "Ask about your logged training, or a Lock'd default / formula.",
+      call: 'Ask about your logged training, or a Lock’d default / formula.',
       matches: [],
       missing: 'A question.',
       nextStep: 'Pick a starter chip or type a training question.',

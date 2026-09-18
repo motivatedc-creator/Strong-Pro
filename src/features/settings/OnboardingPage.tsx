@@ -28,7 +28,7 @@ export function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
-        <img src="/brand/app-icon-master.svg" alt="Lockd" className="h-14 w-14 rounded-2xl" />
+        <img src="/brand/app-icon-master.svg" alt="Lock’d" className="h-14 w-14 rounded-2xl" />
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">LOCKD</h1>
           <p className="text-sm text-ink-muted">Keep the receipt.</p>
@@ -39,7 +39,7 @@ export function OnboardingPage() {
         <Card>
           <h2 className="text-base font-semibold text-ink">Your record stays on this device</h2>
           <ul className="mt-2 space-y-2 text-sm text-ink-muted">
-            <li>• Lock'd logs the work you did. Not a guess. Not a highlight reel.</li>
+            <li>• Lock’d logs the work you did. Not a guess. Not a highlight reel.</li>
             <li>• Sessions live in a local database on this device.</li>
             <li>• Nothing is uploaded. The file stays here.</li>
             <li>• Works in airplane mode once installed.</li>

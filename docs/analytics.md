@@ -1,6 +1,6 @@
-# RepForge analytics rules
+# Lock’d analytics rules
 
-Every number in RepForge is recomputed from your stored sets when a screen opens. No
+Every number in Lock’d is recomputed from your stored sets when a screen opens. No
 aggregate is persisted as a source of truth, so editing or deleting a workout immediately
 and correctly changes everything derived from it, including personal records.
 
@@ -47,7 +47,7 @@ Rules:
 
 Assisted exercises record the assistance removed from bodyweight, not the load lifted, so
 including them would be actively wrong. Bodyweight and cardio work carries no external
-load; RepForge reports it separately rather than inventing a number for it.
+load; Lock’d reports it separately rather than inventing a number for it.
 
 A set is counted exactly once, even when the same exercise appears twice in a session.
 

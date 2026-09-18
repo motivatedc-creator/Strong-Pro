@@ -30,7 +30,7 @@ export function AskLabEntry({
           <div>
             <p className="text-sm font-semibold text-ink">Ask the Lab</p>
             <p className="mt-1 text-xs text-ink-muted">
-              Questions about your logged training — plus Lock'd defaults — answered from
+              Questions about your logged training — plus Lock’d defaults — answered from
               app-computed data and the shared evidence layer.
             </p>
           </div>

@@ -108,7 +108,7 @@ export function SideNav() {
             LOCKD
           </span>
           <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-ink-subtle">
-            Keep the receipt
+            Keep the receipt.
           </span>
         </div>
       </div>

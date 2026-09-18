@@ -88,8 +88,7 @@ export const EVIDENCE_SOURCES: readonly EvidenceSource[] = [
 export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
   {
     id: 'weekly-credited-sets-10-20',
-    statement:
-      'A practical weekly starting band for credited working sets per muscle is 10–20.',
+    statement: 'A practical weekly starting band for credited working sets per muscle is 10–20.',
     kind: 'evidence_backed_default',
     behaviors: ['research_muscle_target', 'data_lab_enough_volume', 'personal_target_fallback'],
     sourceIds: [
@@ -102,7 +101,7 @@ export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
     interpretation:
       'Higher weekly set volume tends to grow muscle more than lower volume, with diminishing returns. ACSM 2026 highlights about ≥10 hard sets/week among hypertrophy findings. Schoenfeld 2017 shows a graded dose-response often summarized with a 10+ bin. Pelland 2026 models volume continuously rather than as a fixed 10–20 band.',
     limitations:
-      "Literature supports a positive dose-response and often a ≥10 lower region; it does not cleanly underwrite a discrete upper bound of 20. Lock'd keeps 10–20 as a stable product default so existing personal training against that band is not silently rewritten. Personal targets override it.",
+      'Literature supports a positive dose-response and often a ≥10 lower region; it does not cleanly underwrite a discrete upper bound of 20. Lock’d keeps 10–20 as a stable product default so existing personal training against that band is not silently rewritten. Personal targets override it.',
     lastReviewed: '2026-09-18',
   },
   {
@@ -114,7 +113,7 @@ export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
     sourceIds: ['pelland-2026-dose-response'],
     support: 'partial',
     interpretation:
-      "Pelland 2026 finds fractional counting of indirect sets (0.5) fits dose-response data better than counting every indirect set as a full set. Lock'd's default 0.5 matches that spirit for credited-set accounting, and remains user-editable.",
+      'Pelland 2026 finds fractional counting of indirect sets (0.5) fits dose-response data better than counting every indirect set as a full set. Lock’d’s default 0.5 matches that spirit for credited-set accounting, and remains user-editable.',
     limitations:
       'Fractional credit here is a product heuristic for attributed volume and credited sets, not a claim that every secondary muscle always receives half the hypertrophic stimulus of the primary.',
     lastReviewed: '2026-09-18',
@@ -153,7 +152,7 @@ export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
     sourceIds: ['brzycki-1993'],
     support: 'partial',
     interpretation:
-      "High-rep sets are useful training data but make 1RM estimates too noisy to show as strength. Brzycki's chart was aimed at lower-rep fatigue sets; Lock'd hard-caps at 12.",
+      "High-rep sets are useful training data but make 1RM estimates too noisy to show as strength. Brzycki's chart was aimed at lower-rep fatigue sets; Lock’d hard-caps at 12.",
     limitations:
       'The exact cap of 12 is a product reliability rule, not a universal scientific cutoff.',
     lastReviewed: '2026-09-18',
@@ -187,15 +186,14 @@ export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
   {
     id: 'proximity-to-failure-context',
     statement:
-      "Training near failure can matter for hypertrophy, but Lock'd does not currently prescribe an RIR target.",
+      'Training near failure can matter for hypertrophy, but Lock’d does not currently prescribe an RIR target.',
     kind: 'implementation_heuristic',
     behaviors: ['future_ask_the_lab'],
     sourceIds: ['refalo-2023-proximity', 'schoenfeld-2021-iusca'],
     support: 'partial',
     interpretation:
       'Refalo 2023 finds little clear hypertrophy advantage for forcing momentary failure versus hard non-failure training when other factors are matched. Catalogued so Ask the Lab can cite the same layer later.',
-    limitations:
-      'Not surfaced as a Data Lab recommendation yet. Included for consolidation only.',
+    limitations: 'Not surfaced as a Data Lab recommendation yet. Included for consolidation only.',
     lastReviewed: '2026-09-18',
   },
 ];

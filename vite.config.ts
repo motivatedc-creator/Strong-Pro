@@ -11,10 +11,10 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['brand/*.svg', 'brand/*.png', 'icons/*.svg'],
       manifest: {
-        name: "Lock'd — Workout Tracker",
+        name: 'Lockd',
         short_name: 'Lockd',
         description:
-          'A local-first workout log: keep the receipt. Templates, analytics, measurements and plate math — offline, on your device.',
+          'A local-first workout log: keep the receipt. Routines, analytics, measurements and plate math — offline, on your device.',
         theme_color: '#0a0a0b',
         background_color: '#0a0a0b',
         display: 'standalone',

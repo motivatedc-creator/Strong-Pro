@@ -12,7 +12,7 @@ import {
 import { Icon, Icons } from './icons';
 
 /**
- * Lock'd UI primitives.
+ * Lock’d UI primitives.
  *
  * Rules baked in here rather than left to each screen:
  *  - every interactive control is at least 44x44 px,

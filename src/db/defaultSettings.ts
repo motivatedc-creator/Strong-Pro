@@ -1,7 +1,7 @@
 import { defaultQuickIncrementG } from '@/domain/units';
 import type { AppSettings } from '@/domain/types';
 
-/** Fresh-install defaults. Stamp is the Lock'd ink/paper accent (not ember gold). */
+/** Fresh-install defaults. Stamp is the Lock’d ink/paper accent (not ember gold). */
 export function defaultSettings(now: string): AppSettings {
   return {
     id: 'settings',

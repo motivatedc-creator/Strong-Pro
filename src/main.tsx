@@ -19,7 +19,7 @@ createRoot(container).render(
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    toast.info('A new version of Lockd is ready.');
+    toast.info('A new version of Lock’d is ready.');
     window.addEventListener(
       'rf-apply-update',
       () => {
@@ -29,6 +29,6 @@ const updateSW = registerSW({
     );
   },
   onOfflineReady() {
-    toast.success('Lockd is ready offline.');
+    toast.success('Lock’d is ready offline.');
   },
 });

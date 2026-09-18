@@ -1,18 +1,18 @@
-# RepForge
+# Lock’d
 
-A free, subscription-free, local-first workout tracker for lifters. Templates, fast set
+A free, subscription-free, local-first workout tracker for lifters. Routines, fast set
 logging, rest timers, progress analytics, body measurements and plate maths — all stored
 on your device, all working offline.
 
-RepForge is an original, independent product. It has no accounts, no ads, no analytics
+Lock’d is an original, independent product. It has no accounts, no ads, no analytics
 SDK, no telemetry and no server. It is not affiliated with any other fitness app.
 
 ## What it does
 
-- **Log fast.** Start empty or from a template; recently used exercises appear first, previous-
+- **Log fast.** Start empty or from a routine; recently used exercises appear first, previous-
   session values sit beside every set, one tap copies them, and one tap completes a set and
   starts the rest timer.
-- **Templates without limits.** Target sets, rep ranges, RPE/RIR targets, rest times, set
+- **Routines without limits.** Target sets, rep ranges, RPE/RIR targets, rest times, set
   types and superset grouping. Duplicate, reorder, archive, delete.
 - **Real analytics.** Estimated 1RM (Epley or Brzycki), heaviest set, session and weekly
   volume, muscle-group attribution and rep records — all recomputed from your stored sets.
@@ -84,8 +84,9 @@ src/
 
 The layering rule: `domain/` knows nothing about React or storage, `db/` knows nothing
 about React, and feature code talks to storage only through the `RepForgeRepository`
-interface in `src/db/repository.ts`. That interface is the seam where a native SQLite
-adapter can replace Dexie without touching feature logic.
+interface in `src/db/repository.ts`. The legacy internal type name is retained to avoid an
+unnecessary migration. That interface is the seam where a native SQLite adapter can replace
+Dexie without touching feature logic.
 
 ## Local data model
 
@@ -118,7 +119,7 @@ Storage conventions:
 
 ## Data privacy
 
-Your workouts, measurements and settings stay in this browser's local database. RepForge
+Your workouts, measurements and settings stay in this browser's local database. Lock’d
 makes no network requests after the initial page load: there is no backend, no account, no
 analytics and no telemetry. Data leaves the device only when you explicitly export it, and
 the export is a file download. Deleting site data (or using Settings → Data → Delete
@@ -131,7 +132,7 @@ everything) removes it permanently, so take a backup first.
 - **Download JSON backup** — a complete, versioned backup (format `repforge-backup`,
   version 1; see [docs/data-format.md](docs/data-format.md)).
 - **Download CSV files** — five spreadsheet-safe files: sets, workouts, exercises,
-  templates and measurements. Values that begin with `=`, `+`, `-`, `@` or a control
+  routines and measurements. Values that begin with `=`, `+`, `-`, `@` or a control
   character are prefixed with `'` so a note cannot execute as a spreadsheet formula.
 - **Restore** — choose a JSON backup. It is validated against the schema and previewed
   before anything is written. **Merge** adds what is missing and skips workouts you already
@@ -144,7 +145,7 @@ everything) removes it permanently, so take a backup first.
 **Settings → Data → Open the import wizard**, or `/settings/import`.
 
 1. Export your data as CSV from the Strong app and save it to this device.
-2. Choose the file. RepForge parses it locally — nothing is uploaded.
+2. Choose the file. Lock’d parses it locally — nothing is uploaded.
 3. Confirm the column mapping. Recognised headers are matched automatically, case- and
    accent-insensitively; anything unmatched can be mapped by hand.
 4. Review the preview: workouts found, rows skipped, row-level errors and warnings, and
@@ -207,7 +208,7 @@ npm install @capacitor/local-notifications
 npm run cap:sync
 ```
 
-RepForge detects the plugin at runtime. Without it, the web fallback is used and the app
+Lock’d detects the plugin at runtime. Without it, the web fallback is used and the app
 says so rather than pretending a background notification was scheduled.
 
 ### iOS alternate app icons
@@ -221,7 +222,7 @@ To enable it:
 2. In `Info.plist`, declare them under `CFBundleIcons` → `CFBundleAlternateIcons`, with
    `UIPrerenderedIcon` set as you prefer.
 3. Install a Capacitor plugin that exposes `AlternateIcon.change({ name })` (any plugin
-   wrapping `setAlternateIconName` works — RepForge probes for it at runtime).
+   wrapping `setAlternateIconName` works — Lock’d probes for it at runtime).
 4. Rebuild. Settings → Appearance → App icon then switches the icon immediately.
 
 Signing is yours to configure: a Capacitor iOS build needs an Apple Developer account, a
@@ -240,14 +241,14 @@ Stated honestly, because each one is a platform constraint rather than missing w
 - **There is no reliable background timer on the web.** The rest timer stores an absolute
   end timestamp and recomputes from it, so it is always correct when you come back — but a
   browser cannot wake a suspended tab to fire a notification. Native builds schedule a real
-  local notification; on the web the notification only fires while RepForge is open.
+  local notification; on the web the notification only fires while Lock’d is open.
 - **Vibration is unavailable in iOS Safari.** The setting exists and is honoured wherever
   the Vibration API is implemented.
 - **Storage can be evicted.** IndexedDB in a browser is subject to eviction under storage
-  pressure, and private browsing may block it entirely. RepForge shows an explained,
+  pressure, and private browsing may block it entirely. Lock’d shows an explained,
   recoverable screen instead of a blank page if the database cannot be opened. Keep
   backups.
-- **CSV import depends on your export.** RepForge reads the file you export yourself. If a
+- **CSV import depends on your export.** Lock’d reads the file you export yourself. If a
   future export changes its columns, the wizard's manual mapping step covers it.
 - **Analytics need weighted sets.** Bodyweight, duration and distance work carries no
   external load, so it contributes no tonnage by design. See
@@ -260,5 +261,5 @@ Stated honestly, because each one is a platform constraint rather than missing w
 
 ## Licence
 
-Released for personal use. The RepForge name, interface and icon artwork are original to
+Released for personal use. The Lock’d identity, interface and icon artwork are original to
 this project.

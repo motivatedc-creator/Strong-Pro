@@ -1,6 +1,6 @@
-# RepForge JSON backup format
+# Lock’d JSON backup format
 
-A backup is a single UTF-8 JSON file. It contains everything RepForge stores about you and
+A backup is a single UTF-8 JSON file. It contains everything Lock’d stores about you and
 nothing else: no identifiers beyond the app's own UUIDs, no device information, no
 telemetry.
 
@@ -21,7 +21,7 @@ telemetry.
 | `format`     | Always `repforge-backup`. A file without it is rejected.                                                     |
 | `version`    | Backup format version (currently `1`). A newer version than the app knows is rejected rather than half-read. |
 | `exportedAt` | ISO-8601 UTC timestamp of the export.                                                                        |
-| `appVersion` | RepForge version that produced the file.                                                                     |
+| `appVersion` | Lock’d version that produced the file.                                                                       |
 | `data`       | The payload described below.                                                                                 |
 
 ## Payload
@@ -61,7 +61,7 @@ unit is a display preference, not a storage format.
 - `templateExercises.templateId` → `templates.id`
 - `workoutExercises.exerciseId` and `templateExercises.exerciseId` → `exercises.id`
 
-On restore, RepForge validates the whole file with Zod first, reports any rows whose
+On restore, Lock’d validates the whole file with Zod first, reports any rows whose
 parents are missing, and prunes those rows rather than writing dangling references.
 
 ## Restore semantics
