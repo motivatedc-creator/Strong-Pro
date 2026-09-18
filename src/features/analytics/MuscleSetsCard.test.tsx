@@ -154,4 +154,17 @@ describe('MuscleSetsCard', () => {
     expect(screen.getByText('Target not set')).toBeInTheDocument();
     expect(screen.getByText(/does not use a muscle target range/i)).toBeInTheDocument();
   });
+
+  it('opens research evidence for the 10–20 default without dumping sources on the card', async () => {
+    renderCard();
+
+    expect(screen.queryByText(/doi:/i)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Why this range' }));
+    expect(screen.getByRole('heading', { name: 'Why 10–20 credited sets' })).toBeInTheDocument();
+    expect(screen.getByText('Research default')).toBeInTheDocument();
+    expect(
+      screen.getByText(/does not cleanly underwrite a discrete upper bound of 20/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/doi:10\.1080\/02640414\.2016\.1210197/i)).toBeInTheDocument();
+  });
 });
