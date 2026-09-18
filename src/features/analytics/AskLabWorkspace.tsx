@@ -204,6 +204,22 @@ export function AskLabWorkspace({
                 </p>
               )}
 
+              {answer.payload?.kind === 'change_flags' &&
+                answer.payload.activeLabels.length > 0 && (
+                  <ul className="divide-y divide-line rounded-xl border border-line bg-surface-raised px-3">
+                    {answer.payload.activeLabels.map((label, index) => (
+                      <li key={label} className="py-2 text-sm">
+                        <p className="font-semibold text-ink">{label}</p>
+                        <p className="mt-0.5 text-xs text-ink-muted">
+                          {answer.payload?.kind === 'change_flags'
+                            ? answer.payload.receipts[index]
+                            : null}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
               {answer.matches.length > 0 && (
                 <ul className="space-y-2" aria-label="Cited claims">
                   {answer.matches.map(({ claim }) => (
