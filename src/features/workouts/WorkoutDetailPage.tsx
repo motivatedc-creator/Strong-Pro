@@ -13,6 +13,7 @@ import {
   TextArea,
   TextInput,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { ExercisePicker } from '@/features/exercises/ExercisePicker';
 import { elapsedSeconds, formatDateTime } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
@@ -151,7 +152,7 @@ export function WorkoutDetailPage() {
                   label={`Remove ${entry.exercise.exerciseNameSnapshot} from this workout`}
                   onClick={() => void removeExercise(entry.exercise.id)}
                 >
-                  <span aria-hidden="true">🗑</span>
+                  <Icon icon={Icons.trash} size={16} />
                 </IconButton>
               </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { Button, Card, Field, NumberInput, Select, Toggle, cx } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { calculatePlates, type PlateCalculatorResult } from '@/domain/plateCalculator';
 import type { BarProfile, PlateInventory } from '@/domain/types';
 import { formatWeight, fromGrams, toGrams, trimNumber } from '@/domain/units';
@@ -210,8 +211,14 @@ export function PlateCalculatorPanel({
           )}
         >
           <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <span aria-hidden="true">
-              {result.status === 'exact' ? '✓' : result.status === 'invalid' ? '✕' : '≈'}
+            <span aria-hidden="true" className="flex items-center">
+              {result.status === 'exact' ? (
+                <Icon icon={Icons.check} size={16} />
+              ) : result.status === 'invalid' ? (
+                <Icon icon={Icons.close} size={16} />
+              ) : (
+                '≈'
+              )}
             </span>
             {formatWeight(result.achievedTotalG, weightUnit)} {weightUnit}
             {result.differenceG !== 0 && Number.isFinite(targetG) && (

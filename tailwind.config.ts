@@ -29,11 +29,12 @@ const config: Config = {
         'danger-ink': 'rgb(var(--rf-danger-ink) / <alpha-value>)',
       },
       borderRadius: {
-        sm: '0.125rem',
-        DEFAULT: '0.25rem',
-        lg: '0.375rem',
-        xl: '1.125rem',
+        sm: '0.5rem',
+        DEFAULT: '0.75rem',
+        lg: '1rem',
+        xl: '1.25rem',
         '2xl': '1.5rem',
+        '3xl': '1.75rem',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -44,13 +45,16 @@ const config: Config = {
         'data-lg': ['1.75rem', { lineHeight: '2rem', fontWeight: '700' }],
       },
       boxShadow: {
-        card: '0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px -12px rgb(0 0 0 / 0.25)',
-        sheet: '0 -8px 40px -12px rgb(0 0 0 / 0.45)',
+        card: '0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -16px rgb(0 0 0 / 0.55)',
+        sheet: '0 -12px 48px -12px rgb(0 0 0 / 0.55)',
       },
       spacing: {
         'safe-b': 'env(safe-area-inset-bottom, 0px)',
         'safe-t': 'env(safe-area-inset-top, 0px)',
         tap: '2.75rem',
+      },
+      transitionTimingFunction: {
+        out: 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
       keyframes: {
         'rf-rise': {
@@ -59,13 +63,12 @@ const config: Config = {
         },
         'rf-pop': {
           '0%': { transform: 'scale(0.96)' },
-          '60%': { transform: 'scale(1.02)' },
           '100%': { transform: 'scale(1)' },
         },
       },
       animation: {
-        rise: 'rf-rise 180ms ease-out both',
-        pop: 'rf-pop 160ms ease-out both',
+        rise: 'rf-rise 250ms cubic-bezier(0.22, 1, 0.36, 1) both',
+        pop: 'rf-pop 160ms cubic-bezier(0.22, 1, 0.36, 1) both',
       },
     },
   },

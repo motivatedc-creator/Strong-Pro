@@ -1,16 +1,22 @@
 import { Link } from 'react-router-dom';
 import { Card, PageHeader } from '@/components/ui';
+import { Icon, Icons, type LucideIcon } from '@/components/icons';
 
-const TOOLS = [
+const TOOLS: Array<{
+  to: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}> = [
   {
     to: '/tools/plates',
-    icon: '🥏',
+    icon: Icons.plates,
     title: 'Plate calculator',
     description: 'Exact plates per side, based on your bar and the plates available.',
   },
   {
     to: '/tools/warmup',
-    icon: '🔥',
+    icon: Icons.flame,
     title: 'Warm-up generator',
     description: 'A ramp to your working weight, rounded to loads you can actually build.',
   },
@@ -25,11 +31,11 @@ export function ToolsPage() {
         {TOOLS.map((tool) => (
           <li key={tool.to}>
             <Link to={tool.to} className="block">
-              <Card className="h-full p-4 hover:border-accent/60">
-                <span aria-hidden="true" className="text-2xl">
-                  {tool.icon}
+              <Card className="h-full p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-raised text-ink-muted">
+                  <Icon icon={tool.icon} size={20} />
                 </span>
-                <h2 className="mt-2 text-sm font-semibold text-ink">{tool.title}</h2>
+                <h2 className="mt-3 text-sm font-semibold text-ink">{tool.title}</h2>
                 <p className="mt-1 text-xs text-ink-muted">{tool.description}</p>
               </Card>
             </Link>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRepository, useWrite } from '@/app/hooks';
 import { toast } from '@/app/store';
 import { Button, Field, Select, Sheet, TextArea, TextInput, Toggle } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import {
   EQUIPMENT,
   MOVEMENT_PATTERNS,
@@ -185,7 +186,11 @@ export function ExerciseEditor({
                     : 'min-h-[2.25rem] rounded-full border border-line bg-surface-raised px-3 text-xs font-medium text-ink-muted'
                 }
               >
-                {selected ? '✓ ' : ''}
+                {selected ? (
+                  <span className="mr-1 inline-flex">
+                    <Icon icon={Icons.check} size={12} strokeWidth={2.5} />
+                  </span>
+                ) : null}
                 {titleCase(muscle)}
               </button>
             );

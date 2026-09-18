@@ -4,6 +4,7 @@ import { useRepository, useRepositoryData, useWrite } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { toast } from '@/app/store';
 import { Button, Card, ConfirmDialog, Segmented, Sheet, TextInput } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import type { BackupPayload } from '@/db/repository';
 import { formatDateTime } from '@/domain/time';
 import {
@@ -181,7 +182,7 @@ export function DataSettings() {
         {validation && !validation.ok && (
           <div>
             <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-danger">
-              <span aria-hidden="true">⚠</span>
+              <Icon icon={Icons.warning} size={14} />
               This file is not a valid RepForge backup, so nothing was changed.
             </p>
             <ul className="list-disc space-y-1 pl-5 text-xs text-ink-muted">

@@ -17,6 +17,7 @@ import type {
   UnitSystem,
   WeekStartDay,
 } from '@/domain/types';
+import { Icon, Icons } from '@/components/icons';
 import { EquipmentSettings } from './EquipmentSettings';
 
 const SECTIONS = ['training', 'timers', 'equipment', 'appearance', 'data', 'about'] as const;
@@ -278,7 +279,9 @@ export function SettingsPage() {
                     style={{ backgroundColor: theme.swatch }}
                   />
                   <span className="min-w-0 truncate">{theme.name}</span>
-                  {settings.accentTheme === theme.id && <span aria-hidden="true">✓</span>}
+                  {settings.accentTheme === theme.id && (
+                    <Icon icon={Icons.check} size={14} strokeWidth={2.5} />
+                  )}
                 </button>
               ))}
             </div>

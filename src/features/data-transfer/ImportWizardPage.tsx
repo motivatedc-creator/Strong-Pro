@@ -13,6 +13,7 @@ import {
   Toggle,
   cx,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { formatDate } from '@/domain/time';
 import { formatWeight, type WeightUnit } from '@/domain/units';
 import { useSettings } from '@/app/SettingsProvider';
@@ -268,8 +269,14 @@ export function ImportWizardPage() {
                     key={`${issue.row}-${index}`}
                     className={cx(issue.severity === 'error' ? 'text-danger' : 'text-warning')}
                   >
-                    <span aria-hidden="true">{issue.severity === 'error' ? '✕' : '⚠'}</span> Row{' '}
-                    {issue.row}: {issue.message}
+                    <span aria-hidden="true" className="inline-flex">
+                      {issue.severity === 'error' ? (
+                        <Icon icon={Icons.close} size={14} />
+                      ) : (
+                        <Icon icon={Icons.warning} size={14} />
+                      )}
+                    </span>{' '}
+                    Row {issue.row}: {issue.message}
                   </li>
                 ))}
               </ul>
@@ -389,7 +396,7 @@ export function ImportWizardPage() {
       {step === 'done' && result && (
         <Card>
           <h2 className="flex items-center gap-2 text-sm font-semibold text-success">
-            <span aria-hidden="true">✓</span>
+            <Icon icon={Icons.check} size={16} />
             Import complete
           </h2>
           <ul className="mt-2 space-y-1 text-sm text-ink-muted">

@@ -15,8 +15,8 @@ export default defineConfig({
         short_name: 'Certified',
         description:
           'A local-first workout log: your reps, your receipts. Templates, analytics, measurements and plate math — offline, on your device.',
-        theme_color: '#1c1b19',
-        background_color: '#1c1b19',
+        theme_color: '#0a0a0b',
+        background_color: '#0a0a0b',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',

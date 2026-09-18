@@ -9,9 +9,10 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import { Icon, Icons } from './icons';
 
 /**
- * RepForge UI primitives.
+ * Certified UI primitives.
  *
  * Rules baked in here rather than left to each screen:
  *  - every interactive control is at least 44x44 px,
@@ -29,16 +30,17 @@ type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-accent text-accent-ink hover:brightness-110 active:brightness-95',
-  secondary: 'bg-surface-raised text-ink border border-line hover:border-accent',
+  secondary:
+    'bg-surface-raised text-ink shadow-[inset_0_0_0_1px_rgb(var(--rf-line))] hover:bg-surface',
   ghost: 'bg-transparent text-ink-muted hover:text-ink hover:bg-surface-raised',
   danger: 'bg-danger text-danger-ink hover:brightness-110',
   success: 'bg-success text-canvas hover:brightness-110',
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: 'min-h-[2.25rem] px-3 text-sm',
-  md: 'min-h-tap px-4 text-sm',
-  lg: 'min-h-[3.25rem] px-5 text-base',
+  sm: 'min-h-[2.25rem] px-3 text-sm rounded-lg',
+  md: 'min-h-tap px-4 text-sm rounded-xl',
+  lg: 'min-h-[3.25rem] px-5 text-base rounded-xl',
 };
 
 /**
@@ -51,8 +53,10 @@ export function buttonClasses(
   block = false,
 ): string {
   return cx(
-    'inline-flex items-center justify-center gap-2 rounded font-semibold transition',
-    'disabled:cursor-not-allowed disabled:opacity-50',
+    'inline-flex items-center justify-center gap-2 font-semibold',
+    'transition-[transform,filter,background-color,color,opacity] duration-150 ease-out',
+    'active:scale-[0.96]',
+    'disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
     VARIANTS[variant],
     SIZES[size],
     block && 'w-full',
@@ -83,14 +87,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type}
-      className={cx(
-        'inline-flex items-center justify-center gap-2 rounded font-semibold transition',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        VARIANTS[variant],
-        SIZES[size],
-        block && 'w-full',
-        className,
-      )}
+      className={cx(buttonClasses(variant, size, block), className)}
       {...rest}
     >
       {icon}
@@ -115,7 +112,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       aria-label={label}
       title={label}
       className={cx(
-        'inline-flex h-tap w-tap shrink-0 items-center justify-center rounded transition',
+        'inline-flex h-tap w-tap shrink-0 items-center justify-center rounded-xl',
+        'transition-[transform,background-color,color,opacity] duration-150 ease-out',
+        'active:scale-[0.96] disabled:active:scale-100',
         'disabled:cursor-not-allowed disabled:opacity-50',
         VARIANTS[variant],
         className,
@@ -168,7 +167,7 @@ export function Field({ label, hint, error, children }: FieldProps) {
           role="alert"
           className="mt-1 flex items-center gap-1 text-xs font-medium text-danger"
         >
-          <span aria-hidden="true">⚠</span>
+          <Icon icon={Icons.warning} size={14} />
           {error}
         </p>
       )}
@@ -238,7 +237,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="inline-flex w-full gap-1 rounded-lg border border-line bg-surface-raised p-1"
+      className="inline-flex w-full gap-1 rounded-2xl bg-surface-raised p-1 shadow-[inset_0_0_0_1px_rgb(var(--rf-line))]"
     >
       {options.map((option) => {
         const selected = option.value === value;
@@ -251,7 +250,8 @@ export function Segmented<T extends string>({
             title={option.hint}
             onClick={() => onChange(option.value)}
             className={cx(
-              'flex-1 rounded px-2 font-semibold transition',
+              'flex-1 rounded-xl px-2 font-semibold transition-[background-color,color,transform] duration-150 ease-out',
+              'active:scale-[0.98]',
               size === 'sm' ? 'min-h-[2.25rem] text-xs' : 'min-h-tap text-sm',
               selected
                 ? 'bg-accent text-accent-ink shadow-sm'
@@ -297,18 +297,18 @@ export function Toggle({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={cx(
-          'relative h-7 w-12 shrink-0 rounded-full border transition disabled:opacity-50',
-          checked ? 'border-accent bg-accent' : 'border-line bg-surface-raised',
+          'relative h-7 w-12 shrink-0 rounded-full transition-[background-color] duration-150 ease-out disabled:opacity-50',
+          checked ? 'bg-accent' : 'bg-surface-raised shadow-[inset_0_0_0_1px_rgb(var(--rf-line))]',
         )}
       >
         <span
           className={cx(
-            'absolute top-0.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold transition-all',
+            'absolute top-0.5 flex h-5 w-5 items-center justify-center rounded-full transition-[left,background-color] duration-150 ease-out',
             checked ? 'left-6 bg-accent-ink text-accent' : 'left-0.5 bg-ink-subtle text-surface',
           )}
           aria-hidden="true"
         >
-          {checked ? '✓' : ''}
+          {checked ? <Icon icon={Icons.check} size={12} strokeWidth={2.5} /> : null}
         </span>
       </button>
     </div>
@@ -326,10 +326,10 @@ export function Chip({
 }) {
   const tones: Record<string, string> = {
     neutral: 'border-line bg-surface-raised text-ink-muted',
-    accent: 'border-accent/50 bg-accent/15 text-accent',
-    success: 'border-success/50 bg-success/15 text-success',
-    warning: 'border-warning/50 bg-warning/15 text-warning',
-    danger: 'border-danger/50 bg-danger/15 text-danger',
+    accent: 'border-accent/40 bg-accent/15 text-accent',
+    success: 'border-success/40 bg-success/15 text-success',
+    warning: 'border-warning/40 bg-warning/15 text-warning',
+    danger: 'border-danger/40 bg-danger/15 text-danger',
   };
   return (
     <span className={cx('rf-chip', tones[tone])}>
@@ -343,7 +343,7 @@ export function EmptyState({
   title,
   description,
   action,
-  icon = '🏋️',
+  icon,
 }: {
   title: string;
   description: string;
@@ -351,9 +351,9 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="rf-card flex flex-col items-center gap-3 px-6 py-10 text-center">
-      <span className="text-3xl" aria-hidden="true">
-        {icon}
+    <div className="rf-card flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-raised text-ink-subtle">
+        {icon ?? <Icon icon={Icons.dumbbell} size={22} />}
       </span>
       <h2 className="text-base font-semibold text-ink">{title}</h2>
       <p className="max-w-sm text-sm text-ink-muted">{description}</p>
@@ -387,9 +387,9 @@ export function ErrorNotice({
   onRetry?: () => void;
 }) {
   return (
-    <div role="alert" className="rf-card border-danger/50 p-4">
+    <div role="alert" className="rf-card p-4">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-danger">
-        <span aria-hidden="true">⚠</span>
+        <Icon icon={Icons.warning} size={16} />
         {title}
       </h2>
       <p className="mt-1 text-sm text-ink-muted">{message}</p>
@@ -473,7 +473,7 @@ export function Sheet({
         type="button"
         aria-label="Close"
         tabIndex={-1}
-        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/65"
         onClick={onClose}
       />
       <div
@@ -482,12 +482,12 @@ export function Sheet({
         aria-modal="true"
         aria-labelledby={titleId}
         className={cx(
-          'relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-line bg-surface shadow-sheet',
-          'animate-rise sm:rounded-2xl',
+          'relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-surface shadow-sheet',
+          'animate-rise sm:rounded-3xl',
           size === 'lg' ? 'sm:max-w-2xl' : 'sm:max-w-lg',
         )}
       >
-        <header className="flex items-start justify-between gap-3 border-b border-line px-4 py-3">
+        <header className="flex items-start justify-between gap-3 px-5 py-4">
           <div>
             <h2 id={titleId} className="text-base font-semibold text-ink">
               {title}
@@ -495,14 +495,12 @@ export function Sheet({
             {description && <p className="mt-0.5 text-xs text-ink-muted">{description}</p>}
           </div>
           <IconButton label="Close" onClick={onClose}>
-            <span aria-hidden="true" className="text-lg">
-              ✕
-            </span>
+            <Icon icon={Icons.close} size={18} />
           </IconButton>
         </header>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-2">{children}</div>
         {footer && (
-          <footer className="border-t border-line bg-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <footer className="bg-surface px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {footer}
           </footer>
         )}
@@ -562,10 +560,12 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="truncate text-xl font-bold text-ink">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-ink-muted">{subtitle}</p>}
+        <h1 className="truncate font-display text-[1.75rem] leading-none tracking-tight text-ink">
+          {title}
+        </h1>
+        {subtitle && <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
@@ -584,17 +584,31 @@ export function StatTile({
   tone?: 'neutral' | 'accent' | 'success';
 }) {
   return (
-    <div className="rf-card px-3 py-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-ink-subtle">{label}</p>
+    <div
+      className="rounded-2xl bg-surface px-3 py-3.5"
+      style={{ boxShadow: 'var(--shadow-border)' }}
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-subtle">
+        {label}
+      </p>
       <p
         className={cx(
-          'mt-1 text-data-lg tabular-nums',
+          'mt-1.5 text-data-lg tabular-nums',
           tone === 'accent' ? 'text-accent' : tone === 'success' ? 'text-success' : 'text-ink',
         )}
       >
         {value}
       </p>
       {sub && <p className="mt-0.5 text-xs text-ink-muted">{sub}</p>}
+    </div>
+  );
+}
+
+export function SectionHeading({ children, action }: { children: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <h2 className="rf-section-label">{children}</h2>
+      {action}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cx } from '@/components/ui';
+import { Icon, Icons, type LucideIcon } from '@/components/icons';
 
 /**
  * Navigation model.
@@ -12,24 +13,35 @@ import { cx } from '@/components/ui';
 export interface NavItem {
   to: string;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   /** Shown in the phone bottom bar. */
   primary: boolean;
   end?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/', label: 'Today', icon: '⌂', primary: true, end: true },
-  { to: '/templates', label: 'Routines', icon: '▤', primary: true },
-  { to: '/history', label: 'History', icon: '⏱', primary: true },
-  { to: '/analytics', label: 'Data Lab', icon: '📈', primary: true },
-  { to: '/measurements', label: 'Measurements', icon: '📏', primary: false },
-  { to: '/tools', label: 'Tools', icon: '🧮', primary: false },
-  { to: '/exercises', label: 'Library', icon: '🏋', primary: false },
-  { to: '/settings', label: 'Settings', icon: '⚙', primary: false },
+  { to: '/', label: 'Today', icon: Icons.today, primary: true, end: true },
+  { to: '/templates', label: 'Routines', icon: Icons.routines, primary: true },
+  { to: '/history', label: 'History', icon: Icons.history, primary: true },
+  { to: '/analytics', label: 'Data Lab', icon: Icons.analytics, primary: true },
+  { to: '/measurements', label: 'Measurements', icon: Icons.measurements, primary: false },
+  { to: '/tools', label: 'Tools', icon: Icons.tools, primary: false },
+  { to: '/exercises', label: 'Library', icon: Icons.library, primary: false },
+  { to: '/settings', label: 'Settings', icon: Icons.settings, primary: false },
 ];
 
 const MORE_PATHS = NAV_ITEMS.filter((item) => !item.primary).map((item) => item.to);
+
+function NavGlyph({ icon, active }: { icon: LucideIcon; active: boolean }) {
+  return (
+    <Icon
+      icon={icon}
+      size={20}
+      strokeWidth={active ? 2.1 : 1.7}
+      className={active ? 'text-accent' : 'text-current'}
+    />
+  );
+}
 
 export function BottomNav() {
   const location = useLocation();
@@ -38,7 +50,8 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 bg-surface/92 backdrop-blur-xl lg:hidden"
+      style={{ boxShadow: '0 -1px 0 rgb(var(--rf-line) / 0.7)' }}
     >
       <ul className="mx-auto flex max-w-lg items-stretch justify-between px-1 pb-[env(safe-area-inset-bottom)]">
         {NAV_ITEMS.filter((item) => item.primary).map((item) => (
@@ -48,24 +61,22 @@ export function BottomNav() {
               end={item.end}
               className={({ isActive }) =>
                 cx(
-                  'flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded px-1 py-1 text-[11px] font-medium transition',
+                  'flex min-h-[3.5rem] flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-semibold tracking-wide transition-colors duration-150',
                   isActive ? 'text-accent' : 'text-ink-subtle hover:text-ink',
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <span aria-hidden="true" className="text-lg leading-none">
-                    {item.icon}
+                  <span
+                    className={cx(
+                      'flex h-8 w-8 items-center justify-center rounded-full transition-[background-color] duration-150',
+                      isActive && 'bg-accent/15',
+                    )}
+                  >
+                    <NavGlyph icon={item.icon} active={isActive} />
                   </span>
                   <span>{item.label}</span>
-                  <span
-                    aria-hidden="true"
-                    className={cx(
-                      'h-0.5 w-6 rounded-full',
-                      isActive ? 'bg-accent' : 'bg-transparent',
-                    )}
-                  />
                 </>
               )}
             </NavLink>
@@ -75,19 +86,20 @@ export function BottomNav() {
           <NavLink
             to="/more"
             className={cx(
-              'flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded px-1 py-1 text-[11px] font-medium transition',
+              'flex min-h-[3.5rem] flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-semibold tracking-wide transition-colors duration-150',
               moreActive ? 'text-accent' : 'text-ink-subtle hover:text-ink',
             )}
             aria-current={moreActive ? 'page' : undefined}
           >
-            <span aria-hidden="true" className="text-lg leading-none">
-              ⋯
+            <span
+              className={cx(
+                'flex h-8 w-8 items-center justify-center rounded-full transition-[background-color] duration-150',
+                moreActive && 'bg-accent/15',
+              )}
+            >
+              <NavGlyph icon={Icons.more} active={moreActive} />
             </span>
             <span>More</span>
-            <span
-              aria-hidden="true"
-              className={cx('h-0.5 w-6 rounded-full', moreActive ? 'bg-accent' : 'bg-transparent')}
-            />
           </NavLink>
         </li>
       </ul>
@@ -97,15 +109,19 @@ export function BottomNav() {
 
 export function SideNav() {
   return (
-    <nav
-      aria-label="Primary"
-      className="hidden w-60 shrink-0 border-r border-line bg-surface px-3 py-5 lg:block"
-    >
-      <div className="mb-6 flex items-center gap-2 px-2">
+    <nav aria-label="Primary" className="hidden w-60 shrink-0 bg-surface px-3 py-6 lg:block">
+      <div className="mb-8 flex items-center gap-2.5 px-2">
         <img src="/brand/symbol.svg" alt="" aria-hidden="true" className="h-8 w-8" />
-        <span className="font-mono text-lg font-bold tracking-tight text-ink">CERTIFIED</span>
+        <div>
+          <span className="block font-display text-lg font-extrabold tracking-tight text-ink">
+            CERTIFIED
+          </span>
+          <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-ink-subtle">
+            Your receipts
+          </span>
+        </div>
       </div>
-      <ul className="space-y-1">
+      <ul className="space-y-0.5">
         {NAV_ITEMS.map((item) => (
           <li key={item.to}>
             <NavLink
@@ -113,22 +129,24 @@ export function SideNav() {
               end={item.end}
               className={({ isActive }) =>
                 cx(
-                  'flex min-h-tap items-center gap-3 rounded px-3 text-sm font-medium transition',
+                  'flex min-h-tap items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150',
                   isActive
-                    ? 'bg-accent/15 text-accent'
+                    ? 'bg-accent/12 text-accent'
                     : 'text-ink-muted hover:bg-surface-raised hover:text-ink',
                 )
               }
             >
-              <span aria-hidden="true" className="text-base">
-                {item.icon}
-              </span>
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <NavGlyph icon={item.icon} active={isActive} />
+                  {item.label}
+                </>
+              )}
             </NavLink>
           </li>
         ))}
       </ul>
-      <p className="mt-6 px-3 text-xs text-ink-subtle">
+      <p className="mt-8 px-3 text-xs leading-relaxed text-ink-subtle">
         Your reps. Your receipts. Local-first, always.
       </p>
     </nav>

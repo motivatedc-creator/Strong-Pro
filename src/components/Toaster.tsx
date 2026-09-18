@@ -1,19 +1,27 @@
 import { useEffect } from 'react';
 import { useAppStore, type Toast } from '@/app/store';
 import { Button, cx } from './ui';
+import { Icon, Icons, type LucideIcon } from './icons';
 
 const TONES: Record<Toast['tone'], string> = {
-  info: 'border-line bg-surface-raised text-ink',
-  success: 'border-success/60 bg-surface-raised text-ink',
-  warning: 'border-warning/60 bg-surface-raised text-ink',
-  danger: 'border-danger/60 bg-surface-raised text-ink',
+  info: 'bg-surface-raised text-ink',
+  success: 'bg-surface-raised text-ink',
+  warning: 'bg-surface-raised text-ink',
+  danger: 'bg-surface-raised text-ink',
 };
 
-const ICONS: Record<Toast['tone'], string> = {
-  info: 'ℹ',
-  success: '✓',
-  warning: '⚠',
-  danger: '✕',
+const ICONS: Record<Toast['tone'], LucideIcon> = {
+  info: Icons.info,
+  success: Icons.check,
+  warning: Icons.warning,
+  danger: Icons.close,
+};
+
+const ICON_TONES: Record<Toast['tone'], string> = {
+  info: 'text-ink-muted',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger',
 };
 
 function ToastRow({ toast }: { toast: Toast }) {
@@ -27,12 +35,13 @@ function ToastRow({ toast }: { toast: Toast }) {
   return (
     <div
       className={cx(
-        'pointer-events-auto flex items-center gap-3 rounded-lg border px-3 py-2 shadow-card animate-rise',
+        'pointer-events-auto flex items-center gap-3 rounded-2xl px-3 py-2.5 animate-rise',
         TONES[toast.tone],
       )}
+      style={{ boxShadow: 'var(--shadow-border)' }}
     >
-      <span aria-hidden="true" className="text-sm">
-        {ICONS[toast.tone]}
+      <span className={ICON_TONES[toast.tone]}>
+        <Icon icon={ICONS[toast.tone]} size={16} />
       </span>
       <p className="flex-1 text-sm">{toast.message}</p>
       {toast.action && (

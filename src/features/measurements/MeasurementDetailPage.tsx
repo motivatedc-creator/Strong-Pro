@@ -12,6 +12,7 @@ import {
   Spinner,
   StatTile,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { MEASUREMENT_METRICS, metricKind, metricLabel } from '@/domain/taxonomy';
 import { formatDate, isWithin, resolveRange, type RangeKey } from '@/domain/time';
 import { formatLength, formatWeight, fromGrams, fromMillimetres, trimNumber } from '@/domain/units';
@@ -104,7 +105,7 @@ export function MeasurementDetailPage() {
         <EmptyState
           title="Nothing logged in this range"
           description="Pick a wider range, or add an entry to start the trend."
-          icon="📏"
+          icon={<Icon icon={Icons.measurements} size={22} />}
           action={
             <Button variant="primary" onClick={() => setAdding(true)}>
               Log {metricLabel(metricValue).toLowerCase()}

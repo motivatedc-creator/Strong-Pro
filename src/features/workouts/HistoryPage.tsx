@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDebouncedValue, useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { Button, EmptyState, PageHeader, Segmented, Spinner, TextInput } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import {
   elapsedSeconds,
   formatDate,
@@ -105,7 +106,7 @@ export function HistoryPage() {
               ? 'Try a different exercise name, workout name or note.'
               : 'Finish a session and it will appear here with its sets, volume and records.'
           }
-          icon="⏱"
+          icon={<Icon icon={Icons.history} size={22} />}
         />
       )}
 

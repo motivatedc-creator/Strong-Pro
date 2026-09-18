@@ -14,6 +14,7 @@ import {
   TextInput,
   Toggle,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { EQUIPMENT, MUSCLE_GROUPS, titleCase, trackingLabel } from '@/domain/taxonomy';
 import type { Equipment, Exercise, MuscleGroup } from '@/domain/types';
 import { ExerciseEditor } from './ExerciseEditor';
@@ -117,7 +118,7 @@ export function ExerciseLibraryPage() {
         <EmptyState
           title="No exercises match"
           description="Adjust the filters, or add a custom exercise for the movement you need."
-          icon="🔍"
+          icon={<Icon icon={Icons.search} size={22} />}
           action={
             <Button variant="primary" onClick={() => setCreating(true)}>
               New exercise

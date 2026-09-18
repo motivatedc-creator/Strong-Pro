@@ -13,8 +13,8 @@ export const THEME_STORAGE_KEY = 'repforge.theme';
 
 /** Meta theme-color per resolved mode, matching --rf-canvas. */
 const THEME_COLOR: Record<'light' | 'dark', string> = {
-  dark: '#1c1b19',
-  light: '#f3eee6',
+  dark: '#0a0a0b',
+  light: '#f4efe6',
 };
 
 export interface StoredTheme {
@@ -77,8 +77,8 @@ export const ACCENT_THEMES: Array<{
   description: string;
   swatch: string;
 }> = [
-  { id: 'ember', name: 'Seal', description: 'Stamp amber on ink', swatch: '#e8a33d' },
-  { id: 'glacier', name: 'Ledger', description: 'Trust blue for data', swatch: '#3e5c6b' },
-  { id: 'moss', name: 'Success', description: 'Completed-session green', swatch: '#4c7a5a' },
-  { id: 'violet', name: 'Slate', description: 'Quiet blue-grey', swatch: '#70818b' },
+  { id: 'ember', name: 'Seal', description: 'Stamp amber on ink', swatch: '#f2b044' },
+  { id: 'glacier', name: 'Ledger', description: 'Trust blue for data', swatch: '#8cbacc' },
+  { id: 'moss', name: 'Success', description: 'Completed-session green', swatch: '#7ab08a' },
+  { id: 'violet', name: 'Slate', description: 'Quiet blue-grey', swatch: '#a8b4be' },
 ];

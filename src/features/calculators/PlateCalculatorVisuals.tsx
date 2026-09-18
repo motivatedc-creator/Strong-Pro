@@ -1,4 +1,5 @@
 import { Button, Card, Sheet, cx } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import type { BarProfile } from '@/domain/types';
 import { formatWeight, fromGrams, type WeightUnit } from '@/domain/units';
 import type { PlateStackItem } from '@/domain/plateCalculator';
@@ -73,7 +74,7 @@ export function BarPicker({
                     selected ? 'border-accent bg-accent text-accent-ink' : 'border-line',
                   )}
                 >
-                  {selected ? '✓' : ''}
+                  {selected ? <Icon icon={Icons.check} size={14} strokeWidth={2.5} /> : null}
                 </span>
               </span>
               <span className="mt-2 block text-xs leading-relaxed text-ink-muted">

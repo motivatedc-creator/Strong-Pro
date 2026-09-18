@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '@/app/SettingsProvider';
 import { Button, Card, Segmented } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { ACCENT_THEMES } from '@/platform/theme';
 import { nowIso } from '@/domain/time';
 import { defaultQuickIncrementG } from '@/domain/units';
@@ -27,11 +28,7 @@ export function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
-        <img
-          src="/brand/app-icon-master.svg"
-          alt="Certified"
-          className="h-14 w-14 rounded-lg"
-        />
+        <img src="/brand/app-icon-master.svg" alt="Certified" className="h-14 w-14 rounded-2xl" />
         <div>
           <h1 className="font-mono text-2xl font-bold tracking-tight text-ink">CERTIFIED</h1>
           <p className="text-sm text-ink-muted">Your reps. Your receipts.</p>
@@ -140,7 +137,9 @@ export function OnboardingPage() {
                   style={{ backgroundColor: theme.swatch }}
                 />
                 {theme.name}
-                {settings.accentTheme === theme.id && <span aria-hidden="true">✓</span>}
+                {settings.accentTheme === theme.id && (
+                  <Icon icon={Icons.check} size={14} strokeWidth={2.5} />
+                )}
               </button>
             ))}
           </div>
