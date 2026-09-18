@@ -1,1 +1,1 @@
-SEE_FILE_IS_WRONG_DO_NOT_KEEP
+import { uuid } from '@/domain/ids';
