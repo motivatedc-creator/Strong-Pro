@@ -1,6 +1,6 @@
 # Research evidence layer
 
-Certified ships research-informed defaults (notably the 10–20 weekly credited-set band). Those defaults, plus related heuristics and formulas, live in `src/domain/evidence/` so Data Lab, help copy, and future Ask the Lab share one inspectable source of truth.
+Lock'd ships research-informed defaults (notably the 10–20 weekly credited-set band). Those defaults, plus related heuristics and formulas, live in `src/domain/evidence/` so Data Lab, help copy, and future Ask the Lab share one inspectable source of truth.
 
 ## Kind labels
 

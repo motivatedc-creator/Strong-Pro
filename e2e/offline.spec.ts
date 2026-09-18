@@ -47,9 +47,9 @@ test('the web manifest describes an installable app', async ({ page, request }) 
   const response = await request.get(href!);
   expect(response.ok()).toBe(true);
   const manifest = await response.json();
-  expect(manifest.name).toContain('Certified');
+  expect(manifest.name).toContain("Lock'd");
   expect(manifest.display).toBe('standalone');
-  expect(manifest.theme_color).toBe('#1c1b19');
+  expect(manifest.theme_color).toBe('#0a0a0b');
   expect(manifest.icons.length).toBeGreaterThan(0);
   expect(manifest.icons.some((icon: { purpose?: string }) => icon.purpose === 'maskable')).toBe(
     true,
