@@ -114,10 +114,10 @@ export function SideNav() {
         <img src="/brand/symbol.svg" alt="" aria-hidden="true" className="h-8 w-8" />
         <div>
           <span className="block font-display text-lg font-extrabold tracking-tight text-ink">
-            CERTIFIED
+            LOCKD
           </span>
           <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-ink-subtle">
-            Your receipts
+            Keep the receipt
           </span>
         </div>
       </div>
@@ -147,7 +147,7 @@ export function SideNav() {
         ))}
       </ul>
       <p className="mt-8 px-3 text-xs leading-relaxed text-ink-subtle">
-        Your reps. Your receipts. Local-first, always.
+        Keep the receipt. Local-first, always.
       </p>
     </nav>
   );
