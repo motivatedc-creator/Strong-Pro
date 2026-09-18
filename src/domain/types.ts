@@ -40,6 +40,13 @@ export type MuscleGroup =
   | 'full body'
   | 'cardio';
 
+export interface MuscleTargetBand {
+  min: number;
+  max: number;
+}
+
+export type PersonalMuscleTargets = Partial<Record<MuscleGroup, MuscleTargetBand>>;
+
 export type Equipment =
   | 'barbell'
   | 'dumbbell'
@@ -250,6 +257,8 @@ export interface AppSettings {
   excludeWarmupsFromAnalytics: boolean;
   /** Fractional volume credit assigned to secondary muscle groups (0–1). */
   secondaryMuscleCredit: number;
+  /** Optional per-muscle overrides; missing entries use the research default. */
+  personalMuscleTargets?: PersonalMuscleTargets;
   defaultBarProfileId?: UUID;
   defaultPlateInventoryId?: UUID;
   themeMode: ThemeMode;

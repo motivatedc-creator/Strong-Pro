@@ -81,8 +81,9 @@ describe('bucketVolume', () => {
     const buckets = bucketVolume([entry('2026-09-17T10:00:00.000Z', 'week')], 'week', options);
 
     expect(buckets).toHaveLength(1);
-    expect(new Date(buckets[0]!.date).getDay()).toBe(1);
-    expect(buckets[0]!.date).toContain('2026-09-14');
+    const start = new Date(buckets[0]!.date);
+    expect(start.getDay()).toBe(1);
+    expect([start.getFullYear(), start.getMonth() + 1, start.getDate()]).toEqual([2026, 9, 14]);
   });
 
   it('sorts monthly buckets chronologically and keeps their start timestamps', () => {

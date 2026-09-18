@@ -345,6 +345,9 @@ describe('backup round trip', () => {
 
   it('exports, validates and restores identical data', async () => {
     const workoutId = await seedHistory();
+    await repository.updateSettings({
+      personalMuscleTargets: { chest: { min: 12, max: 16 } },
+    });
     const exported = await repository.exportAll();
 
     const json = backupToJson(exported);
@@ -363,6 +366,9 @@ describe('backup round trip', () => {
     expect(restored?.exercises[0]?.sets[0]).toMatchObject({ weightG: 140_000, reps: 5, rpe: 8 });
     expect(restored?.exercises[0]?.sets[0]?.notes).toBe('=SUM(A1:A2)');
     expect(await repository.listMeasurements('bodyweight')).toHaveLength(1);
+    expect((await repository.getSettings()).personalMuscleTargets).toEqual({
+      chest: { min: 12, max: 16 },
+    });
   });
 
   it('merges a backup without duplicating existing workouts', async () => {

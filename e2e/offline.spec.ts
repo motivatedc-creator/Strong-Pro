@@ -34,7 +34,7 @@ test('the app shell and core features work offline once the service worker is re
 
   // So does the plate calculator.
   await page.goto('/tools/plates');
-  await page.getByLabel('Target weight (kg)').fill('100');
+  await page.getByLabel('Total weight on the bar (kg)').fill('100');
   await expect(page.getByText('Exact match.')).toBeVisible();
 
   await context.setOffline(false);
@@ -51,5 +51,7 @@ test('the web manifest describes an installable app', async ({ page, request }) 
   expect(manifest.display).toBe('standalone');
   expect(manifest.theme_color).toBe('#1c1b19');
   expect(manifest.icons.length).toBeGreaterThan(0);
-  expect(manifest.icons.some((icon: { purpose?: string }) => icon.purpose === 'maskable')).toBe(true);
+  expect(manifest.icons.some((icon: { purpose?: string }) => icon.purpose === 'maskable')).toBe(
+    true,
+  );
 });

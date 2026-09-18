@@ -22,7 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Today', icon: '⌂', primary: true, end: true },
   { to: '/templates', label: 'Routines', icon: '▤', primary: true },
   { to: '/history', label: 'History', icon: '⏱', primary: true },
-  { to: '/analytics', label: 'Analytics', icon: '📈', primary: true },
+  { to: '/analytics', label: 'Data Lab', icon: '📈', primary: true },
   { to: '/measurements', label: 'Measurements', icon: '📏', primary: false },
   { to: '/tools', label: 'Tools', icon: '🧮', primary: false },
   { to: '/exercises', label: 'Library', icon: '🏋', primary: false },

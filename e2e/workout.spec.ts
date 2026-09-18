@@ -54,9 +54,20 @@ test.describe('routine to history', () => {
     await expect(page.getByRole('heading', { name: 'Push A', level: 2 })).toBeVisible();
     await expect(page.getByText('3 sets')).toBeVisible();
 
-    // --- analytics use the real data ---
+    // --- Data Lab uses the real data ---
     await page.goto('/analytics');
-    await expect(page.getByRole('heading', { name: 'Analytics', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Data Lab', level: 1 })).toBeVisible();
+    await page.getByRole('button', { name: /Am I training enough/ }).click();
+    const chestTarget = page.getByRole('listitem').filter({ hasText: 'Chest' });
+    await expect(chestTarget.getByText('3 of 10–20 credited sets')).toBeVisible();
+    await expect(chestTarget.getByText('Research default')).toBeVisible();
+    await page.getByRole('button', { name: 'Edit personal targets' }).click();
+    await page.getByRole('spinbutton', { name: 'Minimum sets' }).fill('2');
+    await page.getByRole('spinbutton', { name: 'Maximum sets' }).fill('4');
+    await page.getByRole('button', { name: 'Save personal target' }).click();
+    await expect(chestTarget.getByText('3 of 2–4 credited sets')).toBeVisible();
+    await expect(chestTarget.getByText('Personal target')).toBeVisible();
+    await page.getByRole('button', { name: 'Explore detailed charts' }).click();
     await expect(page.getByRole('heading', { name: 'Estimated 1RM — Bench Press' })).toBeVisible();
     await page.getByRole('button', { name: 'Show data table' }).first().click();
     await expect(page.getByRole('table').first()).toBeVisible();

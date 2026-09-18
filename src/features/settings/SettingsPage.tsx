@@ -127,7 +127,7 @@ export function SettingsPage() {
           </Card>
 
           <Card>
-            <h2 className="mb-2 text-sm font-semibold text-ink">Analytics</h2>
+            <h2 className="mb-2 text-sm font-semibold text-ink">Data Lab</h2>
             <Segmented
               label="Training week starts"
               value={settings.weekStartDay ?? 'monday'}
@@ -139,7 +139,7 @@ export function SettingsPage() {
               ]}
             />
             <p className="mb-4 mt-2 text-xs text-ink-subtle">
-              Used by Weekly Verdict and the “This week” analytics range. Older installs default to
+              Used by Weekly Verdict and the “This week” Data Lab range. Older installs default to
               Monday until you choose otherwise.
             </p>
             <Segmented
