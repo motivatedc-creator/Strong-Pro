@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useRepositoryData } from '@/app/hooks';
 import { Button, Chip, EmptyState, Select, Sheet, Spinner, TextInput, cx } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { EQUIPMENT, MUSCLE_GROUPS, titleCase, trackingLabel } from '@/domain/taxonomy';
 import type { Equipment, Exercise, MuscleGroup } from '@/domain/types';
 import { ExerciseEditor } from './ExerciseEditor';
@@ -167,7 +168,7 @@ export function ExercisePicker({
           <EmptyState
             title="No matching exercises"
             description="Try a different filter, or create a custom exercise for this movement."
-            icon="🔍"
+            icon={<Icon icon={Icons.search} size={22} />}
             action={
               <Button variant="primary" onClick={() => setCreating(true)}>
                 Create &quot;{search.trim() || 'new exercise'}&quot;
@@ -201,7 +202,7 @@ export function ExercisePicker({
                         : 'border-line text-ink-subtle',
                     )}
                   >
-                    {isSelected ? '✓' : '+'}
+                    {isSelected ? <Icon icon={Icons.check} size={12} strokeWidth={2.5} /> : '+'}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-ink">

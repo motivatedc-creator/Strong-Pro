@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSettings } from '@/app/SettingsProvider';
 import { useTicker, useVisibilityRefresh } from '@/app/hooks';
 import { Button, IconButton, cx } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { formatDuration } from '@/domain/units';
 import {
   describeTimer,
@@ -55,10 +56,8 @@ export function RestTimerBar() {
       )}
     >
       <div
-        className={cx(
-          'overflow-hidden rounded-lg border shadow-card',
-          expired ? 'border-success bg-success/15' : 'border-line bg-surface',
-        )}
+        className={cx('overflow-hidden rounded-2xl', expired ? 'bg-success/15' : 'bg-surface')}
+        style={{ boxShadow: 'var(--shadow-border)' }}
       >
         <div
           aria-hidden="true"
@@ -71,7 +70,7 @@ export function RestTimerBar() {
         <div className="flex items-center gap-2 px-3 py-2">
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">
-              <span aria-hidden="true">{expired ? '✓' : '⏳'}</span>
+              <Icon icon={expired ? Icons.check : Icons.timer} size={14} />
               {expired ? 'Rest complete' : 'Resting'}
               {timer.label && <span className="truncate text-ink-subtle">· {timer.label}</span>}
             </p>

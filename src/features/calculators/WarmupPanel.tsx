@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { Button, Field, IconButton, NumberInput, Segmented, Select } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { generateWarmup, type WarmupStep } from '@/domain/warmup';
 import type { Equipment } from '@/domain/types';
 import { formatWeight, toGrams } from '@/domain/units';
@@ -259,7 +260,7 @@ export function WarmupPanel({
                   label={`Remove warm-up set ${index + 1}`}
                   onClick={() => removeStep(index)}
                 >
-                  <span aria-hidden="true">🗑</span>
+                  <Icon icon={Icons.trash} size={16} />
                 </IconButton>
               </li>
             ))}

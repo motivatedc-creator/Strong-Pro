@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, Chip } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import type { WeightUnit } from '@/domain/units';
 import { VerdictEvidenceSheet, formatDateRange } from './VerdictEvidenceSheet';
 import { weeklyVerdictCopy, type WeeklyVerdict } from './weeklyVerdict';
@@ -42,8 +43,8 @@ export function WeeklyVerdictCard({
               aria-label={`${line} Show evidence`}
             >
               <span className="flex-1">{line}</span>
-              <span aria-hidden="true" className="ml-2 text-xs text-accent">
-                ›
+              <span aria-hidden="true" className="ml-2 text-accent">
+                <Icon icon={Icons.chevron} size={14} />
               </span>
             </button>
           ))}
@@ -58,7 +59,7 @@ export function WeeklyVerdictCard({
           >
             <span className="flex-1">{copy.pulseLine}</span>
             <span aria-hidden="true" className="ml-2 text-accent">
-              ›
+              <Icon icon={Icons.chevron} size={14} />
             </span>
           </button>
         )}

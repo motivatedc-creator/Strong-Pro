@@ -3,6 +3,7 @@ import { useRepository, useRepositoryData, useWrite } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { toast } from '@/app/store';
 import { Button, Card, Chip, IconButton, NumberInput, Sheet, TextInput } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { uuid } from '@/domain/ids';
 import type { BarProfile, PlateInventory } from '@/domain/types';
 import { formatWeight, toGrams } from '@/domain/units';
@@ -86,7 +87,7 @@ export function EquipmentSettings() {
                   Edit
                 </Button>
                 <IconButton label={`Delete ${bar.name}`} onClick={() => void deleteBar(bar.id)}>
-                  <span aria-hidden="true">🗑</span>
+                  <Icon icon={Icons.trash} size={16} />
                 </IconButton>
               </span>
             </li>
@@ -142,7 +143,7 @@ export function EquipmentSettings() {
                   label={`Delete ${inventory.name}`}
                   onClick={() => void deleteInventory(inventory.id)}
                 >
-                  <span aria-hidden="true">🗑</span>
+                  <Icon icon={Icons.trash} size={16} />
                 </IconButton>
               </span>
             </li>
@@ -371,7 +372,7 @@ function InventoryEditor({
                     setDraft({ ...draft, plates: draft.plates.filter((_, i) => i !== index) })
                   }
                 >
-                  <span aria-hidden="true">🗑</span>
+                  <Icon icon={Icons.trash} size={16} />
                 </IconButton>
               </li>
             ))}

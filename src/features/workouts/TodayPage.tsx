@@ -3,7 +3,17 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useRepository, useRepositoryData, useWrite } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { toast } from '@/app/store';
-import { Button, Card, Chip, EmptyState, PageHeader, Spinner, StatTile } from '@/components/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  PageHeader,
+  SectionHeading,
+  Spinner,
+  StatTile,
+} from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { ActiveWorkoutExistsError } from '@/db/dexieRepository';
 import { computeExerciseRecords } from '@/domain/records';
 import { elapsedSeconds, formatDate, relativeDay } from '@/domain/time';
@@ -125,18 +135,20 @@ export function TodayPage() {
       />
 
       {active ? (
-        <Card className="mb-4 border-accent/50">
+        <Card className="mb-5 bg-accent/10 p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-accent">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
                 <span
                   aria-hidden="true"
-                  className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent"
+                  className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"
                 />
                 In progress
               </p>
-              <h2 className="mt-1 truncate text-lg font-bold text-ink">{active.workout.name}</h2>
-              <p className="text-sm text-ink-muted">
+              <h2 className="mt-1 truncate font-display text-xl tracking-tight text-ink">
+                {active.workout.name}
+              </h2>
+              <p className="mt-0.5 text-sm text-ink-muted">
                 {formatDurationLong(
                   elapsedSeconds(active.workout.startedAt, undefined, active.workout.pausedSeconds),
                 )}{' '}
@@ -149,39 +161,36 @@ export function TodayPage() {
           </div>
         </Card>
       ) : (
-        <>
-          <Button
-            variant="primary"
-            size="lg"
-            block
-            className="mb-4"
-            aria-label="Start empty workout"
-            disabled={starting}
-            onClick={() => void start(undefined)}
-          >
-            Let&apos;s cook 🔥
-          </Button>
-          <p className="-mt-2 mb-5 text-center text-xs text-ink-subtle">
-            Bar&apos;s loaded. Log it or it didn&apos;t happen.
-          </p>
-        </>
+        <Button
+          variant="primary"
+          size="lg"
+          block
+          className="mb-6"
+          aria-label="Start empty workout"
+          disabled={starting}
+          icon={<Icon icon={Icons.plus} size={18} strokeWidth={2.25} />}
+          onClick={() => void start(undefined)}
+        >
+          Start empty workout
+        </Button>
       )}
 
       <section className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-subtle">
-            Routines
-          </h2>
-          <Link to="/templates" className="text-sm font-medium text-accent">
-            Manage
-          </Link>
-        </div>
+        <SectionHeading
+          action={
+            <Link to="/templates" className="text-sm font-medium text-accent">
+              Manage
+            </Link>
+          }
+        >
+          Routines
+        </SectionHeading>
 
         {templates.length === 0 ? (
           <EmptyState
             title="No routines on record"
             description="Build a routine once and start it in a single tap on every future session."
-            icon="▤"
+            icon={<Icon icon={Icons.routines} size={22} />}
             action={
               <Button variant="primary" onClick={() => navigate('/templates/new')}>
                 Create a routine
@@ -219,9 +228,7 @@ export function TodayPage() {
       </section>
 
       <section className="mb-6">
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-subtle">
-          This week
-        </h2>
+        <SectionHeading>This week</SectionHeading>
         <div className="grid grid-cols-3 gap-2">
           <StatTile label="Workouts" value={String(stats.weekWorkouts)} />
           <StatTile label="Sets" value={String(stats.weekTotals.completedSets)} />
@@ -235,14 +242,15 @@ export function TodayPage() {
 
       {stats.topRecords.length > 0 && (
         <section className="mb-6">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-subtle">
-              Personal records
-            </h2>
-            <Link to="/analytics" className="text-sm font-medium text-accent">
-              Data Lab
-            </Link>
-          </div>
+          <SectionHeading
+            action={
+              <Link to="/analytics" className="text-sm font-medium text-accent">
+                Data Lab
+              </Link>
+            }
+          >
+            Personal records
+          </SectionHeading>
           <ul className="space-y-1.5">
             {stats.topRecords.map((record) => (
               <li key={record.exerciseId}>
@@ -269,19 +277,20 @@ export function TodayPage() {
       )}
 
       <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-subtle">
-            Recent sessions
-          </h2>
-          <Link to="/history" className="text-sm font-medium text-accent">
-            All history
-          </Link>
-        </div>
+        <SectionHeading
+          action={
+            <Link to="/history" className="text-sm font-medium text-accent">
+              All history
+            </Link>
+          }
+        >
+          Recent sessions
+        </SectionHeading>
         {recent.length === 0 ? (
           <EmptyState
-            title="No aura on file yet"
+            title="No sessions yet"
             description="Log set one and start building a case. Your records and analytics will follow."
-            icon="⏱"
+            icon={<Icon icon={Icons.history} size={22} />}
           />
         ) : (
           <ul className="space-y-1.5">
@@ -289,7 +298,7 @@ export function TodayPage() {
               <li key={workout.id}>
                 <Link
                   to={`/history/${workout.id}`}
-                  className="rf-card flex items-center justify-between gap-3 p-3"
+                  className="rf-card flex items-center justify-between gap-3 p-3.5"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium text-ink">
@@ -307,7 +316,7 @@ export function TodayPage() {
                       {weightUnit}
                     </span>
                   </span>
-                  <span className="shrink-0 text-xs text-ink-muted">
+                  <span className="shrink-0 text-xs tabular-nums text-ink-muted">
                     {formatDurationLong(
                       elapsedSeconds(workout.startedAt, workout.endedAt, workout.pausedSeconds),
                     )}

@@ -44,11 +44,12 @@ export function DataLabQuestions({
             disabled={item.comingSoon}
             onClick={() => onSelect(item.id)}
             className={cx(
-              'min-h-20 rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-default disabled:opacity-70',
+              'min-h-20 rounded-2xl p-3.5 text-left transition-[background-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-default disabled:opacity-70',
               selected === item.id
-                ? 'border-accent bg-accent/10'
-                : 'border-line bg-surface hover:border-accent/50',
+                ? 'bg-accent/12 shadow-[inset_0_0_0_1px_rgb(var(--rf-accent)/0.55)]'
+                : 'bg-surface',
             )}
+            style={selected === item.id ? undefined : { boxShadow: 'var(--shadow-border)' }}
           >
             <span className="flex items-start justify-between gap-2">
               <span className="text-sm font-semibold text-ink">{item.question}</span>

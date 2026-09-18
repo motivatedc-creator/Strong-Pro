@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Card, PageHeader } from '@/components/ui';
+import { Icon } from '@/components/icons';
 import { NAV_ITEMS } from '@/app/navigation';
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -18,9 +19,9 @@ export function MorePage() {
         {NAV_ITEMS.filter((item) => !item.primary).map((item) => (
           <li key={item.to}>
             <Link to={item.to} className="block">
-              <Card className="flex items-center gap-3 p-4 hover:border-accent/60">
-                <span aria-hidden="true" className="text-xl">
-                  {item.icon}
+              <Card className="flex items-center gap-3 p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-raised text-ink-muted">
+                  <Icon icon={item.icon} size={18} />
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-ink">{item.label}</span>
@@ -32,7 +33,8 @@ export function MorePage() {
         ))}
       </ul>
       <p className="mt-6 text-center text-xs text-ink-subtle">
-        Certified is subscription-free. Everything you log stays on this device unless you export it.
+        Certified is subscription-free. Everything you log stays on this device unless you export
+        it.
       </p>
     </>
   );

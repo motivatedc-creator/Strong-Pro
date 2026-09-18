@@ -11,6 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Button, cx, EmptyState } from './ui';
+import { Icon, Icons } from './icons';
 
 /**
  * Charts.
@@ -148,7 +149,11 @@ export function ChartCard({
       <p className="mb-3 text-xs text-ink-muted">{summary}</p>
 
       {!hasData ? (
-        <EmptyState title="No data in this range" description={emptyMessage} icon="📈" />
+        <EmptyState
+          title="No data in this range"
+          description={emptyMessage}
+          icon={<Icon icon={Icons.chart} size={22} />}
+        />
       ) : (
         <>
           <div style={{ height: chartHeight }} className="w-full">

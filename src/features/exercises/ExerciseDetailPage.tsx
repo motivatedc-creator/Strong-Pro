@@ -4,6 +4,7 @@ import { useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { CHART_COLORS, ChartCard } from '@/components/Chart';
 import { Button, Card, Chip, EmptyState, PageHeader, Spinner, StatTile } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { FORMULA_LABEL } from '@/domain/oneRepMax';
 import { formatDate } from '@/domain/time';
 import { setTypeLabel, titleCase, trackingLabel } from '@/domain/taxonomy';
@@ -59,7 +60,7 @@ export function ExerciseDetailPage() {
       <EmptyState
         title="Exercise not found"
         description="It may have been deleted. Your logged history still shows the name it was performed under."
-        icon="🔍"
+        icon={<Icon icon={Icons.search} size={22} />}
         action={
           <Link to="/exercises" className="text-sm font-semibold text-accent">
             Back to the library
@@ -95,7 +96,7 @@ export function ExerciseDetailPage() {
         <EmptyState
           title="No sessions logged yet"
           description="Once you log this exercise, its progression charts, records and previous sets appear here."
-          icon="📈"
+          icon={<Icon icon={Icons.chart} size={22} />}
         />
       ) : (
         <>

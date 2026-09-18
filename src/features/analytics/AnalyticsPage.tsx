@@ -16,6 +16,7 @@ import {
   StatTile,
   Toggle,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { FORMULA_EXPRESSION, FORMULA_LABEL } from '@/domain/oneRepMax';
 import {
   RANGE_DESCRIPTIONS,
@@ -126,7 +127,7 @@ export function AnalyticsPage() {
         <EmptyState
           title="No completed workouts yet"
           description="Data Lab learns from completed workouts. Finish a session — or import your Strong history — and your answers will appear here."
-          icon="📈"
+          icon={<Icon icon={Icons.chart} size={22} />}
           action={
             <Link to="/settings/import" className="text-sm font-semibold text-accent">
               Import a Strong CSV

@@ -18,6 +18,7 @@ import {
   TextInput,
   cx,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { ExercisePicker } from '@/features/exercises/ExercisePicker';
 import { PlateCalculatorPanel } from '@/features/calculators/PlateCalculatorPanel';
 import { WarmupPanel } from '@/features/calculators/WarmupPanel';
@@ -211,8 +212,8 @@ export function ActiveWorkoutPage() {
                 aria-label={`Workout name: ${workout.name}. Tap to rename`}
               >
                 {workout.name}
-                <span aria-hidden="true" className="ml-1 text-xs text-ink-subtle">
-                  ✎
+                <span aria-hidden="true" className="ml-1.5 inline-flex text-ink-subtle">
+                  <Icon icon={Icons.pencil} size={12} />
                 </span>
               </button>
             )}
@@ -237,7 +238,7 @@ export function ActiveWorkoutPage() {
         <EmptyState
           title="Empty workout"
           description="Add your first exercise. Everything you log is saved on this device as you go."
-          icon="➕"
+          icon={<Icon icon={Icons.plus} size={22} />}
           action={
             <Button variant="primary" onClick={() => setPicking(true)}>
               Add exercise
@@ -278,7 +279,7 @@ export function ActiveWorkoutPage() {
                     label={`Options for ${entry.exercise.exerciseNameSnapshot}`}
                     onClick={() => setMenuFor(entry.exercise.id)}
                   >
-                    <span aria-hidden="true">⋯</span>
+                    <Icon icon={Icons.more} size={18} />
                   </IconButton>
                 </div>
 
@@ -318,8 +319,9 @@ export function ActiveWorkoutPage() {
                   <Button
                     size="sm"
                     onClick={() => void addSet(entry.exercise.id, entry.sets.at(-1))}
+                    icon={<Icon icon={Icons.plus} size={14} />}
                   >
-                    + Add set
+                    Add set
                   </Button>
                   {usesWeight(entry.exercise.trackingTypeSnapshot) && (
                     <>
@@ -352,8 +354,9 @@ export function ActiveWorkoutPage() {
                       size="sm"
                       variant="ghost"
                       onClick={() => void moveExercise(entry.exercise.id, -1)}
+                      icon={<Icon icon={Icons.chevronUp} size={14} />}
                     >
-                      ↑ Move up
+                      Move up
                     </Button>
                   )}
                   {exerciseIndex < exercises.length - 1 && (
@@ -361,8 +364,9 @@ export function ActiveWorkoutPage() {
                       size="sm"
                       variant="ghost"
                       onClick={() => void moveExercise(entry.exercise.id, 1)}
+                      icon={<Icon icon={Icons.chevronDown} size={14} />}
                     >
-                      ↓ Move down
+                      Move down
                     </Button>
                   )}
                 </div>
@@ -373,8 +377,13 @@ export function ActiveWorkoutPage() {
       </ul>
 
       {exercises.length > 0 && (
-        <Button block className="mt-4" onClick={() => setPicking(true)}>
-          + Add exercise
+        <Button
+          block
+          className="mt-4"
+          onClick={() => setPicking(true)}
+          icon={<Icon icon={Icons.plus} size={16} />}
+        >
+          Add exercise
         </Button>
       )}
 

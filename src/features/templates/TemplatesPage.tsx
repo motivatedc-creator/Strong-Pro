@@ -15,6 +15,7 @@ import {
   Toggle,
   buttonClasses,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { ActiveWorkoutExistsError } from '@/db/dexieRepository';
 import { STARTER_TEMPLATES, buildStarterTemplate } from '@/db/starterTemplates';
 import type { Template } from '@/domain/types';
@@ -123,7 +124,7 @@ export function TemplatesPage() {
         <EmptyState
           title="No custom routines yet"
           description="A routine holds your exercises, target sets, rep ranges and rest times so a session starts in one tap. Build your own, or add one of ours to get moving today."
-          icon="▤"
+          icon={<Icon icon={Icons.routines} size={22} />}
           action={
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Button variant="primary" onClick={() => setBrowsingStarters(true)}>
@@ -166,14 +167,14 @@ export function TemplatesPage() {
                   disabled={index === 0}
                   onClick={() => void move(template.id, -1)}
                 >
-                  <span aria-hidden="true">↑</span>
+                  <Icon icon={Icons.chevronUp} size={16} />
                 </IconButton>
                 <IconButton
                   label={`Move ${template.name} down`}
                   disabled={index === activeTemplates.length - 1}
                   onClick={() => void move(template.id, 1)}
                 >
-                  <span aria-hidden="true">↓</span>
+                  <Icon icon={Icons.chevronDown} size={16} />
                 </IconButton>
                 <Button size="sm" variant="ghost" onClick={() => void duplicate(template.id)}>
                   Duplicate

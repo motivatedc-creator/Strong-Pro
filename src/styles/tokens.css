@@ -9,95 +9,100 @@
  */
 
 :root {
-  /* Certified's ink/paper system: dark is the default for a focused logging surface. */
-  --rf-canvas: 28 27 25;
-  --rf-surface: 42 41 38;
-  --rf-surface-raised: 58 56 51;
-  --rf-line: 91 86 77;
-  --rf-ink: 243 238 230;
-  --rf-ink-muted: 216 208 192;
-  --rf-ink-subtle: 177 169 155;
-  --rf-success: 76 122 90;
+  /* Training-floor dark: near-black canvas, warm paper ink, clear layer steps. */
+  --rf-canvas: 10 10 11;
+  --rf-surface: 18 17 16;
+  --rf-surface-raised: 30 28 26;
+  --rf-line: 64 60 54;
+  --rf-ink: 246 241 232;
+  --rf-ink-muted: 184 176 162;
+  --rf-ink-subtle: 126 119 108;
+  --rf-success: 110 176 132;
   --rf-warning: 232 163 61;
-  --rf-danger: 178 58 46;
-  --rf-danger-ink: 243 238 230;
+  --rf-danger: 214 86 72;
+  --rf-danger-ink: 246 241 232;
 
-  --rf-chart-1: 62 92 107;
+  --rf-chart-1: 140 186 204;
   --rf-chart-2: 232 163 61;
-  --rf-chart-3: 76 122 90;
-  --rf-chart-4: 112 129 139;
-  --rf-chart-5: 178 58 46;
+  --rf-chart-3: 110 176 132;
+  --rf-chart-4: 168 180 190;
+  --rf-chart-5: 214 86 72;
   --rf-chart-6: 216 208 192;
 
-  --rf-radius: 0.375rem;
+  --rf-radius: 0.75rem;
   --rf-motion: 180ms;
+  --rf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --shadow-border: 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 
 :root[data-theme='light'] {
-  --rf-canvas: 243 238 230;
-  --rf-surface: 249 246 240;
-  --rf-surface-raised: 232 225 212;
-  --rf-line: 216 208 192;
-  --rf-ink: 28 27 25;
-  --rf-ink-muted: 74 72 68;
-  --rf-ink-subtle: 105 101 94;
-  --rf-success: 76 122 90;
-  --rf-warning: 145 91 19;
-  --rf-danger: 178 58 46;
-  --rf-danger-ink: 243 238 230;
+  --rf-canvas: 244 239 230;
+  --rf-surface: 252 249 243;
+  --rf-surface-raised: 236 229 216;
+  --rf-line: 214 205 188;
+  --rf-ink: 18 17 16;
+  --rf-ink-muted: 72 68 60;
+  --rf-ink-subtle: 110 104 94;
+  --rf-success: 46 122 74;
+  --rf-warning: 154 92 16;
+  --rf-danger: 176 52 42;
+  --rf-danger-ink: 252 249 243;
 
-  --rf-chart-1: 62 92 107;
-  --rf-chart-2: 178 58 46;
-  --rf-chart-3: 76 122 90;
-  --rf-chart-4: 112 129 139;
-  --rf-chart-5: 145 91 19;
-  --rf-chart-6: 74 72 68;
+  --rf-chart-1: 46 90 112;
+  --rf-chart-2: 176 52 42;
+  --rf-chart-3: 46 122 74;
+  --rf-chart-4: 88 100 112;
+  --rf-chart-5: 154 92 16;
+  --rf-chart-6: 72 68 60;
+  --shadow-border: 0 0 0 1px rgb(18 17 16 / 0.08), 0 1px 2px -1px rgb(18 17 16 / 0.06),
+    0 8px 24px -16px rgb(18 17 16 / 0.18);
 }
 
-/* ---- Accent families: seal amber first, ledger blue for data trust ---- */
+/* ---- Accent families: seal amber first, then quieter data colours ---- */
+/* Dark accents are lifted so primary actions read on near-black. */
 
 :root[data-accent='ember'] {
-  --rf-accent: 232 163 61;
-  --rf-accent-ink: 28 27 25;
-  --rf-accent-soft: 232 163 61;
+  --rf-accent: 242 176 68;
+  --rf-accent-ink: 18 14 8;
+  --rf-accent-soft: 242 176 68;
 }
 :root[data-accent='ember'][data-theme='light'] {
-  --rf-accent: 232 163 61;
-  --rf-accent-ink: 28 27 25;
-  --rf-accent-soft: 232 163 61;
+  --rf-accent: 201 118 18;
+  --rf-accent-ink: 252 249 243;
+  --rf-accent-soft: 201 118 18;
 }
 
 :root[data-accent='glacier'] {
-  --rf-accent: 62 92 107;
-  --rf-accent-ink: 243 238 230;
-  --rf-accent-soft: 62 92 107;
+  --rf-accent: 140 186 204;
+  --rf-accent-ink: 12 18 22;
+  --rf-accent-soft: 140 186 204;
 }
 :root[data-accent='glacier'][data-theme='light'] {
-  --rf-accent: 62 92 107;
-  --rf-accent-ink: 243 238 230;
-  --rf-accent-soft: 62 92 107;
+  --rf-accent: 46 90 112;
+  --rf-accent-ink: 252 249 243;
+  --rf-accent-soft: 46 90 112;
 }
 
 :root[data-accent='moss'] {
-  --rf-accent: 76 122 90;
-  --rf-accent-ink: 243 238 230;
-  --rf-accent-soft: 76 122 90;
+  --rf-accent: 122 176 138;
+  --rf-accent-ink: 12 20 14;
+  --rf-accent-soft: 122 176 138;
 }
 :root[data-accent='moss'][data-theme='light'] {
-  --rf-accent: 76 122 90;
-  --rf-accent-ink: 243 238 230;
-  --rf-accent-soft: 76 122 90;
+  --rf-accent: 46 122 74;
+  --rf-accent-ink: 252 249 243;
+  --rf-accent-soft: 46 122 74;
 }
 
 :root[data-accent='violet'] {
-  --rf-accent: 112 129 139;
-  --rf-accent-ink: 243 238 230;
-  --rf-accent-soft: 112 129 139;
+  --rf-accent: 168 180 190;
+  --rf-accent-ink: 14 16 18;
+  --rf-accent-soft: 168 180 190;
 }
 :root[data-accent='violet'][data-theme='light'] {
-  --rf-accent: 112 129 139;
-  --rf-accent-ink: 243 238 230;
-  --rf-accent-soft: 112 129 139;
+  --rf-accent: 72 88 100;
+  --rf-accent-ink: 252 249 243;
+  --rf-accent-soft: 72 88 100;
 }
 
 @media (prefers-reduced-motion: reduce) {

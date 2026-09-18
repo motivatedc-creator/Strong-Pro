@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { getRepository } from '@/db/dexieRepository';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Button, Spinner } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { SettingsProvider } from './SettingsProvider';
 import { AppShell } from './AppShell';
 import { TodayPage } from '@/features/workouts/TodayPage';
@@ -77,8 +78,8 @@ function DatabaseGate({ children }: { children: React.ReactNode }) {
   if (state === 'failed') {
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
-        <span className="text-3xl" aria-hidden="true">
-          🗄
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface text-ink-subtle">
+          <Icon icon={Icons.database} size={26} />
         </span>
         <h1 className="text-lg font-bold text-ink">Certified could not open its local database</h1>
         <p className="text-sm text-ink-muted">

@@ -52,7 +52,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <main
           id="main"
-          className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] lg:pb-8"
+          className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] lg:pb-8"
         >
           <Outlet />
         </main>
@@ -64,8 +64,8 @@ export function AppShell() {
           // Sits above the rest-timer bar when one is running so neither covers the other.
           className={
             timer
-              ? 'fixed inset-x-0 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-accent/40 bg-accent px-4 py-2 text-accent-ink lg:bottom-28 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-lg lg:border'
-              : 'fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 border-t border-accent/40 bg-accent px-4 py-2 text-accent-ink lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-lg lg:border'
+              ? 'fixed inset-x-0 bottom-[calc(8.75rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 bg-accent px-4 py-2.5 text-accent-ink lg:bottom-28 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-2xl'
+              : 'fixed inset-x-0 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-lg items-center justify-between gap-3 bg-accent px-4 py-2.5 text-accent-ink lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs lg:rounded-2xl'
           }
         >
           <span className="flex items-center gap-2 text-sm font-semibold">

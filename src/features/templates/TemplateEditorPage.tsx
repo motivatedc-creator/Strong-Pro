@@ -17,6 +17,7 @@ import {
   TextArea,
   TextInput,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { ExercisePicker } from '@/features/exercises/ExercisePicker';
 import { uuid } from '@/domain/ids';
 import { SET_TYPES, titleCase } from '@/domain/taxonomy';
@@ -162,7 +163,7 @@ export function TemplateEditorPage() {
         <EmptyState
           title="No exercises yet"
           description="Add the movements you want in this session. You can reorder them and set targets per exercise."
-          icon="➕"
+          icon={<Icon icon={Icons.plus} size={22} />}
           action={
             <Button variant="primary" onClick={() => setPicking(true)}>
               Add exercises
@@ -189,14 +190,14 @@ export function TemplateEditorPage() {
                       disabled={index === 0}
                       onClick={() => moveRow(row.id, -1)}
                     >
-                      <span aria-hidden="true">↑</span>
+                      <Icon icon={Icons.chevronUp} size={16} />
                     </IconButton>
                     <IconButton
                       label={`Move ${row.exerciseName} down`}
                       disabled={index === rows.length - 1}
                       onClick={() => moveRow(row.id, 1)}
                     >
-                      <span aria-hidden="true">↓</span>
+                      <Icon icon={Icons.chevronDown} size={16} />
                     </IconButton>
                     <IconButton
                       label={`Remove ${row.exerciseName}`}
@@ -204,7 +205,7 @@ export function TemplateEditorPage() {
                         setRows((current) => current.filter((entry) => entry.id !== row.id))
                       }
                     >
-                      <span aria-hidden="true">🗑</span>
+                      <Icon icon={Icons.trash} size={16} />
                     </IconButton>
                   </div>
                 </div>

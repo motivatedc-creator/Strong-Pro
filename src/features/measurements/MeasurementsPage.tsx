@@ -15,6 +15,7 @@ import {
   Spinner,
   TextArea,
 } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { MEASUREMENT_METRICS, metricKind, metricLabel } from '@/domain/taxonomy';
 import { localDateOf, relativeDay } from '@/domain/time';
 import type { BodyMeasurement, MeasurementMetric } from '@/domain/types';
@@ -63,7 +64,7 @@ export function MeasurementsPage() {
         <EmptyState
           title="No measurements yet"
           description="Track body weight and circumferences to see trends and weekly change alongside your lifting."
-          icon="📏"
+          icon={<Icon icon={Icons.measurements} size={22} />}
           action={
             <Button variant="primary" onClick={() => setEntryFor('bodyweight')}>
               Log body weight

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Button, IconButton, NumberInput, cx } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
 import { SET_TYPES, usesDistance, usesDuration, usesReps, usesWeight } from '@/domain/taxonomy';
 import type { IntensityMode, SetType, TrackingType, WorkoutSet } from '@/domain/types';
 import { formatWeight, fromGrams, toGrams, trimNumber, type WeightUnit } from '@/domain/units';
@@ -133,8 +134,10 @@ export function SetRow({
       className={cx(
         // Two columns on a narrow phone (badge + inputs, with the actions and the
         // previous-set line wrapping underneath); four columns once there is room.
-        'grid grid-cols-[2.75rem_1fr] items-center gap-2 rounded border px-2 py-2 transition sm:grid-cols-[2.75rem_5.5rem_1fr_auto]',
-        set.isCompleted ? 'border-success/50 bg-success/10' : 'border-line bg-surface-raised',
+        'grid grid-cols-[2.75rem_1fr] items-center gap-2 rounded-xl px-2 py-2 transition-[background-color,box-shadow] duration-150 sm:grid-cols-[2.75rem_5.5rem_1fr_auto]',
+        set.isCompleted
+          ? 'bg-success/12 shadow-[inset_3px_0_0_0_rgb(var(--rf-success))]'
+          : 'bg-surface-raised shadow-[inset_0_0_0_1px_rgb(var(--rf-line)/0.7)]',
       )}
     >
       {previous && (
@@ -149,7 +152,7 @@ export function SetRow({
           title={`Set type: ${typeMeta.label}. Tap to change to ${nextType.label}.`}
           aria-label={`Set ${index + 1}, ${typeMeta.label}. Change set type`}
           className={cx(
-            'flex h-11 w-11 items-center justify-center rounded text-sm font-bold',
+            'flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold',
             set.setType === 'warmup'
               ? 'bg-warning/20 text-warning'
               : set.setType === 'drop'
@@ -175,9 +178,9 @@ export function SetRow({
               label="Decrease weight"
               variant="secondary"
               onClick={() => step(-1)}
-              className="h-9 w-9"
+              className="h-11 w-11 rounded-lg"
             >
-              <span aria-hidden="true">−</span>
+              <Icon icon={Icons.minus} size={16} />
             </IconButton>
             <NumberInput
               value={weightText}
@@ -186,7 +189,7 @@ export function SetRow({
               step="any"
               min={0}
               placeholder={previousWeightPlaceholder}
-              className="h-11 w-[4.5rem] min-h-0 px-2 sm:w-20"
+              className="h-11 w-[4.5rem] min-h-0 rounded-lg px-2 sm:w-20"
               onChange={(event) => setWeightText(event.target.value)}
               onBlur={(event) => commitWeight(event.target.value)}
               onKeyDown={(event) => {
@@ -204,9 +207,9 @@ export function SetRow({
               label="Increase weight"
               variant="secondary"
               onClick={() => step(1)}
-              className="h-9 w-9"
+              className="h-11 w-11 rounded-lg"
             >
-              <span aria-hidden="true">+</span>
+              <Icon icon={Icons.plus} size={16} />
             </IconButton>
           </div>
         )}
@@ -219,7 +222,7 @@ export function SetRow({
             aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
-            className="h-11 w-14 min-h-0 px-2 sm:w-16"
+            className="h-11 w-14 min-h-0 rounded-lg px-2 sm:w-16"
             placeholder={previousRepsPlaceholder ?? 'reps'}
             onChange={(event) => setRepsText(event.target.value)}
             onBlur={(event) => {
@@ -246,7 +249,7 @@ export function SetRow({
             aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
-            className="h-11 w-16 min-h-0 px-2 sm:w-20"
+            className="h-11 w-16 min-h-0 rounded-lg px-2 sm:w-20"
             placeholder={
               previous?.durationSeconds === undefined ? 'secs' : String(previous.durationSeconds)
             }
@@ -272,7 +275,7 @@ export function SetRow({
             aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
-            className="h-11 w-16 min-h-0 px-2 sm:w-20"
+            className="h-11 w-16 min-h-0 rounded-lg px-2 sm:w-20"
             placeholder={previous?.distanceM === undefined ? 'm' : String(previous.distanceM)}
             onBlur={(event) => {
               const value = Number.parseInt(event.target.value, 10);
@@ -293,7 +296,7 @@ export function SetRow({
             step="0.5"
             min={0}
             max={intensityMode === 'rpe' ? 10 : 10}
-            className="h-11 w-14 min-h-0 px-2 sm:w-16"
+            className="h-11 w-14 min-h-0 rounded-lg px-2 sm:w-16"
             placeholder={intensityMode.toUpperCase()}
             onBlur={(event) => {
               const raw = event.target.value.trim();
@@ -314,7 +317,7 @@ export function SetRow({
         {isPr && (
           <span
             title="Personal record"
-            className="hidden rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-accent sm:inline"
+            className="hidden rounded-md bg-accent/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent sm:inline"
           >
             PR
           </span>
@@ -327,15 +330,13 @@ export function SetRow({
           aria-label={
             set.isCompleted ? `Mark set ${index + 1} as not done` : `Complete set ${index + 1}`
           }
-          className="h-11 w-12 px-0"
+          className="h-11 w-12 rounded-xl px-0"
           onClick={() => onToggleComplete(set.isCompleted ? {} : completionPatch())}
         >
-          <span aria-hidden="true" className="text-base">
-            ✓
-          </span>
+          <Icon icon={Icons.check} size={18} strokeWidth={2.4} />
         </Button>
         <IconButton label={`Delete set ${index + 1}`} onClick={onDelete} className="h-11 w-11">
-          <span aria-hidden="true">🗑</span>
+          <Icon icon={Icons.trash} size={16} />
         </IconButton>
       </div>
 
