@@ -51,7 +51,7 @@ test('import a Strong CSV, export a backup, clear the data and restore it', asyn
   // --- restore ---
   await page.goto('/settings');
   await page.getByRole('tab', { name: 'Data' }).click();
-  await page.getByLabel('Choose a RepForge JSON backup').setInputFiles(backupPath);
+  await page.getByLabel('Choose a Lock\u2019d JSON backup').setInputFiles(backupPath);
   await expect(page.getByRole('heading', { name: 'Restore preview' })).toBeVisible();
   await page.getByRole('button', { name: 'Merge into my data' }).click();
   await expect(page.getByText(/2 workouts added/)).toBeVisible();
@@ -68,6 +68,6 @@ test('an invalid backup is rejected without touching stored data', async ({ page
 
   await page.goto('/settings');
   await page.getByRole('tab', { name: 'Data' }).click();
-  await page.getByLabel('Choose a RepForge JSON backup').setInputFiles(badPath);
-  await expect(page.getByText('This file is not a valid RepForge backup, so nothing was changed.')).toBeVisible();
+  await page.getByLabel('Choose a Lock\u2019d JSON backup').setInputFiles(badPath);
+  await expect(page.getByText('This file is not a valid Lock\u2019d backup, so nothing was changed.')).toBeVisible();
 });

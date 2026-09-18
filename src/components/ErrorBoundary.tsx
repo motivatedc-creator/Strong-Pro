@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <span className="text-3xl" aria-hidden="true">
           🛠
         </span>
-        <h1 className="text-lg font-bold text-ink">RepForge hit an unexpected error</h1>
+        <h1 className="text-lg font-bold text-ink">Lock’d hit an unexpected error</h1>
         <p className="text-sm text-ink-muted">
           Your workouts are stored on this device and were not affected. Try again, or reload the
           app.
