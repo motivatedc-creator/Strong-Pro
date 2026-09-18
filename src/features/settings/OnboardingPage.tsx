@@ -28,9 +28,9 @@ export function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
-        <img src="/brand/app-icon-master.svg" alt="Lock'd" className="h-14 w-14 rounded-2xl" />
+        <img src="/brand/app-icon-master.svg" alt="Lockd" className="h-14 w-14 rounded-2xl" />
         <div>
-          <h1 className="font-mono text-2xl font-bold tracking-tight text-ink">LOCKD</h1>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">LOCKD</h1>
           <p className="text-sm text-ink-muted">Keep the receipt.</p>
         </div>
       </div>
@@ -39,10 +39,10 @@ export function OnboardingPage() {
         <Card>
           <h2 className="text-base font-semibold text-ink">Your record stays on this device</h2>
           <ul className="mt-2 space-y-2 text-sm text-ink-muted">
-            <li>• Lock'd logs what you actually did — sets, loads, and PRs as filed.</li>
-            <li>• Your workouts live in this browser&apos;s local database.</li>
-            <li>• Nothing is uploaded — your log stays on your device.</li>
-            <li>• Everything works in airplane mode once installed.</li>
+            <li>• Lock'd logs the work you did. Not a guess. Not a highlight reel.</li>
+            <li>• Sessions live in a local database on this device.</li>
+            <li>• Nothing is uploaded. The file stays here.</li>
+            <li>• Works in airplane mode once installed.</li>
           </ul>
           <Button variant="primary" block className="mt-4" onClick={() => setStep(1)}>
             Set up preferences
@@ -158,7 +158,7 @@ export function OnboardingPage() {
             className="mt-3 w-full text-center text-xs text-ink-subtle underline"
             onClick={() => void finish()}
           >
-            Skip — I&apos;ll change these later
+            Skip — I'll change these later
           </button>
         </Card>
       )}
