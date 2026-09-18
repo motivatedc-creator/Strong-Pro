@@ -8,6 +8,7 @@ import {
   type AskLabMatch,
 } from './askLabShared';
 import {
+  answerChangeFlags,
   answerGettingStronger,
   answerMuscleContribution,
   answerTrainingEnough,
@@ -151,6 +152,20 @@ const INTENT_RULES: readonly IntentRule[] = [
       'progress on lifts',
     ],
   },
+  {
+    intent: 'change_flags',
+    needles: [
+      'what should i change',
+      'should i change',
+      'stall flag',
+      'spike flag',
+      'deload flag',
+      'stall spike deload',
+      'am i stalled',
+      'volume spike',
+      'training flags',
+    ],
+  },
 ];
 
 function detectIntent(normalized: string): AskLabDataIntent | null {
@@ -223,6 +238,8 @@ function answerDataIntent(
       return answerVerdictWhy(query, context);
     case 'getting_stronger':
       return answerGettingStronger(query, context);
+    case 'change_flags':
+      return answerChangeFlags(query, context);
   }
 }
 
@@ -247,7 +264,7 @@ function answerExplore(query: string): AskLabAnswer {
     matches: [],
     known: 'Ask the Lab answers from your logged training or the shared evidence catalog.',
     missing:
-      'A data question (training enough, muscle contribution, verdict, strength) or a catalog claim.',
+      'A data question (training enough, muscle contribution, verdict, strength, change flags) or a catalog claim.',
     nextStep:
       'Try a starter chip, or ask about a Lock’d default (10–20 sets, 0.5 secondary, e1RM).',
   };
