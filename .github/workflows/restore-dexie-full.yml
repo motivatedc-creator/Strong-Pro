@@ -1,0 +1,44 @@
+name: Restore dexieRepository full
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/lockd-chrome-rebrand
+          fetch-depth: 0
+
+      - name: Restore monolithic dexieRepository; drop broken split
+        run: |
+          set -euo pipefail
+          # Known-good full file from earlier restore (accentTheme stamp)
+          git show 0faba5f934f8fd69b90a45371f442a51f97e9a2c:src/db/dexieRepository.ts \
+            > src/db/dexieRepository.ts
+          test "$(wc -c < src/db/dexieRepository.ts)" -ge 30000
+          grep -q "accentTheme: 'stamp'" src/db/dexieRepository.ts
+          # Remove incomplete split leftover (core/rest never landed)
+          if [ -f src/db/dexieRepository.helpers.ts ]; then
+            git rm -f src/db/dexieRepository.helpers.ts
+          fi
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/db/dexieRepository.ts
+          git add -u src/db/dexieRepository.helpers.ts || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "fix(brand): restore full dexieRepository; remove broken split stubs"
+          git push origin HEAD:feat/lockd-chrome-rebrand
