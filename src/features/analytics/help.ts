@@ -1,3 +1,4 @@
+import { researchMuscleTargetClaim } from '@/domain/evidence';
 import { FORMULA_EXPRESSION, FORMULA_LABEL } from '@/domain/oneRepMax';
 import type { OneRepMaxFormula } from '@/domain/types';
 
@@ -37,3 +38,10 @@ export const RECORDS_HELP = [
   'Editing or deleting a workout immediately changes the records it contributed to.',
   'Rep records show the heaviest load lifted for at least that many reps.',
 ];
+
+
+/** Research-default muscle target explanation from the shared evidence catalog. */
+export function researchMuscleTargetHelp(): string[] {
+  const claim = researchMuscleTargetClaim();
+  return [claim.statement, claim.interpretation, claim.limitations];
+}

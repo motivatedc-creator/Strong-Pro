@@ -4,13 +4,14 @@ import type {
   PersonalMuscleTargets,
   WeekStartDay,
 } from '@/domain/types';
+import { RESEARCH_WEEKLY_SET_BAND } from '@/domain/evidence';
 import { clampCredit } from '@/domain/volume';
 import type { LoggedEntry } from './compute';
 import { shiftLocalDate, startOfTrainingWeekDate } from './trainingWeeks';
 
 export type { MuscleTargetBand } from '@/domain/types';
 
-export const RESEARCH_MUSCLE_TARGET: Readonly<MuscleTargetBand> = { min: 10, max: 20 };
+export const RESEARCH_MUSCLE_TARGET: Readonly<MuscleTargetBand> = RESEARCH_WEEKLY_SET_BAND;
 export const NON_TARGETABLE_MUSCLES = new Set<MuscleGroup>(['unmapped', 'full body', 'cardio']);
 
 export type MuscleTargetState = 'below' | 'in_range' | 'above' | 'not_set' | 'unmapped';

@@ -10,6 +10,8 @@ import {
   type MuscleSetInsight,
   type MuscleTargetState,
 } from './muscleSets';
+import { researchMuscleTargetClaim } from '@/domain/evidence';
+import { ClaimEvidenceSheet } from './ClaimEvidenceSheet';
 
 export function MuscleSetsCard({
   insights,
@@ -25,6 +27,8 @@ export function MuscleSetsCard({
   onPersonalTargetsChange?: (targets: PersonalMuscleTargets) => void;
 }) {
   const [showEvidence, setShowEvidence] = useState(false);
+  const [showResearchEvidence, setShowResearchEvidence] = useState(false);
+  const researchClaim = researchMuscleTargetClaim();
   const [showTargetEditor, setShowTargetEditor] = useState(false);
   const initialMuscle =
     insights.find((row) => researchTargetFor(row.muscle))?.muscle ?? TARGETABLE_MUSCLES[0];
@@ -105,6 +109,14 @@ export function MuscleSetsCard({
             onClick={() => setShowEvidence((visible) => !visible)}
           >
             {showEvidence ? 'Hide evidence' : 'Show me why'}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-expanded={showResearchEvidence}
+            onClick={() => setShowResearchEvidence(true)}
+          >
+            Why this range
           </Button>
           {onPersonalTargetsChange && (
             <Button
@@ -253,6 +265,13 @@ export function MuscleSetsCard({
           </div>
         </div>
       )}
+
+      <ClaimEvidenceSheet
+        open={showResearchEvidence}
+        onClose={() => setShowResearchEvidence(false)}
+        claim={researchClaim}
+        title="Why 10–20 credited sets"
+      />
     </Card>
   );
 }
