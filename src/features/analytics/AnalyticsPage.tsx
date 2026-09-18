@@ -21,7 +21,7 @@ import { DataLabQuestions, type DataLabQuestion } from './DataLabQuestions';
 import { AskLabEntry } from './AskLabEntry';
 import { AnalyticsDetailedCharts } from './AnalyticsDetailedCharts';
 import { MuscleSetsCard } from './MuscleSetsCard';
-import { muscleSetInsight } from './muscleSets';
+import { muscleBandBalance } from './muscleSets';
 import { WeeklyVerdictCard } from './WeeklyVerdictCard';
 import { weeklyVerdict } from './weeklyVerdict';
 
@@ -61,12 +61,22 @@ export function AnalyticsPage() {
     const effectiveGranularity = range === 'all' ? 'month' : granularity;
     const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
-    const muscleSets = muscleSetInsight(entries, {
-      referenceLocalDate: localDateOf(),
+    const muscleBandOptions = {
       weekStart,
       secondaryCredit: settings.secondaryMuscleCredit,
       personalTargetBands: settings.personalMuscleTargets,
+    };
+    // Current training week — Data Lab / MuscleSetsCard
+    const currentWeekBalance = muscleBandBalance(entries, {
+      ...muscleBandOptions,
+      referenceLocalDate: localDateOf(),
     });
+    // Subject (last completed) week — Weekly Verdict balance slot
+    const subjectWeekBalance = muscleBandBalance(entries, {
+      ...muscleBandOptions,
+      referenceLocalDate: weekVerdict.subject.endDate,
+    });
+    const muscleSets = currentWeekBalance.insights;
     const exercises = exerciseOptions(entries);
     const selectedId = exerciseId || exercises[0]?.id || '';
     const progress = selectedId ? exerciseProgress(current, selectedId, options) : null;
@@ -77,6 +87,7 @@ export function AnalyticsPage() {
       summary,
       priorSummary,
       weekVerdict,
+      subjectWeekBalance,
       buckets,
       effectiveGranularity,
       muscles,
@@ -125,7 +136,7 @@ export function AnalyticsPage() {
     <>
       <PageHeader title="Data Lab" subtitle="Your data, explained." />
 
-      <WeeklyVerdictCard verdict={view.weekVerdict} weightUnit={weightUnit} />
+      <WeeklyVerdictCard verdict={view.weekVerdict} weightUnit={weightUnit} muscleBalance={view.subjectWeekBalance} />
 
       <DataLabQuestions
         selected={selectedQuestion}
