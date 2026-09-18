@@ -151,6 +151,7 @@ describe('weeklyVerdict v1', () => {
         entry('2026-08-03', 'old1', { hardSets: 8 }),
         entry('2026-08-10', 'old2', { hardSets: 8 }),
         entry('2026-08-17', 'old3', { hardSets: 8 }),
+        entry('2026-09-08', 'return', { hardSets: 8 }),
       ],
       options,
       'monday',
