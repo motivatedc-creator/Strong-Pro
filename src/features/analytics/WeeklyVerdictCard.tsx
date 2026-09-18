@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Card, Chip } from '@/components/ui';
-import { Icon, Icons } from '@/components/icons';
 import type { WeightUnit } from '@/domain/units';
 import { VerdictEvidenceSheet, formatDateRange } from './VerdictEvidenceSheet';
-import { weeklyVerdictCopy, type WeeklyVerdict } from './weeklyVerdict';
+import {
+  weeklyVerdictCopy,
+  type SentencePart,
+  type VerdictEvidenceKey,
+  type WeeklyVerdict,
+} from './weeklyVerdict';
 
 export function WeeklyVerdictCard({
   verdict,
@@ -12,7 +16,7 @@ export function WeeklyVerdictCard({
   verdict: WeeklyVerdict;
   weightUnit: WeightUnit;
 }) {
-  const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [evidenceKey, setEvidenceKey] = useState<VerdictEvidenceKey | null>(null);
   const copy = weeklyVerdictCopy(verdict, weightUnit);
 
   return (
@@ -35,42 +39,55 @@ export function WeeklyVerdictCard({
 
         <div className="space-y-1 text-sm text-ink-muted">
           {copy.lines.map((line) => (
-            <button
-              key={line}
-              type="button"
-              className="flex min-h-11 w-full items-center rounded px-1 text-left transition hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              onClick={() => setEvidenceOpen(true)}
-              aria-label={`${line} Show evidence`}
-            >
-              <span className="flex-1">{line}</span>
-              <span aria-hidden="true" className="ml-2 text-accent">
-                <Icon icon={Icons.chevron} size={14} />
-              </span>
-            </button>
+            <p key={line.plain} className="flex min-h-11 flex-wrap items-center gap-x-0 px-1 py-1">
+              <SentenceParts parts={line.parts} onOpen={setEvidenceKey} />
+            </p>
           ))}
         </div>
 
-        {copy.pulseLine && (
-          <button
-            type="button"
-            className="mt-3 flex min-h-11 w-full items-center rounded border-t border-line pt-3 text-left text-xs text-ink-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            onClick={() => setEvidenceOpen(true)}
-            aria-label={`${copy.pulseLine} Show same-span evidence`}
-          >
-            <span className="flex-1">{copy.pulseLine}</span>
-            <span aria-hidden="true" className="ml-2 text-accent">
-              <Icon icon={Icons.chevron} size={14} />
-            </span>
-          </button>
+        {copy.pulse && (
+          <div className="mt-3 flex min-h-11 flex-wrap items-center border-t border-line px-1 pt-3 text-xs text-ink-subtle">
+            <SentenceParts parts={copy.pulse.parts} onOpen={setEvidenceKey} />
+          </div>
         )}
       </Card>
 
       <VerdictEvidenceSheet
-        open={evidenceOpen}
-        onClose={() => setEvidenceOpen(false)}
+        open={evidenceKey !== null}
+        onClose={() => setEvidenceKey(null)}
         verdict={verdict}
         weightUnit={weightUnit}
+        focusKey={evidenceKey ?? undefined}
       />
     </section>
+  );
+}
+
+function SentenceParts({
+  parts,
+  onOpen,
+}: {
+  parts: SentencePart[];
+  onOpen: (key: VerdictEvidenceKey) => void;
+}) {
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.type === 'metric' && part.evidenceKey) {
+          return (
+            <button
+              key={`${part.text}-${index}`}
+              type="button"
+              className="mx-0.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 font-semibold tabular-nums text-ink underline decoration-accent/50 underline-offset-2 transition hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => onOpen(part.evidenceKey!)}
+              aria-label={`${part.text}. Show evidence`}
+            >
+              {part.text}
+            </button>
+          );
+        }
+        return <span key={`${part.text}-${index}`}>{part.text}</span>;
+      })}
+    </>
   );
 }
