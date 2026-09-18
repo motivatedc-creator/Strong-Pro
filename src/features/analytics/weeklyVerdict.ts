@@ -247,7 +247,7 @@ function averageMetrics(values: readonly WeeklyMetrics[]): WeeklyMetrics {
   };
 }
 
-function buildDirection(current: WeeklyMetrics, baseline: WeeklyMetrics): WeeklyMetrics extends never ? never : WeeklyDirection {
+function buildDirection(current: WeeklyMetrics, baseline: WeeklyMetrics): WeeklyDirection {
   if (baseline.hardSets <= 0) {
     return { id: 'direction_no_hard_set_baseline', band: 'steady', changePercent: null };
   }
@@ -264,3 +264,168 @@ function buildDirection(current: WeeklyMetrics, baseline: WeeklyMetrics): Weekly
             : 'steady';
   return { id: `direction_${band}`, band, changePercent };
 }
+
+function buildPulse(
+  entries: readonly LoggedEntry[],
+  currentWeekStart: string,
+  referenceLocalDate: string,
+  weekStart: WeekStartDay,
+): WeeklyPulse | null {
+  const dayIndex = elapsedDayIndex(referenceLocalDate, currentWeekStart);
+  if (dayIndex < 1) return null;
+
+  const baselineWeeks = selectTrainingBaseline(entries, currentWeekStart, weekStart);
+  if (baselineWeeks.length < MIN_BASELINE_WEEKS) return null;
+
+  const currentWindow = windowThroughElapsedDay(weekWindow(currentWeekStart), dayIndex);
+  const currentHardSets = metricsFor(entriesInWeek(entries, currentWindow)).hardSets;
+  const baselineHardSets = baselineWeeks.map((week) =>
+    metricsFor(entriesInWeek(entries, windowThroughElapsedDay(week, dayIndex))).hardSets,
+  );
+  const baselineHardSetsAverage = average(baselineHardSets);
+
+  return {
+    currentHardSets,
+    baselineHardSetsAverage,
+    baselineWeeks: baselineWeeks.length,
+    changePercent: percent(currentHardSets, baselineHardSetsAverage),
+  };
+}
+
+export interface GoalLift {
+  id: string;
+  name: string;
+  sessions: number;
+}
+
+export function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
+  const byLift = new Map<string, GoalLift & { workoutIds: Set<string> }>();
+  for (const entry of weeks.flatMap((week) => week.entries)) {
+    const current = byLift.get(entry.exercise.exerciseId) ?? {
+      id: entry.exercise.exerciseId,
+      name: entry.exercise.exerciseNameSnapshot,
+      sessions: 0,
+      workoutIds: new Set<string>(),
+    };
+    current.workoutIds.add(entry.workout.id);
+    byLift.set(current.id, current);
+  }
+  return [...byLift.values()]
+    .map(({ workoutIds, ...lift }) => ({ ...lift, sessions: workoutIds.size }))
+    .sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name))
+    .slice(0, MAX_GOAL_LIFTS);
+}
+
+export function bestEstimateForLift(
+  entries: readonly LoggedEntry[],
+  liftId: string,
+  options: AnalyticsOptions,
+): number | null {
+  const sets = entries
+    .filter((entry) => entry.exercise.exerciseId === liftId)
+    .flatMap((entry) => entry.sets);
+  return bestOneRepMax(sets, options.formula, { includeWarmups: false })?.value ?? null;
+}
+
+function buildStandout(
+  allEntries: readonly LoggedEntry[],
+  subjectEntries: readonly LoggedEntry[],
+  subjectWindow: TrainingWeekWindow,
+  baselineWeeks: readonly TrainingBaselineWeek[],
+  subject: WeeklyMetrics,
+  baseline: WeeklyMetrics,
+  goalLifts: readonly GoalLift[],
+  options: AnalyticsOptions,
+): WeeklyVerdictRule {
+  const baselineEntries = baselineWeeks.flatMap((week) => week.entries);
+  const historicalEntries = allEntries.filter((entry) => entry.workout.localDate < subjectWindow.startDate);
+
+  for (const lift of goalLifts) {
+    const current = bestEstimateForLift(subjectEntries, lift.id, options);
+    const previousBest = bestEstimateForLift(historicalEntries, lift.id, options);
+    if (current !== null && previousBest !== null && current > previousBest) {
+      return { id: 'standout_new_e1rm_best', text: `${lift.name}|${current}` };
+    }
+  }
+
+  for (const lift of goalLifts) {
+    const current = bestEstimateForLift(subjectEntries, lift.id, options);
+    const baselineBest = bestEstimateForLift(baselineEntries, lift.id, options);
+    const change = current !== null && baselineBest !== null ? percent(current, baselineBest) : null;
+    if (change !== null && change >= 2.5) {
+      return { id: 'standout_e1rm_up', text: `${lift.name}|${Math.round(change)}` };
+    }
+  }
+
+  const movers = [
+    { name: 'Hard sets', change: percent(subject.hardSets, baseline.hardSets) },
+    { name: 'Sessions', change: percent(subject.sessions, baseline.sessions) },
+    { name: 'Tonnage', change: percent(subject.tonnageG, baseline.tonnageG) },
+  ]
+    .filter((value): value is { name: string; change: number } => value.change !== null)
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
+
+  if (movers[0] && Math.abs(movers[0].change) >= 15) {
+    return {
+      id: 'standout_metric_mover',
+      text: `${movers[0].name}|${Math.round(movers[0].change)}`,
+    };
+  }
+
+  return { id: 'standout_none' };
+}
+
+function buildWatchout(
+  allEntries: readonly LoggedEntry[],
+  subjectEntries: readonly LoggedEntry[],
+  subjectWindow: TrainingWeekWindow,
+  baselineWeeks: readonly TrainingBaselineWeek[],
+  subject: WeeklyMetrics,
+  baseline: WeeklyMetrics,
+  goalLifts: readonly GoalLift[],
+  direction: WeeklyDirection,
+  options: AnalyticsOptions,
+): WeeklyVerdictRule {
+  if (direction.band === 'big_jump') return { id: 'watchout_big_jump' };
+
+  const baselineEntries = baselineWeeks.flatMap((week) => week.entries);
+  const previousWindow = weekWindow(shiftLocalDate(subjectWindow.startDate, -7));
+  const previousEntries = entriesInWeek(allEntries, previousWindow);
+
+  for (const lift of goalLifts) {
+    const baselineBest = bestEstimateForLift(baselineEntries, lift.id, options);
+    const current = bestEstimateForLift(subjectEntries, lift.id, options);
+    const previous = bestEstimateForLift(previousEntries, lift.id, options);
+    if (
+      baselineBest !== null &&
+      current !== null &&
+      previous !== null &&
+      current <= baselineBest * 0.95 &&
+      previous <= baselineBest * 0.95
+    ) {
+      return { id: 'watchout_e1rm_slip', text: lift.name };
+    }
+  }
+
+  const roundedBaselineSessions = Math.round(baseline.sessions);
+  if (subject.sessions <= roundedBaselineSessions - 1) {
+    return {
+      id: 'watchout_sessions_down',
+      text: `${subject.sessions}|${roundedBaselineSessions}`,
+    };
+  }
+
+  return { id: 'watchout_none' };
+}
+
+function percent(current: number, baseline: number): number | null {
+  if (baseline <= 0) return null;
+  return ((current - baseline) / baseline) * 100;
+}
+
+function average(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+export { metricEvidenceFor, weeklyVerdictCopy } from './weeklyVerdict.presentation';
