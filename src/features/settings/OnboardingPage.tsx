@@ -28,10 +28,10 @@ export function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
-        <img src="/brand/app-icon-master.svg" alt="Certified" className="h-14 w-14 rounded-2xl" />
+        <img src="/brand/app-icon-master.svg" alt="Lock'd" className="h-14 w-14 rounded-2xl" />
         <div>
-          <h1 className="font-mono text-2xl font-bold tracking-tight text-ink">CERTIFIED</h1>
-          <p className="text-sm text-ink-muted">Your reps. Your receipts.</p>
+          <h1 className="font-mono text-2xl font-bold tracking-tight text-ink">LOCKD</h1>
+          <p className="text-sm text-ink-muted">Keep the receipt.</p>
         </div>
       </div>
 
@@ -39,9 +39,9 @@ export function OnboardingPage() {
         <Card>
           <h2 className="text-base font-semibold text-ink">Your record stays on this device</h2>
           <ul className="mt-2 space-y-2 text-sm text-ink-muted">
-            <li>• Certified logs what you actually did — no cap, no vibes-based bench maxes.</li>
+            <li>• Lock'd logs what you actually did — sets, loads, and PRs as filed.</li>
             <li>• Your workouts live in this browser&apos;s local database.</li>
-            <li>• Nothing is uploaded — your aura lives on your device.</li>
+            <li>• Nothing is uploaded — your log stays on your device.</li>
             <li>• Everything works in airplane mode once installed.</li>
           </ul>
           <Button variant="primary" block className="mt-4" onClick={() => setStep(1)}>
