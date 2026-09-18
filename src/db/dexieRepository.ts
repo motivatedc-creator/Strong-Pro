@@ -55,6 +55,7 @@ export function defaultSettings(now: string): AppSettings {
     restTimerNotification: false,
     excludeWarmupsFromAnalytics: true,
     secondaryMuscleCredit: 0.5,
+    personalMuscleTargets: {},
     defaultBarProfileId: 'seed-bar-olympic-kg',
     defaultPlateInventoryId: 'seed-plates-kg',
     themeMode: 'system',

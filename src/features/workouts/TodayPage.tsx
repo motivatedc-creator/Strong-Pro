@@ -240,7 +240,7 @@ export function TodayPage() {
               Personal records
             </h2>
             <Link to="/analytics" className="text-sm font-medium text-accent">
-              Analytics
+              Data Lab
             </Link>
           </div>
           <ul className="space-y-1.5">

@@ -180,6 +180,15 @@ export const settingsSchema = z.object({
   restTimerNotification: z.boolean(),
   excludeWarmupsFromAnalytics: z.boolean(),
   secondaryMuscleCredit: z.number().min(0).max(1),
+  personalMuscleTargets: z
+    .record(
+      z.object({
+        min: z.number().finite().min(0).max(100),
+        max: z.number().finite().min(0).max(100),
+      }),
+    )
+    .optional()
+    .default({}),
   defaultBarProfileId: id.optional(),
   defaultPlateInventoryId: id.optional(),
   themeMode: z.enum(['light', 'dark', 'system']),
