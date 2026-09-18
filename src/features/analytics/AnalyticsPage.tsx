@@ -40,6 +40,7 @@ import {
 } from './compute';
 import { MUSCLE_HELP, RECORDS_HELP, VOLUME_HELP, oneRepMaxHelp } from './help';
 import { DataLabQuestions, type DataLabQuestion } from './DataLabQuestions';
+import { AskLabWorkspace } from './AskLabWorkspace';
 import { MuscleSetsCard } from './MuscleSetsCard';
 import { muscleSetInsight } from './muscleSets';
 import { WeeklyVerdictCard } from './WeeklyVerdictCard';
@@ -56,6 +57,7 @@ export function AnalyticsPage() {
   const [help, setHelp] = useState<{ title: string; lines: string[] } | null>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<DataLabQuestion | null>(null);
   const [showDetailedAnalytics, setShowDetailedAnalytics] = useState(false);
+  const [askLabOpen, setAskLabOpen] = useState(false);
 
   const formula = formulaOverride ?? settings.oneRepMaxFormula;
   const options = useMemo(
@@ -168,6 +170,21 @@ export function AnalyticsPage() {
           }
         />
       )}
+
+      <Card className="mb-4 p-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-ink">Ask the Lab</p>
+            <p className="mt-1 text-xs text-ink-muted">
+              Questions about Certified defaults, heuristics, and formulas — answered from the
+              shared evidence layer.
+            </p>
+          </div>
+          <Button size="sm" onClick={() => setAskLabOpen(true)}>
+            Open Ask the Lab
+          </Button>
+        </div>
+      </Card>
 
       <Button
         block
@@ -535,6 +552,8 @@ export function AnalyticsPage() {
           )}
         </div>
       )}
+
+      <AskLabWorkspace open={askLabOpen} onClose={() => setAskLabOpen(false)} />
 
       <Sheet open={!!help} onClose={() => setHelp(null)} title={help?.title ?? ''}>
         <ul className="list-disc space-y-2 pl-5 text-sm text-ink-muted">
