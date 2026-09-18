@@ -1,4 +1,4 @@
-/** Structured research / evidence layer for Certified (Strong-Pro). */
+/** Structured research / evidence layer for Lock'd (Strong-Pro). */
 
 export type EvidenceKind =
   | 'evidence_backed_default'

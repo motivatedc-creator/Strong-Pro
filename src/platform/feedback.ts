@@ -64,7 +64,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 export function showWebNotification(title: string, body: string): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
-    new Notification(title, { body, icon: '/brand/favicon.svg', tag: 'certified-rest-timer' });
+    new Notification(title, { body, icon: '/brand/favicon.svg', tag: 'lockd-rest-timer' });
   } catch {
     // Some browsers require a service-worker registration for notifications; ignore.
   }
