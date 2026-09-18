@@ -2,19 +2,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cx } from '@/components/ui';
 import { Icon, Icons, type LucideIcon } from '@/components/icons';
 
-/**
- * Navigation model.
- *
- * Phones get a five-item bottom bar (thumb-reachable, 44px+ targets) with a "More" hub
- * holding the remaining destinations. Tablets and desktops get a persistent sidebar with
- * every destination visible, so nothing is buried behind an extra tap on a big screen.
- */
-
 export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
-  /** Shown in the phone bottom bar. */
   primary: boolean;
   end?: boolean;
 }
