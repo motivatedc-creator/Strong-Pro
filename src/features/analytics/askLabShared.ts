@@ -17,7 +17,8 @@ export type AskLabDataIntent =
   | 'training_enough'
   | 'muscle_contribution'
   | 'verdict_why'
-  | 'getting_stronger';
+  | 'getting_stronger'
+  | 'change_flags';
 
 export type AskLabMatch = {
   claim: EvidenceClaim;
@@ -84,6 +85,14 @@ export type AskLabPayload =
       windowLabel: string;
       repCap: number;
       trends: StrengthTrendRow[];
+    }
+  | {
+      kind: 'change_flags';
+      subjectStartDate: string;
+      subjectEndDate: string;
+      activeLabels: string[];
+      receipts: string[];
+      hasPartialStalls: boolean;
     };
 
 export type AskLabAnswer = {
@@ -119,6 +128,7 @@ export const ASK_LAB_STARTERS: readonly { label: string; query: string }[] = [
   { label: 'Chest contributors', query: 'Which exercises contributed to chest?' },
   { label: 'Verdict change', query: 'Why did Weekly Verdict change?' },
   { label: 'Getting stronger?', query: 'Am I getting stronger?' },
+  { label: 'What to change?', query: 'What should I change?' },
 ];
 
 export const EXPLORE_BADGE = 'Not computed — thinking with you';
