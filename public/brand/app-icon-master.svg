@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <rect x="0" y="0" width="1024" height="1024" fill="#1C1B19"/>
   <g transform="translate(112,112) scale(2)">
-    <path d="M 122 118 L 245 118 L 282 155 L 282 282 L 118 282 L 118 155 Z" fill="none" stroke="#E8A33D" stroke-width="16" stroke-linejoin="round"/>
-    <circle cx="245" cy="155" r="11" fill="#E8A33D"/>
-    <text x="200" y="244" text-anchor="middle" font-size="132" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#F3EEE6">C</text>
+    <path d="M 122 118 L 245 118 L 282 155 L 282 282 L 118 282 L 118 155 Z" fill="none" stroke="#B0303A" stroke-width="16" stroke-linejoin="round"/>
+    <circle cx="245" cy="155" r="11" fill="#B0303A"/>
+    <text x="200" y="244" text-anchor="middle" font-size="132" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#F3EEE6">L</text>
   </g>
 </svg>
