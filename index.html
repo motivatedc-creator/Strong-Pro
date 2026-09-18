@@ -9,16 +9,20 @@
     <meta name="theme-color" content="#0a0a0b" id="rf-theme-color" />
     <meta
       name="description"
-      content="Lock'd — your local-first workout log. Keep the receipt."
+      content="Lock’d — your local-first workout log. Keep the receipt."
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Lockd" />
     <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
     <link rel="apple-touch-icon" href="/brand/app-icon-192.png" />
-    <title>Lock'd — Keep the receipt.</title>
+    <meta property="og:title" content="Lockd" />
+    <meta property="og:description" content="Lock’d — your local-first workout log. Keep the receipt." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Lockd" />
+    <meta name="twitter:description" content="Lock’d — your local-first workout log. Keep the receipt." />
+    <title>Lockd — Keep the receipt.</title>
     <script>
-      // Apply the persisted theme before first paint to avoid a flash of the wrong palette.
       (function () {
         try {
           var raw = localStorage.getItem('repforge.theme');
@@ -34,15 +38,13 @@
               : mode;
           document.documentElement.setAttribute('data-theme', resolved);
           if (accent) document.documentElement.setAttribute('data-accent', accent);
-        } catch (e) {
-          /* storage unavailable — fall back to the default dark theme */
-        }
+        } catch (e) {}
       })();
     </script>
   </head>
   <body>
     <div id="root"></div>
-    <noscript>Lock'd needs JavaScript enabled to log workouts.</noscript>
+    <noscript>Lock’d needs JavaScript enabled to log workouts.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

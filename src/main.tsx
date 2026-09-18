@@ -17,11 +17,9 @@ createRoot(container).render(
   </StrictMode>,
 );
 
-// Service worker: prompt rather than reload under the user's hands mid-set.
 const updateSW = registerSW({
   onNeedRefresh() {
-    toast.info("A new version of Lock'd is ready.");
-    // The update applies on the next launch; never interrupt an in-progress session.
+    toast.info('A new version of Lockd is ready.');
     window.addEventListener(
       'rf-apply-update',
       () => {
@@ -31,6 +29,6 @@ const updateSW = registerSW({
     );
   },
   onOfflineReady() {
-    toast.success("Lock'd is ready to work offline.");
+    toast.success('Lockd is ready offline.');
   },
 });
