@@ -33,7 +33,7 @@ const SECTION_LABELS: Record<Section, string> = {
 };
 
 const APP_ICONS: Array<{ id: AppIcon; name: string }> = [
-  { id: 'default', name: "Lock'd" },
+  { id: 'default', name: 'Lockd' },
   { id: 'ember', name: 'Ember' },
   { id: 'glacier', name: 'Glacier' },
   { id: 'moss', name: 'Moss' },
@@ -222,7 +222,7 @@ export function SettingsPage() {
           />
           <Toggle
             label="Notification"
-            description="Best effort. On the web this only fires while Lock'd is open; native builds schedule a real local notification."
+            description="Best effort. On the web this only fires while Lockd is open; native builds schedule a real local notification."
             checked={settings.restTimerNotification}
             onChange={async (value) => {
               if (value) {
@@ -328,7 +328,7 @@ export function SettingsPage() {
             <p className="mt-3 text-xs text-ink-subtle">
               {canSwitchAppIconAtRuntime()
                 ? 'Your choice is applied to the iOS home-screen icon immediately.'
-                : 'Installed as a web app, the home-screen icon is controlled by the platform through the manifest and cannot be changed at runtime — reinstall to pick up a new one. In a Capacitor iOS build, RepForge switches the icon natively.'}
+                : 'Installed as a web app, the home-screen icon is controlled by the platform through the manifest and cannot be changed at runtime — reinstall to pick up a new one. In a Capacitor iOS build, Lockd switches the icon natively.'}
             </p>
           </Card>
         </>
@@ -338,7 +338,7 @@ export function SettingsPage() {
 
       {section === 'about' && (
         <Card>
-          <h2 className="mb-2 text-sm font-semibold text-ink">About Lock'd</h2>
+          <h2 className="mb-2 text-sm font-semibold text-ink">About Lock’d</h2>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-ink-muted">Version</dt>
@@ -354,9 +354,9 @@ export function SettingsPage() {
             </div>
           </dl>
           <p className="mt-3 text-xs text-ink-muted">
-            Lock'd is free and subscription-free: no accounts, no ads, no analytics, no
+            Lock’d is free and subscription-free: no accounts, no ads, no analytics, no
             telemetry, no server. Your training data never leaves this device unless you export it
-            yourself. Lock'd is an independent, original product and is not affiliated with any
+            yourself. Lock’d is an independent, original product and is not affiliated with any
             other fitness app.
           </p>
         </Card>
