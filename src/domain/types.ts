@@ -237,7 +237,7 @@ export interface BarProfile {
 export type OneRepMaxFormula = 'epley' | 'brzycki';
 export type IntensityMode = 'rpe' | 'rir' | 'none';
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type AccentTheme = 'ember' | 'glacier' | 'moss' | 'violet';
+export type AccentTheme = 'stamp' | 'ember' | 'glacier' | 'moss' | 'violet';
 export type AppIcon = 'default' | 'ember' | 'glacier' | 'moss' | 'violet';
 
 export interface AppSettings {
