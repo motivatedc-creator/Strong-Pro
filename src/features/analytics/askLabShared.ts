@@ -58,6 +58,9 @@ export type AskLabPayload =
       weekEndDate: string;
       muscles: TrainingEnoughMuscleRow[];
       evidence: MuscleSetEvidence[];
+      balanceId: string;
+      balancePlain: string;
+      insufficientMapping: boolean;
     }
   | {
       kind: 'muscle_contribution';
