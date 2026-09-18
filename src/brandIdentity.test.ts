@@ -9,7 +9,7 @@ describe('Lock’d identity contract', () => {
     expect(read('vite.config.ts')).toMatch(/manifest:\s*{\s*name:\s*['"]Lockd['"],/);
   });
 
-  it('uses the diamond-ring mark for app chrome and alternate icons', () => {
+  it('uses the stamp L mark for app chrome and alternate icons', () => {
     const iconPaths = [
       'public/brand/app-icon-master.svg',
       'public/brand/favicon.svg',
@@ -27,9 +27,9 @@ describe('Lock’d identity contract', () => {
       const svg = read(path);
 
       expect(svg, path).toContain('aria-label="Lockd"');
-      expect(svg, path).toContain('data-brand-mark="diamond-ring"');
-      expect(svg, path).toContain('fill-rule="evenodd"');
-      expect(svg, path).not.toMatch(/RepForge|barbell|<text\b|>L<|rx="96"/i);
+      expect(svg, path).toContain('data-brand-mark="stamp-l"');
+      expect(svg, path).toContain('fill="#F3EEE4"');
+      expect(svg, path).not.toMatch(/diamond-ring|RepForge|barbell|rx="96"/i);
     }
   });
 
