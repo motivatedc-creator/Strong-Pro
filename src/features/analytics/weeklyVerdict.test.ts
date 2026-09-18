@@ -159,7 +159,7 @@ describe('weeklyVerdict v1', () => {
     );
 
     expect(result.state).toBe('welcome_back');
-    expect(weeklyVerdictCopy(result, 'kg').lines[0]).toContain('Welcome back');
+    expect(weeklyVerdictCopy(result, 'kg').lines[0]?.plain).toContain('Welcome back');
   });
 
   it('recognises a deload-shaped week when hard sets fall but sessions hold', () => {
@@ -179,7 +179,7 @@ describe('weeklyVerdict v1', () => {
     );
 
     expect(result.state).toBe('deload');
-    expect(weeklyVerdictCopy(result, 'kg').lines[0]).toContain('looks like a deload');
+    expect(weeklyVerdictCopy(result, 'kg').lines[0]?.plain).toContain('looks like a deload');
   });
 
   it('uses a new e1RM best as the first standout rule', () => {
@@ -194,7 +194,7 @@ describe('weeklyVerdict v1', () => {
     );
 
     expect(result.standout?.id).toBe('standout_new_e1rm_best');
-    expect(weeklyVerdictCopy(result, 'kg').lines[1]).toContain('Bench Press hit a new best estimate');
+    expect(weeklyVerdictCopy(result, 'kg').lines[1]?.plain).toContain('Bench Press hit a new best estimate');
   });
 
   it('uses the sessions drop as a watch-out when hard sets are otherwise steady', () => {

@@ -1,7 +1,6 @@
 import { bestOneRepMax } from '@/domain/oneRepMax';
 import { localDateOf } from '@/domain/time';
 import type { WeekStartDay } from '@/domain/types';
-import { fromGrams, type WeightUnit } from '@/domain/units';
 import type { AnalyticsOptions, LoggedEntry } from './compute';
 import {
   elapsedDayIndex,
@@ -15,8 +14,9 @@ import {
   type TrainingBaselineWeek,
   type TrainingWeekWindow,
 } from './trainingWeeks';
+import { metricsFor } from './weeklyVerdict.metrics';
 
-const MIN_BASELINE_WEEKS = 3;
+export const MIN_BASELINE_WEEKS = 3;
 const MAX_GOAL_LIFTS = 3;
 
 export type WeeklyVerdictState = 'not_enough_history' | 'welcome_back' | 'deload' | 'full';
@@ -62,12 +62,48 @@ export interface WeeklyVerdict {
   pulse: WeeklyPulse | null;
 }
 
+export type VerdictEvidenceKey =
+  | 'hard_sets'
+  | 'sessions'
+  | 'tonnage'
+  | 'direction_change'
+  | 'pulse_hard_sets'
+  | 'e1rm'
+  | 'baseline_weeks';
+
+export interface SentencePart {
+  type: 'text' | 'metric';
+  text: string;
+  evidenceKey?: VerdictEvidenceKey;
+}
+
+export interface VerdictSentence {
+  plain: string;
+  parts: SentencePart[];
+}
+
 export interface WeeklyVerdictCopy {
   available: boolean;
   title: string;
   baselineLabel: string;
-  lines: string[];
-  pulseLine?: string;
+  lines: VerdictSentence[];
+  pulse?: VerdictSentence;
+}
+
+export interface BaselineWeekEvidence {
+  startDate: string;
+  endDate: string;
+  value: string;
+}
+
+export interface MetricEvidence {
+  key: VerdictEvidenceKey;
+  label: string;
+  formula: string;
+  subjectLabel: string;
+  subjectValue: string;
+  baselineMean: string;
+  baselineWeeks: BaselineWeekEvidence[];
 }
 
 export function weeklyVerdict(
@@ -175,68 +211,6 @@ export function weeklyVerdict(
   );
 }
 
-export function weeklyVerdictCopy(
-  verdict: WeeklyVerdict,
-  weightUnit: WeightUnit,
-): WeeklyVerdictCopy {
-  const baselineCount = verdict.baseline.weeks.length;
-  const baselineLabel =
-    baselineCount === 4 ? '4-week baseline' : `Based on ${baselineCount} week${baselineCount === 1 ? '' : 's'}`;
-
-  if (verdict.state === 'not_enough_history') {
-    const remaining = Math.max(0, MIN_BASELINE_WEEKS - baselineCount);
-    return {
-      available: false,
-      title: 'Building your baseline',
-      baselineLabel,
-      lines: [
-        `Weekly Verdict needs ${remaining} more training week${remaining === 1 ? '' : 's'} before it can compare your training honestly.`,
-      ],
-      pulseLine: pulseCopy(verdict.pulse),
-    };
-  }
-
-  if (verdict.state === 'welcome_back') {
-    return {
-      available: true,
-      title: 'Last week',
-      baselineLabel,
-      lines: [
-        `Welcome back — you logged ${verdict.subject.metrics.sessions} ${plural(verdict.subject.metrics.sessions, 'session')} last week after at least two weeks away.`,
-        'No comparison this week; your older training stays intact as context.',
-        'Build another week and the normal verdict resumes.',
-      ],
-      pulseLine: pulseCopy(verdict.pulse),
-    };
-  }
-
-  if (verdict.state === 'deload') {
-    return {
-      available: true,
-      title: 'Last week',
-      baselineLabel,
-      lines: [
-        'Lighter week, consistent sessions — looks like a deload. Good.',
-        'No single lift or metric needs calling out from this week.',
-        'Nothing to fix — return to normal training when planned.',
-      ],
-      pulseLine: pulseCopy(verdict.pulse),
-    };
-  }
-
-  return {
-    available: true,
-    title: 'Last week',
-    baselineLabel,
-    lines: [
-      directionCopy(verdict.direction!, verdict.subject.metrics.hardSets, baselineCount),
-      standoutCopy(verdict.standout!, weightUnit),
-      watchoutCopy(verdict.watchout!),
-    ],
-    pulseLine: pulseCopy(verdict.pulse),
-  };
-}
-
 function result(
   state: WeeklyVerdictState,
   subjectWindow: TrainingWeekWindow,
@@ -257,30 +231,6 @@ function result(
     watchout,
     pulse,
   };
-}
-
-function metricsFor(entries: readonly LoggedEntry[]): WeeklyMetrics {
-  const workoutIds = new Set<string>();
-  let hardSets = 0;
-  let tonnageG = 0;
-
-  for (const entry of entries) {
-    workoutIds.add(entry.workout.id);
-    for (const set of entry.sets) {
-      if (!set.isCompleted) continue;
-      if (set.setType === 'working') hardSets += 1;
-      if (
-        set.setType !== 'warmup' &&
-        entry.exercise.trackingTypeSnapshot === 'weight_reps' &&
-        (set.weightG ?? 0) > 0 &&
-        (set.reps ?? 0) > 0
-      ) {
-        tonnageG += (set.weightG ?? 0) * (set.reps ?? 0);
-      }
-    }
-  }
-
-  return { hardSets, sessions: workoutIds.size, tonnageG };
 }
 
 function averageMetrics(values: readonly WeeklyMetrics[]): WeeklyMetrics {
@@ -463,68 +413,6 @@ function buildWatchout(
   return { id: 'watchout_none' };
 }
 
-function directionCopy(direction: WeeklyDirection, hardSets: number, baselineWeeks: number): string {
-  if (direction.changePercent === null) {
-    return `${hardSets} hard ${plural(hardSets, 'set')} last week; your recent baseline has no working sets to compare yet.`;
-  }
-
-  const change = Math.abs(Math.round(direction.changePercent));
-  const averageLabel = `${baselineWeeks}-week average`;
-  switch (direction.band) {
-    case 'big_jump':
-      return `You did ${hardSets} hard sets, ${change}% above your ${averageLabel} — a big jump.`;
-    case 'up':
-      return `Training went up: ${hardSets} hard sets, ${change}% above your ${averageLabel}.`;
-    case 'steady':
-      return `A steady week: ${hardSets} hard sets, in line with your ${averageLabel}.`;
-    case 'down':
-      return `A lighter week: ${hardSets} hard sets, ${change}% below your ${averageLabel}.`;
-    case 'well_down':
-      return `Training dropped: ${hardSets} hard sets, ${change}% below your ${averageLabel}.`;
-  }
-}
-
-function standoutCopy(rule: WeeklyVerdictRule, unit: WeightUnit): string {
-  if (rule.id === 'standout_new_e1rm_best' && rule.text) {
-    const [name, grams] = rule.text.split('|');
-    return `${name} hit a new best estimate of ${formatWeight(Number(grams), unit)} ${unit}.`;
-  }
-  if (rule.id === 'standout_e1rm_up' && rule.text) {
-    const [name, change] = rule.text.split('|');
-    return `${name} is up ${change}% on your recent best.`;
-  }
-  if (rule.id === 'standout_metric_mover' && rule.text) {
-    const [name, changeRaw] = rule.text.split('|');
-    const change = Number(changeRaw);
-    const signed = change > 0 ? `+${change}` : String(change);
-    return `${name} was your biggest mover at ${signed}%.`;
-  }
-  return 'No single lift or metric stood out.';
-}
-
-function watchoutCopy(rule: WeeklyVerdictRule): string {
-  if (rule.id === 'watchout_big_jump') {
-    return "That's a sharp rise — keep an eye on recovery next week.";
-  }
-  if (rule.id === 'watchout_e1rm_slip' && rule.text) {
-    return `${rule.text} has slipped 2 weeks running; check sleep, load or technique.`;
-  }
-  if (rule.id === 'watchout_sessions_down' && rule.text) {
-    const [sessions, baseline] = rule.text.split('|');
-    return `You trained ${sessions} times vs your usual ${baseline}; consistency is the easy win.`;
-  }
-  return 'Nothing to fix — repeat it.';
-}
-
-function pulseCopy(pulse: WeeklyPulse | null): string | undefined {
-  if (!pulse) return undefined;
-  if (pulse.changePercent === null || Math.abs(pulse.changePercent) < 10) {
-    return `This week so far: ${pulse.currentHardSets} hard ${plural(pulse.currentHardSets, 'set')}, in line with your usual pace by this point.`;
-  }
-  const change = Math.abs(Math.round(pulse.changePercent));
-  return `This week so far: ${pulse.currentHardSets} hard ${plural(pulse.currentHardSets, 'set')}, ${change}% ${pulse.changePercent > 0 ? 'above' : 'below'} your usual pace by this point.`;
-}
-
 function percent(current: number, baseline: number): number | null {
   if (baseline <= 0) return null;
   return ((current - baseline) / baseline) * 100;
@@ -535,11 +423,4 @@ function average(values: readonly number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function formatWeight(grams: number, unit: WeightUnit): string {
-  const value = fromGrams(grams, unit);
-  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 }).format(value);
-}
-
-function plural(value: number, singular: string): string {
-  return value === 1 ? singular : `${singular}s`;
-}
+export { metricEvidenceFor, weeklyVerdictCopy } from './weeklyVerdict.presentation';

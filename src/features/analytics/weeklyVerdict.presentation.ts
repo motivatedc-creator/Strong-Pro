@@ -1,0 +1,464 @@
+import type { WeightUnit } from '@/domain/units';
+import { metricsFor } from './weeklyVerdict.metrics';
+import { formatMetric, formatWeight, plural } from './weeklyVerdict.util';
+import {
+  MIN_BASELINE_WEEKS,
+  type MetricEvidence,
+  type SentencePart,
+  type VerdictEvidenceKey,
+  type VerdictSentence,
+  type WeeklyDirection,
+  type WeeklyPulse,
+  type WeeklyVerdict,
+  type WeeklyVerdictCopy,
+  type WeeklyVerdictRule,
+} from './weeklyVerdict';
+
+export function weeklyVerdictCopy(
+  verdict: WeeklyVerdict,
+  weightUnit: WeightUnit,
+): WeeklyVerdictCopy {
+  const baselineCount = verdict.baseline.weeks.length;
+  const baselineLabel =
+    baselineCount === 4
+      ? '4-week baseline'
+      : `Based on ${baselineCount} week${baselineCount === 1 ? '' : 's'}`;
+
+  if (verdict.state === 'not_enough_history') {
+    const remaining = Math.max(0, MIN_BASELINE_WEEKS - baselineCount);
+    const weekWord = remaining === 1 ? 'week' : 'weeks';
+    return {
+      available: false,
+      title: 'Building your baseline',
+      baselineLabel,
+      lines: [
+        sentence(
+          [
+            { type: 'text', text: 'Weekly Verdict needs ' },
+            {
+              type: 'metric',
+              text: `${remaining} more training ${weekWord}`,
+              evidenceKey: 'baseline_weeks',
+            },
+            {
+              type: 'text',
+              text: ' before it can compare your training honestly.',
+            },
+          ],
+        ),
+      ],
+      pulse: pulseSentence(verdict.pulse),
+    };
+  }
+
+  if (verdict.state === 'welcome_back') {
+    const sessions = verdict.subject.metrics.sessions;
+    return {
+      available: true,
+      title: 'Last week',
+      baselineLabel,
+      lines: [
+        sentence([
+          { type: 'text', text: 'Welcome back — you logged ' },
+          {
+            type: 'metric',
+            text: `${sessions} ${plural(sessions, 'session')}`,
+            evidenceKey: 'sessions',
+          },
+          {
+            type: 'text',
+            text: ' last week after at least two weeks away.',
+          },
+        ]),
+        sentence([
+          {
+            type: 'text',
+            text: 'No comparison this week; your older training stays intact as context.',
+          },
+        ]),
+        sentence([
+          {
+            type: 'text',
+            text: 'Build another week and the normal verdict resumes.',
+          },
+        ]),
+      ],
+      pulse: pulseSentence(verdict.pulse),
+    };
+  }
+
+  if (verdict.state === 'deload') {
+    return {
+      available: true,
+      title: 'Last week',
+      baselineLabel,
+      lines: [
+        sentence([
+          {
+            type: 'text',
+            text: 'Lighter week, consistent sessions — looks like a deload. Good.',
+          },
+        ]),
+        sentence([
+          {
+            type: 'text',
+            text: 'No single lift or metric needs calling out from this week.',
+          },
+        ]),
+        sentence([
+          {
+            type: 'text',
+            text: 'Nothing to fix — return to normal training when planned.',
+          },
+        ]),
+      ],
+      pulse: pulseSentence(verdict.pulse),
+    };
+  }
+
+  return {
+    available: true,
+    title: 'Last week',
+    baselineLabel,
+    lines: [
+      directionSentence(verdict.direction!, verdict.subject.metrics.hardSets, baselineCount),
+      standoutSentence(verdict.standout!, weightUnit),
+      watchoutSentence(verdict.watchout!),
+    ],
+    pulse: pulseSentence(verdict.pulse),
+  };
+}
+
+export function metricEvidenceFor(
+  verdict: WeeklyVerdict,
+  key: VerdictEvidenceKey,
+  weightUnit: WeightUnit,
+): MetricEvidence {
+  const weekMetrics = verdict.baseline.weeks.map((week) => ({
+    startDate: week.startDate,
+    endDate: week.endDate,
+    metrics: metricsFor(week.entries),
+  }));
+
+  switch (key) {
+    case 'hard_sets':
+      return {
+        key,
+        label: 'Hard sets',
+        formula:
+          'Completed working sets only. Warm-up, drop and failure sets do not count toward direction.',
+        subjectLabel: 'Last completed week',
+        subjectValue: `${formatMetric(verdict.subject.metrics.hardSets)} hard sets`,
+        baselineMean: `${formatMetric(verdict.baseline.metrics.hardSets)} hard sets`,
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: `${formatMetric(week.metrics.hardSets)} hard sets`,
+        })),
+      };
+    case 'sessions':
+      return {
+        key,
+        label: 'Sessions',
+        formula: 'Distinct completed workouts in the week, keyed by workout id.',
+        subjectLabel: 'Last completed week',
+        subjectValue: `${formatMetric(verdict.subject.metrics.sessions)} sessions`,
+        baselineMean: `${formatMetric(verdict.baseline.metrics.sessions)} sessions`,
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: `${formatMetric(week.metrics.sessions)} sessions`,
+        })),
+      };
+    case 'tonnage':
+      return {
+        key,
+        label: 'Tonnage',
+        formula:
+          'Sum of weight × reps for completed non-warm-up weight_reps sets. Used for standouts, never direction.',
+        subjectLabel: 'Last completed week',
+        subjectValue: `${formatWeight(verdict.subject.metrics.tonnageG, weightUnit)} ${weightUnit}`,
+        baselineMean: `${formatWeight(verdict.baseline.metrics.tonnageG, weightUnit)} ${weightUnit}`,
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: `${formatWeight(week.metrics.tonnageG, weightUnit)} ${weightUnit}`,
+        })),
+      };
+    case 'direction_change': {
+      const change = verdict.direction?.changePercent;
+      return {
+        key,
+        label: 'Hard-set change',
+        formula:
+          '((last week hard sets − baseline mean hard sets) ÷ baseline mean) × 100. Direction bands: >50 big jump, ≥10 up, >−10 steady, ≥−30 down, else well down.',
+        subjectLabel: 'Last completed week',
+        subjectValue:
+          change === null || change === undefined
+            ? 'No baseline hard sets'
+            : `${Math.round(change)}% vs baseline`,
+        baselineMean: `${formatMetric(verdict.baseline.metrics.hardSets)} hard sets`,
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: `${formatMetric(week.metrics.hardSets)} hard sets`,
+        })),
+      };
+    }
+    case 'pulse_hard_sets': {
+      const pulse = verdict.pulse;
+      return {
+        key,
+        label: 'Same-span hard sets',
+        formula:
+          'Current-week hard sets through today’s elapsed local day, compared with the identical day-count slice of each selected baseline week. Never compared with full weeks. Hidden on day 1.',
+        subjectLabel: 'This week so far',
+        subjectValue: pulse
+          ? `${formatMetric(pulse.currentHardSets)} hard sets`
+          : 'Hidden on day 1',
+        baselineMean: pulse
+          ? `${formatMetric(pulse.baselineHardSetsAverage)} hard sets`
+          : '—',
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: 'Same elapsed-day slice (see formula)',
+        })),
+      };
+    }
+    case 'e1rm':
+      return {
+        key,
+        label: 'Estimated 1RM',
+        formula:
+          'Best capped e1RM (≤12 reps) from completed non-warm-up sets under the active formula. Standout/watch-out only.',
+        subjectLabel: 'Last completed week',
+        subjectValue: verdict.standout?.text?.split('|')[1]
+          ? `${formatWeight(Number(verdict.standout.text.split('|')[1]), weightUnit)} ${weightUnit}`
+          : 'See standout sentence',
+        baselineMean: 'Prior best / baseline-window best per rule',
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: 'Lift-specific (not week totals)',
+        })),
+      };
+    case 'baseline_weeks':
+      return {
+        key,
+        label: 'Baseline weeks',
+        formula:
+          'Mean of up to 4 most recent non-empty training weeks inside the 8 completed weeks before the subject week. 3 weeks unlocks the verdict and is labelled.',
+        subjectLabel: 'Selected baseline',
+        subjectValue: `${verdict.baseline.weeks.length} training week${verdict.baseline.weeks.length === 1 ? '' : 's'}`,
+        baselineMean: `${formatMetric(verdict.baseline.metrics.hardSets)} hard sets mean`,
+        baselineWeeks: weekMetrics.map((week) => ({
+          startDate: week.startDate,
+          endDate: week.endDate,
+          value: `${formatMetric(week.metrics.hardSets)} hard sets · ${formatMetric(week.metrics.sessions)} sessions`,
+        })),
+      };
+  }
+}
+
+function sentence(parts: SentencePart[]): VerdictSentence {
+  return { plain: parts.map((part) => part.text).join(''), parts };
+}
+
+function directionSentence(
+  direction: WeeklyDirection,
+  hardSets: number,
+  baselineWeeks: number,
+): VerdictSentence {
+  if (direction.changePercent === null) {
+    return sentence([
+      {
+        type: 'metric',
+        text: `${hardSets} hard ${plural(hardSets, 'set')}`,
+        evidenceKey: 'hard_sets',
+      },
+      {
+        type: 'text',
+        text: ' last week; your recent baseline has no working sets to compare yet.',
+      },
+    ]);
+  }
+
+  const change = Math.abs(Math.round(direction.changePercent));
+  const averageLabel = `${baselineWeeks}-week average`;
+  const hard = {
+    type: 'metric' as const,
+    text: `${hardSets} hard sets`,
+    evidenceKey: 'hard_sets' as const,
+  };
+  const pct = {
+    type: 'metric' as const,
+    text: `${change}%`,
+    evidenceKey: 'direction_change' as const,
+  };
+
+  switch (direction.band) {
+    case 'big_jump':
+      return sentence([
+        { type: 'text', text: 'You did ' },
+        hard,
+        { type: 'text', text: ', ' },
+        pct,
+        { type: 'text', text: ` above your ${averageLabel} — a big jump.` },
+      ]);
+    case 'up':
+      return sentence([
+        { type: 'text', text: 'Training went up: ' },
+        hard,
+        { type: 'text', text: ', ' },
+        pct,
+        { type: 'text', text: ` above your ${averageLabel}.` },
+      ]);
+    case 'steady':
+      return sentence([
+        { type: 'text', text: 'A steady week: ' },
+        hard,
+        { type: 'text', text: `, in line with your ${averageLabel}.` },
+      ]);
+    case 'down':
+      return sentence([
+        { type: 'text', text: 'A lighter week: ' },
+        hard,
+        { type: 'text', text: ', ' },
+        pct,
+        { type: 'text', text: ` below your ${averageLabel}.` },
+      ]);
+    case 'well_down':
+      return sentence([
+        { type: 'text', text: 'Training dropped: ' },
+        hard,
+        { type: 'text', text: ', ' },
+        pct,
+        { type: 'text', text: ` below your ${averageLabel}.` },
+      ]);
+  }
+}
+
+function standoutSentence(rule: WeeklyVerdictRule, unit: WeightUnit): VerdictSentence {
+  if (rule.id === 'standout_new_e1rm_best' && rule.text) {
+    const [name, grams] = rule.text.split('|');
+    return sentence([
+      { type: 'text', text: `${name} hit a new best estimate of ` },
+      {
+        type: 'metric',
+        text: `${formatWeight(Number(grams), unit)} ${unit}`,
+        evidenceKey: 'e1rm',
+      },
+      { type: 'text', text: '.' },
+    ]);
+  }
+  if (rule.id === 'standout_e1rm_up' && rule.text) {
+    const [name, change] = rule.text.split('|');
+    return sentence([
+      { type: 'text', text: `${name} is up ` },
+      {
+        type: 'metric',
+        text: `${change}%`,
+        evidenceKey: 'e1rm',
+      },
+      { type: 'text', text: ' on your recent best.' },
+    ]);
+  }
+  if (rule.id === 'standout_metric_mover' && rule.text) {
+    const [name, changeRaw] = rule.text.split('|');
+    const change = Number(changeRaw);
+    const signed = change > 0 ? `+${change}` : String(change);
+    const evidenceKey: VerdictEvidenceKey =
+      name === 'Sessions' ? 'sessions' : name === 'Tonnage' ? 'tonnage' : 'hard_sets';
+    return sentence([
+      { type: 'text', text: `${name} was your biggest mover at ` },
+      {
+        type: 'metric',
+        text: `${signed}%`,
+        evidenceKey,
+      },
+      { type: 'text', text: '.' },
+    ]);
+  }
+  return sentence([{ type: 'text', text: 'No single lift or metric stood out.' }]);
+}
+
+function watchoutSentence(rule: WeeklyVerdictRule): VerdictSentence {
+  if (rule.id === 'watchout_big_jump') {
+    return sentence([
+      {
+        type: 'text',
+        text: "That's a sharp rise — keep an eye on recovery next week.",
+      },
+    ]);
+  }
+  if (rule.id === 'watchout_e1rm_slip' && rule.text) {
+    return sentence([
+      {
+        type: 'metric',
+        text: rule.text,
+        evidenceKey: 'e1rm',
+      },
+      {
+        type: 'text',
+        text: ' has slipped 2 weeks running; check sleep, load or technique.',
+      },
+    ]);
+  }
+  if (rule.id === 'watchout_sessions_down' && rule.text) {
+    const [sessions, baseline] = rule.text.split('|');
+    return sentence([
+      { type: 'text', text: 'You trained ' },
+      {
+        type: 'metric',
+        text: `${sessions} times`,
+        evidenceKey: 'sessions',
+      },
+      { type: 'text', text: ' vs your usual ' },
+      {
+        type: 'metric',
+        text: String(baseline),
+        evidenceKey: 'sessions',
+      },
+      { type: 'text', text: '; consistency is the easy win.' },
+    ]);
+  }
+  return sentence([{ type: 'text', text: 'Nothing to fix — repeat it.' }]);
+}
+
+function pulseSentence(pulse: WeeklyPulse | null): VerdictSentence | undefined {
+  if (!pulse) return undefined;
+  if (pulse.changePercent === null || Math.abs(pulse.changePercent) < 10) {
+    return sentence([
+      { type: 'text', text: 'This week so far: ' },
+      {
+        type: 'metric',
+        text: `${pulse.currentHardSets} hard ${plural(pulse.currentHardSets, 'set')}`,
+        evidenceKey: 'pulse_hard_sets',
+      },
+      {
+        type: 'text',
+        text: ', in line with your usual pace by this point.',
+      },
+    ]);
+  }
+  const change = Math.abs(Math.round(pulse.changePercent));
+  return sentence([
+    { type: 'text', text: 'This week so far: ' },
+    {
+      type: 'metric',
+      text: `${pulse.currentHardSets} hard ${plural(pulse.currentHardSets, 'set')}`,
+      evidenceKey: 'pulse_hard_sets',
+    },
+    { type: 'text', text: ', ' },
+    {
+      type: 'metric',
+      text: `${change}%`,
+      evidenceKey: 'pulse_hard_sets',
+    },
+    {
+      type: 'text',
+      text: ` ${pulse.changePercent > 0 ? 'above' : 'below'} your usual pace by this point.`,
+    },
+  ]);
+}

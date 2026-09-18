@@ -57,19 +57,26 @@ describe('WeeklyVerdictCard', () => {
 
     expect(screen.getByRole('heading', { name: 'Last week' })).toBeInTheDocument();
     expect(screen.getByText('Sep 7–13')).toBeInTheDocument();
-    expect(screen.getByText(/This week so far: 5 hard sets/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /5 hard sets\. Show evidence/ })).toBeInTheDocument();
   });
 
-  it('opens traceable evidence from a verdict sentence', async () => {
+  it('opens metric evidence from a tappable number with formula and baseline mean', async () => {
     render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" />);
 
-    await userEvent.click(screen.getByRole('button', { name: /Training went up/ }));
+    await userEvent.click(screen.getByRole('button', { name: /12 hard sets\. Show evidence/ }));
 
-    expect(screen.getByRole('dialog', { name: 'Weekly Verdict evidence' })).toBeInTheDocument();
-    expect(screen.getByText('Completed working sets only')).toBeInTheDocument();
-    expect(screen.getByText('12 hard sets')).toBeInTheDocument();
-    expect(screen.getByText('4-week mean')).toBeInTheDocument();
-    expect(screen.getByText('Same-span comparison')).toBeInTheDocument();
-    expect(screen.getByText('5 vs 4 hard sets')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Hard sets evidence' })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Completed working sets only\. Warm-up, drop and failure sets do not count/),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('12 hard sets').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Mean 10 hard sets')).toBeInTheDocument();
+  });
+
+  it('keeps 44px minimum targets on metric buttons', () => {
+    render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" />);
+    const button = screen.getByRole('button', { name: /12 hard sets\. Show evidence/ });
+    expect(button.className).toMatch(/min-h-11/);
+    expect(button.className).toMatch(/min-w-11/);
   });
 });
