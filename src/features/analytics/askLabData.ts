@@ -1,1 +1,1 @@
-PLACEHOLDER
+@file:///tmp/ask_restore.ts
