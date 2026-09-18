@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Lockd">
-  <rect width="32" height="32" fill="#0E0E0C"/>
-  <path data-brand-mark="diamond-ring" d="M16 3 29 16 16 29 3 16ZM16 10 10 16 16 22 22 16Z" fill="#E8E2D4" fill-rule="evenodd"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Lockd">
+  <rect width="1024" height="1024" rx="192" fill="#F3EEE4"/>
+  <path data-brand-mark="stamp-l" d="M304 208h166.4v422.4H736v169.6H304z" fill="#C24A32"/>
 </svg>
