@@ -108,4 +108,13 @@ describe('training week windows', () => {
       endDate: '2026-09-07',
     });
   });
+
+  it('keeps a 23:50 local session on its stored localDate across week starts', () => {
+    const late = entry('2026-09-13', 'late', '2026-09-13T23:50:00.000+04:00');
+    expect(entriesInWeek([late], { startDate: '2026-09-13', endDate: '2026-09-19' })).toHaveLength(1);
+    expect(entriesInWeek([late], { startDate: '2026-09-07', endDate: '2026-09-12' })).toHaveLength(0);
+    expect(startOfTrainingWeekDate(late.workout.localDate, 'sunday')).toBe('2026-09-13');
+    expect(startOfTrainingWeekDate(late.workout.localDate, 'monday')).toBe('2026-09-07');
+    expect(startOfTrainingWeekDate(late.workout.localDate, 'saturday')).toBe('2026-09-12');
+  });
 });
