@@ -12,7 +12,7 @@ import {
 import { Icon, Icons } from './icons';
 
 /**
- * Certified UI primitives.
+ * Lock’d UI primitives.
  *
  * Rules baked in here rather than left to each screen:
  *  - every interactive control is at least 44x44 px,
@@ -29,7 +29,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-accent-ink hover:brightness-110 active:brightness-95',
+  primary: 'bg-ink text-canvas hover:brightness-110 active:brightness-95',
   secondary:
     'bg-surface-raised text-ink shadow-[inset_0_0_0_1px_rgb(var(--rf-line))] hover:bg-surface',
   ghost: 'bg-transparent text-ink-muted hover:text-ink hover:bg-surface-raised',
@@ -43,10 +43,6 @@ const SIZES: Record<ButtonSize, string> = {
   lg: 'min-h-[3.25rem] px-5 text-base rounded-xl',
 };
 
-/**
- * Classes shared by <Button> and link-shaped buttons, so a <Link> that acts as a button
- * looks identical without nesting an anchor inside a <button>.
- */
 export function buttonClasses(
   variant: ButtonVariant = 'secondary',
   size: ButtonSize = 'md',
@@ -181,7 +177,6 @@ export const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLIn
   },
 );
 
-/** Numeric input that opens a decimal keypad and never shows spinner arrows. */
 export const NumberInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function NumberInput({ className, ...rest }, ref) {
     return (
@@ -402,7 +397,6 @@ export function ErrorNotice({
   );
 }
 
-/** Bottom sheet on phones, centred dialog on wider screens. Traps focus and closes on Escape. */
 export function Sheet({
   open,
   onClose,
@@ -509,7 +503,6 @@ export function Sheet({
   );
 }
 
-/** Destructive-action dialog. The body must explain the effect, not just ask "are you sure". */
 export function ConfirmDialog({
   open,
   title,
