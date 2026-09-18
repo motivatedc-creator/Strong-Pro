@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import { Button, Card, Sheet, cx } from '@/components/ui';
 import type { EvidenceClaim, EvidenceKind } from '@/domain/evidence';
+import { titleCase } from '@/domain/taxonomy';
+import { formatCompactNumber, fromGrams, type WeightUnit } from '@/domain/units';
 import { ClaimEvidenceSheet } from './ClaimEvidenceSheet';
-import { ASK_LAB_STARTERS, answerAskLab, type AskLabAnswer } from './askLab';
+import {
+  ASK_LAB_STARTERS,
+  EXPLORE_BADGE,
+  answerAskLab,
+  type AskLabAnswer,
+  type AskLabContext,
+  type AskLabTier,
+} from './askLab';
 
 const KIND_LABEL: Record<EvidenceKind, string> = {
   evidence_backed_default: 'Research default',
@@ -11,12 +20,26 @@ const KIND_LABEL: Record<EvidenceKind, string> = {
   pure_calculation: 'Pure calculation',
 };
 
+const TIER_BADGE: Record<AskLabTier, string> = {
+  computed: 'Computed',
+  partial: 'Partial',
+  explore: EXPLORE_BADGE,
+};
+
+function formatSets(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
 export function AskLabWorkspace({
   open,
   onClose,
+  context,
+  weightUnit = 'kg',
 }: {
   open: boolean;
   onClose: () => void;
+  context?: AskLabContext;
+  weightUnit?: WeightUnit;
 }) {
   const [draft, setDraft] = useState('');
   const [answer, setAnswer] = useState<AskLabAnswer | null>(null);
@@ -25,7 +48,7 @@ export function AskLabWorkspace({
   const canAsk = draft.trim().length > 0;
 
   const submit = (query: string) => {
-    const next = answerAskLab(query);
+    const next = answerAskLab(query, context);
     setDraft(query);
     setAnswer(next);
   };
@@ -36,7 +59,7 @@ export function AskLabWorkspace({
         open={open}
         onClose={onClose}
         title="Ask the Lab"
-        description="Answers from the shared evidence layer — same receipts as Data Lab."
+        description="Answers from your logged training and the shared evidence layer."
         size="lg"
       >
         <div className="space-y-4 pb-4 text-sm">
@@ -50,7 +73,7 @@ export function AskLabWorkspace({
           >
             <input
               aria-label="Ask the Lab"
-              placeholder="e.g. Why 10–20 credited sets?"
+              placeholder="e.g. Am I training enough?"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               className="min-h-tap w-full flex-1 rounded-xl border border-line bg-surface px-3 text-sm text-ink"
@@ -75,14 +98,113 @@ export function AskLabWorkspace({
 
           {answer && (
             <Card className="space-y-3 p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={cx(
+                    'inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+                    answer.tier === 'computed' && 'border-accent/40 text-accent',
+                    answer.tier === 'partial' && 'border-line text-ink-muted',
+                    answer.tier === 'explore' && 'border-line text-ink-subtle',
+                  )}
+                >
+                  {TIER_BADGE[answer.tier]}
+                </span>
+                {answer.intent && (
+                  <span className="text-[11px] font-medium uppercase tracking-wide text-ink-subtle">
+                    {answer.intent.replaceAll('_', ' ')}
+                  </span>
+                )}
+              </div>
+
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
-                  {answer.refused ? 'No receipt' : 'Call'}
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">Call</p>
                 <p className="mt-1 font-medium text-ink">{answer.call}</p>
               </div>
 
-              {!answer.refused && (
+              {answer.known && (
+                <p className="text-xs text-ink-muted">
+                  <span className="font-semibold text-ink">Known: </span>
+                  {answer.known}
+                </p>
+              )}
+              {answer.missing && (
+                <p className="text-xs text-ink-muted">
+                  <span className="font-semibold text-ink">Missing: </span>
+                  {answer.missing}
+                </p>
+              )}
+              {answer.nextStep && (
+                <p className="text-xs text-ink-muted">
+                  <span className="font-semibold text-ink">Next: </span>
+                  {answer.nextStep}
+                </p>
+              )}
+
+              {answer.payload?.kind === 'training_enough' &&
+                answer.payload.muscles.length > 0 && (
+                  <ul className="divide-y divide-line rounded-xl border border-line bg-surface-raised px-3">
+                    {answer.payload.muscles.slice(0, 8).map((row) => (
+                      <li
+                        key={row.muscle}
+                        className="flex items-center justify-between gap-3 py-2 text-sm"
+                      >
+                        <span className="font-semibold text-ink">{titleCase(row.muscle)}</span>
+                        <span className="font-mono tabular-nums text-ink-muted">
+                          {row.targetMin != null && row.targetMax != null
+                            ? `${formatSets(row.sets)} of ${formatSets(row.targetMin)}–${formatSets(row.targetMax)}`
+                            : `${formatSets(row.sets)} credited`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+              {answer.payload?.kind === 'muscle_contribution' &&
+                answer.payload.attributions.length > 0 && (
+                  <ul className="divide-y divide-line rounded-xl border border-line bg-surface-raised px-3">
+                    {answer.payload.attributions.map((row) => (
+                      <li
+                        key={row.exerciseId}
+                        className="flex items-center justify-between gap-3 py-2 text-sm"
+                      >
+                        <span className="font-semibold text-ink">{row.exerciseName}</span>
+                        <span className="font-mono tabular-nums text-ink-muted">
+                          {formatSets(row.creditedSets)} credited · {row.roles.join('/')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+              {answer.payload?.kind === 'getting_stronger' &&
+                answer.payload.trends.length > 0 && (
+                  <ul className="divide-y divide-line rounded-xl border border-line bg-surface-raised px-3">
+                    {answer.payload.trends.map((row) => (
+                      <li
+                        key={row.exerciseId}
+                        className="flex items-center justify-between gap-3 py-2 text-sm"
+                      >
+                        <span className="font-semibold text-ink">{row.exerciseName}</span>
+                        <span className="font-mono tabular-nums text-ink-muted">
+                          {formatCompactNumber(fromGrams(row.firstE1rmG, weightUnit))} →{' '}
+                          {formatCompactNumber(fromGrams(row.lastE1rmG, weightUnit))} {weightUnit}
+                          {row.changePercent != null
+                            ? ` (${row.changePercent >= 0 ? '+' : ''}${row.changePercent.toFixed(0)}%)`
+                            : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+              {answer.payload?.kind === 'verdict_why' && (
+                <p className="text-xs text-ink-subtle">
+                  Subject week {answer.payload.subjectStartDate} → {answer.payload.subjectEndDate}{' '}
+                  · state {answer.payload.verdict.state.replaceAll('_', ' ')}
+                </p>
+              )}
+
+              {answer.matches.length > 0 && (
                 <ul className="space-y-2" aria-label="Cited claims">
                   {answer.matches.map(({ claim }) => (
                     <li key={claim.id}>
@@ -94,7 +216,9 @@ export function AskLabWorkspace({
                         )}
                         onClick={() => setDetailClaim(claim)}
                       >
-                        <span className="block text-sm font-semibold text-ink">{claim.statement}</span>
+                        <span className="block text-sm font-semibold text-ink">
+                          {claim.statement}
+                        </span>
                         <span className="mt-1 inline-flex rounded-full border border-line px-2 py-0.5 text-[11px] font-semibold text-ink-muted">
                           {KIND_LABEL[claim.kind]}
                         </span>
@@ -105,10 +229,10 @@ export function AskLabWorkspace({
                 </ul>
               )}
 
-              {answer.refused && (
+              {answer.tier === 'explore' && (
                 <p className="text-xs text-ink-muted">
-                  Ask the Lab will not invent papers. If this should be answerable, add it to the
-                  evidence catalog first.
+                  Ask the Lab will not invent papers or training metrics. Starter chips cover your
+                  logged work; research defaults stay on the shared evidence layer.
                 </p>
               )}
             </Card>
