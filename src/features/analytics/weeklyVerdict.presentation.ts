@@ -1,4 +1,8 @@
 import type { WeightUnit } from '@/domain/units';
+import {
+  muscleBandBalanceSentence,
+  type MuscleBandBalance,
+} from './muscleSets';
 import { metricsFor } from './weeklyVerdict.metrics';
 import { formatMetric, formatWeight, plural } from './weeklyVerdict.util';
 import {
@@ -17,7 +21,9 @@ import {
 export function weeklyVerdictCopy(
   verdict: WeeklyVerdict,
   weightUnit: WeightUnit,
+  muscleBalance?: MuscleBandBalance | null,
 ): WeeklyVerdictCopy {
+  const balanceSlot = balanceCopy(muscleBalance);
   const baselineCount = verdict.baseline.weeks.length;
   const baselineLabel =
     baselineCount === 4
@@ -47,6 +53,7 @@ export function weeklyVerdictCopy(
           ],
         ),
       ],
+      ...balanceSlot,
       pulse: pulseSentence(verdict.pulse),
     };
   }
@@ -83,6 +90,7 @@ export function weeklyVerdictCopy(
           },
         ]),
       ],
+      ...balanceSlot,
       pulse: pulseSentence(verdict.pulse),
     };
   }
@@ -112,6 +120,7 @@ export function weeklyVerdictCopy(
           },
         ]),
       ],
+      ...balanceSlot,
       pulse: pulseSentence(verdict.pulse),
     };
   }
@@ -125,6 +134,7 @@ export function weeklyVerdictCopy(
       standoutSentence(verdict.standout!, weightUnit),
       watchoutSentence(verdict.watchout!),
     ],
+    ...balanceSlot,
     pulse: pulseSentence(verdict.pulse),
   };
 }
@@ -133,6 +143,7 @@ export function metricEvidenceFor(
   verdict: WeeklyVerdict,
   key: VerdictEvidenceKey,
   weightUnit: WeightUnit,
+  muscleBalance?: MuscleBandBalance | null,
 ): MetricEvidence {
   const weekMetrics = verdict.baseline.weeks.map((week) => ({
     startDate: week.startDate,
@@ -258,7 +269,61 @@ export function metricEvidenceFor(
           value: `${formatMetric(week.metrics.hardSets)} hard sets · ${formatMetric(week.metrics.sessions)} sessions`,
         })),
       };
+    case 'muscle_balance': {
+      const balance = muscleBalance;
+      const judged = balance?.judged ?? [];
+      const detail =
+        judged.length === 0
+          ? 'No targetable mapped volume in the subject week.'
+          : judged
+              .map((row) => {
+                const band =
+                  row.target !== undefined
+                    ? `${formatMetric(row.target.min)}–${formatMetric(row.target.max)}`
+                    : 'no band';
+                const source = row.targetSource ?? 'n/a';
+                return `${row.muscle}: ${formatMetric(row.sets)} credited sets vs ${band} (${source})`;
+              })
+              .join('; ');
+      return {
+        key,
+        label: 'Muscle balance',
+        formula:
+          'Credited working sets in the subject training week per muscle, compared with the personal target band when set, otherwise the research default 10–20. Secondary muscles use fractional credit. The 10–20 upper bound is a product default, not a hard science ceiling — see catalog claim weekly-credited-sets-10-20 for limits.',
+        subjectLabel: 'Last completed week',
+        subjectValue: balance
+          ? muscleBandBalanceSentence(balance).plain
+          : 'No balance data',
+        baselineMean: 'Per-muscle bands (not a week-mean metric)',
+        baselineWeeks: balance
+          ? [
+              {
+                startDate: balance.weekStartDate,
+                endDate: balance.weekEndDate,
+                value: detail,
+              },
+            ]
+          : [],
+      };
+    }
   }
+}
+
+function balanceCopy(
+  muscleBalance: MuscleBandBalance | null | undefined,
+): Pick<WeeklyVerdictCopy, 'balance' | 'balanceId'> {
+  if (!muscleBalance) return {};
+  const built = muscleBandBalanceSentence(muscleBalance);
+  return {
+    balanceId: built.id,
+    balance: sentence([
+      {
+        type: 'metric',
+        text: built.plain,
+        evidenceKey: 'muscle_balance',
+      },
+    ]),
+  };
 }
 
 function sentence(parts: SentencePart[]): VerdictSentence {
