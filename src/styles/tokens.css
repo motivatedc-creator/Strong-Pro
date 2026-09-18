@@ -1,5 +1,5 @@
 /*
- * Certified design tokens.
+ * Lock'd design tokens.
  *
  * Colors are stored as space-separated RGB channels so Tailwind's `<alpha-value>`
  * syntax works (`bg-accent/20`). Light and dark palettes are selected by the
@@ -58,8 +58,19 @@
     0 8px 24px -16px rgb(18 17 16 / 0.18);
 }
 
-/* ---- Accent families: seal amber first, then quieter data colours ---- */
+/* ---- Accent families: stamp seal first (default), ember gold optional ---- */
 /* Dark accents are lifted so primary actions read on near-black. */
+
+:root[data-accent='stamp'] {
+  --rf-accent: 176 48 58;
+  --rf-accent-ink: 252 249 243;
+  --rf-accent-soft: 176 48 58;
+}
+:root[data-accent='stamp'][data-theme='light'] {
+  --rf-accent: 96 28 36;
+  --rf-accent-ink: 252 249 243;
+  --rf-accent-soft: 96 28 36;
+}
 
 :root[data-accent='ember'] {
   --rf-accent: 242 176 68;
