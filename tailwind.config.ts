@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Certified design tokens.
+ * Lock'd design tokens.
  *
  * All colors are declared as CSS custom properties (see src/styles/tokens.css) holding
  * space-separated RGB channels, so that a single class (`bg-surface`) resolves correctly
