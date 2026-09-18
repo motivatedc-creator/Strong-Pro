@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect x="0" y="0" width="64" height="64" rx="10" fill="#1C1B19"/>
-  <path d="M 16 15 L 39 15 L 47 23 L 47 49 L 15 49 L 15 23 Z" fill="none" stroke="#E8A33D" stroke-width="3.2" stroke-linejoin="round" transform="translate(1,0) scale(0.9) translate(3,3)"/>
-  <text x="32" y="41" text-anchor="middle" font-size="24" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#F3EEE6">C</text>
-</svg>

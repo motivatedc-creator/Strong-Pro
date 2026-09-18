@@ -186,7 +186,7 @@ export function ExerciseLibraryPage() {
         body={
           <p>
             Custom exercises can only be deleted when no logged workout uses them. If any history
-            references this exercise, RepForge will refuse and suggest archiving instead — your
+            references this exercise, Lock’d will refuse and suggest archiving instead — your
             history is never rewritten.
           </p>
         }

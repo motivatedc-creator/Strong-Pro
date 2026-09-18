@@ -59,7 +59,7 @@ export function defaultSettings(now: string): AppSettings {
     defaultBarProfileId: 'seed-bar-olympic-kg',
     defaultPlateInventoryId: 'seed-plates-kg',
     themeMode: 'system',
-    accentTheme: 'ember',
+    accentTheme: 'stamp',
     appIcon: 'default',
     updatedAt: now,
   };

@@ -1,37 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
-  <rect x="0" y="0" width="400" height="400" fill="none" fill-opacity="0"/>
-  <g>
-    <line x1="374.0" y1="200.0" x2="386.0" y2="200.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="369.6" y1="238.7" x2="381.3" y2="241.4" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="356.8" y1="275.5" x2="367.6" y2="280.7" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="336.0" y1="308.5" x2="345.4" y2="316.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="308.5" y1="336.0" x2="316.0" y2="345.4" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="275.5" y1="356.8" x2="280.7" y2="367.6" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="238.7" y1="369.6" x2="241.4" y2="381.3" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="200.0" y1="374.0" x2="200.0" y2="386.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="161.3" y1="369.6" x2="158.6" y2="381.3" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="124.5" y1="356.8" x2="119.3" y2="367.6" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="91.5" y1="336.0" x2="84.0" y2="345.4" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="64.0" y1="308.5" x2="54.6" y2="316.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="43.2" y1="275.5" x2="32.4" y2="280.7" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="30.4" y1="238.7" x2="18.7" y2="241.4" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="26.0" y1="200.0" x2="14.0" y2="200.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="30.4" y1="161.3" x2="18.7" y2="158.6" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="43.2" y1="124.5" x2="32.4" y2="119.3" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="64.0" y1="91.5" x2="54.6" y2="84.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="91.5" y1="64.0" x2="84.0" y2="54.6" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="124.5" y1="43.2" x2="119.3" y2="32.4" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="161.3" y1="30.4" x2="158.6" y2="18.7" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="200.0" y1="26.0" x2="200.0" y2="14.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="238.7" y1="30.4" x2="241.4" y2="18.7" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="275.5" y1="43.2" x2="280.7" y2="32.4" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="308.5" y1="64.0" x2="316.0" y2="54.6" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="336.0" y1="91.5" x2="345.4" y2="84.0" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="356.8" y1="124.5" x2="367.6" y2="119.3" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-<line x1="369.6" y1="161.3" x2="381.3" y2="158.6" stroke="#1C1B19" stroke-width="6" stroke-linecap="round"/>
-
-  </g>
-  <path d="M 122 118 L 245 118 L 282 155 L 282 282 L 118 282 L 118 155 Z" fill="none" stroke="#1C1B19" stroke-width="10" stroke-linejoin="round"/>
-  <circle cx="245" cy="155" r="7" fill="#E8A33D"/>
-  <text x="200" y="238" text-anchor="middle" font-size="118" font-family="IBM Plex Mono, JetBrains Mono, ui-monospace, Menlo, monospace" font-weight="700" fill="#1C1B19">C</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Lockd">
+  <rect width="32" height="32" fill="#0E0E0C"/>
+  <path data-brand-mark="diamond-ring" d="M16 3 29 16 16 29 3 16ZM16 10 10 16 16 22 22 16Z" fill="#E8E2D4" fill-rule="evenodd"/>
 </svg>

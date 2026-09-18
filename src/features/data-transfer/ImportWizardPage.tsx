@@ -140,7 +140,7 @@ export function ImportWizardPage() {
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-ink-muted">
             <li>In the Strong app, open Settings and export your data as CSV.</li>
             <li>Save the file to this device.</li>
-            <li>Select it below — RepForge parses it locally and shows you a preview first.</li>
+            <li>Select it below — Lock’d parses it locally and shows you a preview first.</li>
           </ol>
           <input
             type="file"
@@ -160,7 +160,7 @@ export function ImportWizardPage() {
         <Card>
           <h2 className="text-sm font-semibold text-ink">Map the columns</h2>
           <p className="mt-1 text-xs text-ink-muted">
-            RepForge matched what it recognised. Set anything it missed — date and exercise name are
+            Lock’d matched what it recognised. Set anything it missed — date and exercise name are
             required.
           </p>
 

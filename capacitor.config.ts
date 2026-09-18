@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.repforge.tracker',
-  appName: 'RepForge',
+  appName: 'Lockd',
   webDir: 'dist',
   backgroundColor: '#0b0f14',
   ios: {
@@ -15,7 +15,7 @@ const config: CapacitorConfig = {
   plugins: {
     LocalNotifications: {
       smallIcon: 'ic_stat_repforge',
-      iconColor: '#f97316',
+      iconColor: '#c24a32',
     },
   },
 };

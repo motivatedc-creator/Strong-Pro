@@ -50,7 +50,7 @@ export function DataSettings() {
 
   const readFile = async (file: File) => {
     if (file.size > MAX_BACKUP_BYTES) {
-      toast.error('That file is too large to be a RepForge backup.');
+      toast.error('That file is too large to be a Lock’d backup.');
       return;
     }
     let parsed: unknown;
@@ -116,7 +116,7 @@ export function DataSettings() {
           type="file"
           accept="application/json,.json"
           className="mt-3 block w-full text-sm text-ink-muted file:mr-3 file:min-h-tap file:rounded file:border file:border-line file:bg-surface-raised file:px-4 file:text-sm file:font-semibold file:text-ink"
-          aria-label="Choose a RepForge JSON backup"
+          aria-label="Choose a Lock’d JSON backup"
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (file) void readFile(file);
@@ -183,7 +183,7 @@ export function DataSettings() {
           <div>
             <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-danger">
               <Icon icon={Icons.warning} size={14} />
-              This file is not a valid RepForge backup, so nothing was changed.
+              This file is not a valid Lock’d backup, so nothing was changed.
             </p>
             <ul className="list-disc space-y-1 pl-5 text-xs text-ink-muted">
               {validation.errors.map((error) => (
@@ -256,7 +256,7 @@ export function DataSettings() {
         body={
           <p>
             Every workout, routine, exercise and measurement currently on this device is deleted and
-            replaced by the contents of this file. RepForge will download a backup of your current
+            replaced by the contents of this file. Lock’d will download a backup of your current
             data first so the step is reversible.
           </p>
         }
@@ -277,7 +277,7 @@ export function DataSettings() {
           <div>
             <p>
               This erases every workout, set, routine, custom exercise and measurement stored in
-              this browser. It cannot be undone, and RepForge keeps no copy anywhere else.
+              this browser. It cannot be undone, and Lock’d keeps no copy anywhere else.
             </p>
             <label className="rf-label mt-3" htmlFor="confirm-delete">
               Type DELETE to confirm

@@ -192,7 +192,7 @@ export const settingsSchema = z.object({
   defaultBarProfileId: id.optional(),
   defaultPlateInventoryId: id.optional(),
   themeMode: z.enum(['light', 'dark', 'system']),
-  accentTheme: z.enum(['ember', 'glacier', 'moss', 'violet']),
+  accentTheme: z.enum(['stamp', 'ember', 'glacier', 'moss', 'violet']),
   appIcon: z.enum(['default', 'ember', 'glacier', 'moss', 'violet']),
   onboardingCompletedAt: isoDateTime.optional(),
   updatedAt: isoDateTime,

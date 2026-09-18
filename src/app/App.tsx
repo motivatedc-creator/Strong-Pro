@@ -81,7 +81,7 @@ function DatabaseGate({ children }: { children: React.ReactNode }) {
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface text-ink-subtle">
           <Icon icon={Icons.database} size={26} />
         </span>
-        <h1 className="text-lg font-bold text-ink">Certified could not open its local database</h1>
+        <h1 className="text-lg font-bold text-ink">Lock’d could not open its local database</h1>
         <p className="text-sm text-ink-muted">
           This usually means the browser is blocking storage (private browsing, or site data
           disabled), or a migration was interrupted. Your existing data has not been deleted.

@@ -7,7 +7,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { defaultSettings, getRepository } from '@/db/dexieRepository';
+import { getRepository } from '@/db/dexieRepository';
+import { defaultSettings } from '@/db/defaultSettings';
 import type { AppSettings } from '@/domain/types';
 import { lengthUnitFor, weightUnitFor, type LengthUnit, type WeightUnit } from '@/domain/units';
 import { applyTheme, watchSystemTheme } from '@/platform/theme';
