@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Lock'd design tokens.
+ * Lock’d design tokens.
  *
  * All colors are declared as CSS custom properties (see src/styles/tokens.css) holding
  * space-separated RGB channels, so that a single class (`bg-surface`) resolves correctly
@@ -37,8 +37,8 @@ const config: Config = {
         '3xl': '1.75rem',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Archivo', 'Arial Black', 'sans-serif'],
+        sans: ['Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['"Barlow Condensed"', 'Arial Narrow', 'sans-serif'],
         mono: ['"IBM Plex Mono"', '"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
       fontSize: {
