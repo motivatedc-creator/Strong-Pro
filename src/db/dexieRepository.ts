@@ -601,6 +601,7 @@ export class DexieRepository implements RepForgeRepository {
       secondaryMuscleGroupsSnapshot: exercise.secondaryMuscleGroups,
       equipmentSnapshot: exercise.equipment,
       trackingTypeSnapshot: exercise.trackingType,
+      unilateralSnapshot: exercise.unilateral,
     });
   }
 
@@ -653,6 +654,8 @@ export class DexieRepository implements RepForgeRepository {
           isCompleted: input.isCompleted ?? false,
           completedAt: input.isCompleted ? nowIso() : undefined,
           notes: input.notes,
+          side: input.side,
+          pairId: input.pairId,
         };
 
         const shifted = siblings.slice(insertIndex);
@@ -1041,6 +1044,7 @@ export function snapshotExercise(
     secondaryMuscleGroupsSnapshot: exercise.secondaryMuscleGroups,
     equipmentSnapshot: exercise.equipment,
     trackingTypeSnapshot: exercise.trackingType,
+    unilateralSnapshot: exercise.unilateral,
     restSeconds: options.restSeconds ?? 120,
     notes: options.notes,
     supersetGroup: options.supersetGroup,

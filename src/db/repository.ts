@@ -53,6 +53,10 @@ export interface NewSetInput {
   notes?: string;
   /** Insert after this set instead of appending. */
   afterSetId?: UUID;
+  /** Undefined = bilateral row. Set for unilateral exercises. */
+  side?: 'left' | 'right';
+  /** UI-lookup-only grouping key linking the left+right row of one set-number. */
+  pairId?: string;
 }
 
 export interface StartWorkoutInput {

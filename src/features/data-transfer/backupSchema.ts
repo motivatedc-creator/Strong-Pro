@@ -33,6 +33,7 @@ const exerciseSchema = z.object({
     'assisted_weight',
   ]),
   incrementG: count.optional(),
+  unilateral: z.boolean().optional(),
   isCustom: z.boolean(),
   isArchived: z.boolean(),
   notes: text.optional(),
@@ -103,6 +104,7 @@ const workoutExerciseSchema = z.object({
   restSeconds: count,
   notes: text.optional(),
   supersetGroup: z.string().max(100).optional(),
+  unilateralSnapshot: z.boolean().optional(),
 });
 
 const workoutSetSchema = z.object({
@@ -120,6 +122,8 @@ const workoutSetSchema = z.object({
   isCompleted: z.boolean(),
   completedAt: isoDateTime.optional(),
   notes: text.optional(),
+  side: z.enum(['left', 'right']).optional(),
+  pairId: id.optional(),
 });
 
 const measurementSchema = z.object({

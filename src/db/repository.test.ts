@@ -94,6 +94,32 @@ describe('active workouts', () => {
     expect(sets.map((set) => set.order)).toEqual([0, 1]);
   });
 
+  it('wires side and pairId from NewSetInput onto the created WorkoutSet', async () => {
+    const detail = await repository.startWorkout({ name: 'Session' });
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-one-arm-dumbbell-row',
+    );
+    const pairId = 'pair-abc';
+    const [left, right] = await repository.addSets(detail.workout.id, [
+      { workoutExerciseId: workoutExercise.id, weightG: 20_000, reps: 10, side: 'left', pairId },
+      { workoutExerciseId: workoutExercise.id, weightG: 20_000, reps: 10, side: 'right', pairId },
+    ]);
+
+    expect(left?.side).toBe('left');
+    expect(left?.pairId).toBe(pairId);
+    expect(right?.side).toBe('right');
+    expect(right?.pairId).toBe(pairId);
+
+    const bilateral = await repository.addSet(detail.workout.id, {
+      workoutExerciseId: workoutExercise.id,
+      weightG: 20_000,
+      reps: 10,
+    });
+    expect(bilateral.side).toBeUndefined();
+    expect(bilateral.pairId).toBeUndefined();
+  });
+
   it('restores a deleted set verbatim for undo', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
     const workoutExercise = await repository.addExerciseToWorkout(
@@ -371,6 +397,70 @@ describe('backup round trip', () => {
       chest: { min: 12, max: 16 },
     });
     expect((await repository.getSettings()).goalLiftIds).toEqual(['seed-bench-press']);
+  });
+
+  it('round-trips unilateral snapshot, side and pairId through a backup', async () => {
+    const detail = await repository.startWorkout({ name: 'Unilateral session' });
+    const workoutExercise = await repository.addExerciseToWorkout(
+      detail.workout.id,
+      'seed-one-arm-dumbbell-row',
+    );
+    expect(workoutExercise.unilateralSnapshot).toBe(true);
+
+    const pairId = 'pair-1';
+    await repository.addSet(detail.workout.id, {
+      workoutExerciseId: workoutExercise.id,
+      weightG: 20_000,
+      reps: 10,
+      isCompleted: true,
+      side: 'left',
+      pairId,
+    });
+    await repository.addSet(detail.workout.id, {
+      workoutExerciseId: workoutExercise.id,
+      weightG: 20_000,
+      reps: 10,
+      isCompleted: true,
+      side: 'right',
+      pairId,
+    });
+    await repository.completeWorkout(detail.workout.id);
+
+    const exported = await repository.exportAll();
+    const json = backupToJson(exported);
+    const validation = validateBackup(JSON.parse(json));
+    expect(validation.ok).toBe(true);
+
+    await repository.clearAllUserData();
+    await repository.replaceAll(validation.payload!);
+
+    const restored = await repository.getWorkoutDetail(detail.workout.id);
+    expect(restored?.exercises[0]?.exercise.unilateralSnapshot).toBe(true);
+    const sets = restored?.exercises[0]?.sets ?? [];
+    expect(sets).toHaveLength(2);
+    expect(sets.find((set) => set.side === 'left')?.pairId).toBe(pairId);
+    expect(sets.find((set) => set.side === 'right')?.pairId).toBe(pairId);
+  });
+
+  it('validates an old-format backup missing unilateral/side/pairId fields', async () => {
+    await seedHistory();
+    const exported = await repository.exportAll();
+    const parsed = JSON.parse(backupToJson(exported));
+    delete parsed.data.exercises[0].unilateral;
+    delete parsed.data.workoutExercises[0].unilateralSnapshot;
+    delete parsed.data.workoutSets[0].side;
+    delete parsed.data.workoutSets[0].pairId;
+
+    const validation = validateBackup(parsed);
+    expect(validation.ok).toBe(true);
+
+    await repository.clearAllUserData();
+    await repository.replaceAll(validation.payload!);
+
+    const restored = await repository.getWorkoutDetail(parsed.data.workouts[0].id);
+    expect(restored?.exercises[0]?.exercise.unilateralSnapshot).toBeUndefined();
+    expect(restored?.exercises[0]?.sets[0]?.side).toBeUndefined();
+    expect(restored?.exercises[0]?.sets[0]?.pairId).toBeUndefined();
   });
 
   it('restores a backup from before goal lifts existed without the field', async () => {
