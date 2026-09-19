@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Card, Chip } from '@/components/ui';
+import type { UUID } from '@/domain/types';
 import type { WeightUnit } from '@/domain/units';
+import { GoalLiftPicker } from './GoalLiftPicker';
 import { VerdictEvidenceSheet, formatDateRange } from './VerdictEvidenceSheet';
 import type { MuscleBandBalance } from './muscleSets';
 import {
@@ -14,14 +16,22 @@ export function WeeklyVerdictCard({
   verdict,
   weightUnit,
   muscleBalance = null,
+  goalLiftIds,
+  onGoalLiftIdsChange,
 }: {
   verdict: WeeklyVerdict;
   weightUnit: WeightUnit;
   /** Subject-week muscle-band balance from shared muscleBandBalance helper. */
   muscleBalance?: MuscleBandBalance | null;
+  /** The raw setting — not `verdict.goalLifts`, which drops a pick with no data this window. */
+  goalLiftIds?: readonly UUID[];
+  onGoalLiftIdsChange?: (ids: UUID[]) => void;
 }) {
   const [evidenceKey, setEvidenceKey] = useState<VerdictEvidenceKey | null>(null);
+  const [pickingGoalLifts, setPickingGoalLifts] = useState(false);
   const copy = weeklyVerdictCopy(verdict, weightUnit, muscleBalance);
+  const showGoalLiftsLine = verdict.state === 'full';
+  const liftNames = verdict.goalLifts.map((lift) => lift.name).join(', ');
 
   return (
     <section aria-labelledby="weekly-verdict-heading">
@@ -65,6 +75,27 @@ export function WeeklyVerdictCard({
             <SentenceParts parts={copy.pulse.parts} onOpen={setEvidenceKey} />
           </div>
         )}
+
+        {showGoalLiftsLine && (
+          <p className="mt-2 px-1 text-xs text-ink-subtle">
+            {verdict.goalLiftSource === 'chosen'
+              ? liftNames
+                ? `Goal lifts: ${liftNames}.`
+                : 'Goal lifts set, but none logged in this baseline.'
+              : liftNames
+                ? `Based on your top lifts: ${liftNames}.`
+                : "You haven't set goal lifts yet."}{' '}
+            {onGoalLiftIdsChange && (
+              <button
+                type="button"
+                className="min-h-11 font-semibold text-accent underline decoration-accent/50 underline-offset-2"
+                onClick={() => setPickingGoalLifts(true)}
+              >
+                {verdict.goalLiftSource === 'chosen' ? 'Edit' : 'Choose'}
+              </button>
+            )}
+          </p>
+        )}
       </Card>
 
       <VerdictEvidenceSheet
@@ -75,6 +106,16 @@ export function WeeklyVerdictCard({
         focusKey={evidenceKey ?? undefined}
         muscleBalance={muscleBalance}
       />
+
+      {onGoalLiftIdsChange && (
+        <GoalLiftPicker
+          open={pickingGoalLifts}
+          onClose={() => setPickingGoalLifts(false)}
+          goalLiftIds={goalLiftIds}
+          baselineWeeks={verdict.baseline.weeks}
+          onChange={onGoalLiftIdsChange}
+        />
+      )}
     </section>
   );
 }

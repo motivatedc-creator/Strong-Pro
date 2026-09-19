@@ -59,8 +59,8 @@ export function AnalyticsPage() {
 
     const summary = summarise(current, options);
     const priorSummary = summarise(priorEntries, options);
-    const weekVerdict = weeklyVerdict(entries, options, weekStart);
-    const changeFlags = trainingFlags(entries, options, weekStart);
+    const weekVerdict = weeklyVerdict(entries, options, weekStart, undefined, settings.goalLiftIds);
+    const changeFlags = trainingFlags(entries, options, weekStart, undefined, settings.goalLiftIds);
     const effectiveGranularity = range === 'all' ? 'month' : granularity;
     const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
@@ -109,6 +109,7 @@ export function AnalyticsPage() {
     settings.weekStartDay,
     settings.secondaryMuscleCredit,
     settings.personalMuscleTargets,
+    settings.goalLiftIds,
   ]);
 
   const formatWeightValue = (grams: number) => formatCompactNumber(fromGrams(grams, weightUnit));
@@ -140,7 +141,13 @@ export function AnalyticsPage() {
     <>
       <PageHeader title="Data Lab" subtitle="Your data, explained." />
 
-      <WeeklyVerdictCard verdict={view.weekVerdict} weightUnit={weightUnit} muscleBalance={view.subjectWeekBalance} />
+      <WeeklyVerdictCard
+        verdict={view.weekVerdict}
+        weightUnit={weightUnit}
+        muscleBalance={view.subjectWeekBalance}
+        goalLiftIds={settings.goalLiftIds}
+        onGoalLiftIdsChange={(goalLiftIds) => void update({ goalLiftIds })}
+      />
 
       <DataLabQuestions
         selected={selectedQuestion}
@@ -176,6 +183,7 @@ export function AnalyticsPage() {
         formula={formula}
         includeWarmups={includeWarmups}
         weightUnit={weightUnit}
+        goalLiftIds={settings.goalLiftIds}
       />
 
       <Button

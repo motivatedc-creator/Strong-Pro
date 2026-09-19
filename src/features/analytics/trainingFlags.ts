@@ -9,7 +9,7 @@ import {
 } from './trainingWeeks';
 import {
   bestEstimateForLift,
-  topGoalLifts,
+  resolveGoalLifts,
   weeklyVerdict,
   type DirectionBand,
 } from './weeklyVerdict';
@@ -114,8 +114,9 @@ export function deloadFlag(
   options: AnalyticsOptions,
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
+  goalLiftIds?: readonly string[],
 ): DeloadFlag {
-  const verdict = weeklyVerdict(entries, options, weekStart, reference);
+  const verdict = weeklyVerdict(entries, options, weekStart, reference, goalLiftIds);
   const subjectHardSets = verdict.subject.metrics.hardSets;
   const baselineHardSetsMean = verdict.baseline.metrics.hardSets;
   const subjectSessions = verdict.subject.metrics.sessions;
@@ -150,8 +151,9 @@ export function spikeFlag(
   options: AnalyticsOptions,
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
+  goalLiftIds?: readonly string[],
 ): SpikeFlag {
-  const verdict = weeklyVerdict(entries, options, weekStart, reference);
+  const verdict = weeklyVerdict(entries, options, weekStart, reference, goalLiftIds);
   const band = verdict.direction?.band ?? null;
   const changePercent = verdict.direction?.changePercent ?? null;
   const watchoutId = verdict.watchout?.id ?? null;
@@ -186,6 +188,7 @@ export function stallFlags(
   options: AnalyticsOptions,
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
+  goalLiftIds?: readonly string[],
 ): StallFlag[] {
   const referenceLocalDate = localDateOf(reference);
   const windowEndDate = referenceLocalDate;
@@ -193,7 +196,7 @@ export function stallFlags(
   const currentWeekStart = startOfTrainingWeekDate(referenceLocalDate, weekStart);
   const subjectWindow = weekWindow(shiftLocalDate(currentWeekStart, -7));
   const baselineWeeks = selectTrainingBaseline(entries, subjectWindow.startDate, weekStart);
-  const goalLifts = topGoalLifts(baselineWeeks);
+  const { lifts: goalLifts } = resolveGoalLifts(baselineWeeks, goalLiftIds);
 
   return goalLifts.map((lift) => {
     const windowEntries = entriesInLocalRange(entries, windowStartDate, windowEndDate).filter(
@@ -284,10 +287,11 @@ export function trainingFlags(
   options: AnalyticsOptions,
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
+  goalLiftIds?: readonly string[],
 ): TrainingFlags {
-  const deload = deloadFlag(entries, options, weekStart, reference);
-  const spike = spikeFlag(entries, options, weekStart, reference);
-  const stalls = stallFlags(entries, options, weekStart, reference);
+  const deload = deloadFlag(entries, options, weekStart, reference, goalLiftIds);
+  const spike = spikeFlag(entries, options, weekStart, reference, goalLiftIds);
+  const stalls = stallFlags(entries, options, weekStart, reference, goalLiftIds);
   const active = [
     ...(deload.status === 'active' ? [deload] : []),
     ...(spike.status === 'active' ? [spike] : []),

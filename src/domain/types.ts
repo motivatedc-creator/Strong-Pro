@@ -259,6 +259,11 @@ export interface AppSettings {
   secondaryMuscleCredit: number;
   /** Optional per-muscle overrides; missing entries use the research default. */
   personalMuscleTargets?: PersonalMuscleTargets;
+  /**
+   * Up to 3 exercise ids Weekly Verdict and stall flags should track. Missing or empty means
+   * "infer from training" — the most-trained lifts in the baseline window, labelled as such.
+   */
+  goalLiftIds?: UUID[];
   defaultBarProfileId?: UUID;
   defaultPlateInventoryId?: UUID;
   themeMode: ThemeMode;

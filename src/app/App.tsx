@@ -14,6 +14,7 @@ import { WorkoutDetailPage } from '@/features/workouts/WorkoutDetailPage';
 import { TemplatesPage } from '@/features/templates/TemplatesPage';
 import { TemplateEditorPage } from '@/features/templates/TemplateEditorPage';
 import { ExerciseLibraryPage } from '@/features/exercises/ExerciseLibraryPage';
+import { BulkClassifyPage } from '@/features/exercises/BulkClassifyPage';
 import { MeasurementsPage } from '@/features/measurements/MeasurementsPage';
 import { ToolsPage } from '@/features/calculators/ToolsPage';
 import { PlateCalculatorPage } from '@/features/calculators/PlateCalculatorPage';
@@ -123,6 +124,7 @@ export function App() {
                 <Route path="history/:id" element={<WorkoutDetailPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="exercises" element={<ExerciseLibraryPage />} />
+                <Route path="exercises/classify" element={<BulkClassifyPage />} />
                 <Route path="exercises/:id" element={<ExerciseDetailPage />} />
                 <Route path="measurements" element={<MeasurementsPage />} />
                 <Route path="measurements/:metric" element={<MeasurementDetailPage />} />

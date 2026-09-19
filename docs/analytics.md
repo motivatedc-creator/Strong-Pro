@@ -121,10 +121,13 @@ calculation. Flags are derived on read and are never stored.
 - **Spike** is the Weekly Verdict `big jump`: completed working sets are more than 50%
   above the selected weekly baseline.
 - **Deload** is the deload-shaped Weekly Verdict state described above.
-- **Stall** is checked on up to three goal lifts from the weekly baseline. Each lift needs
-  at least three completed sessions in the trailing 28 local days. The best valid e1RM
-  across those sessions is compared with the same number of immediately prior sessions;
-  flat or lower produces the flag.
+- **Stall** is checked on up to three goal lifts. If the user has picked goal lifts in
+  Settings or from the Weekly Verdict card, those are used, in the order picked; a pick
+  with no data in the weekly baseline is skipped rather than compared against zero. With
+  no picks, it falls back to the three most-trained lifts in the weekly baseline, and the
+  card says so. Each lift needs at least three completed sessions in the trailing 28 local
+  days. The best valid e1RM across those sessions is compared with the same number of
+  immediately prior sessions; flat or lower produces the flag.
 
 If the weekly baseline, session count or valid e1RM comparison is missing, the check is
 shown as **Partial** rather than reporting a false all-clear. Each flag has a receipt with

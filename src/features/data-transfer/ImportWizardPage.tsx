@@ -17,19 +17,26 @@ import { Icon, Icons } from '@/components/icons';
 import { formatDate } from '@/domain/time';
 import { formatWeight, type WeightUnit } from '@/domain/units';
 import { useSettings } from '@/app/SettingsProvider';
+import { titleCase } from '@/domain/taxonomy';
+import type { Exercise, UUID } from '@/domain/types';
+import { ExercisePicker } from '@/features/exercises/ExercisePicker';
 import {
   STRONG_FIELD_LABELS,
   analyseStrongCsv,
   buildImportBatch,
+  findExerciseCandidates,
+  normaliseExerciseName,
   type ColumnMapping,
+  type ExerciseCandidate,
   type ImportAnalysis,
+  type ParsedWorkout,
   type StrongField,
 } from './strongImport';
 
 /** Largest CSV accepted. Strong exports of years of training are a few megabytes at most. */
 const MAX_CSV_BYTES = 32 * 1024 * 1024;
 
-type Step = 'file' | 'map' | 'preview' | 'done';
+type Step = 'file' | 'map' | 'resolve' | 'preview' | 'done';
 
 /**
  * Strong CSV import wizard: choose a file, fix the column mapping, preview exactly what
@@ -47,6 +54,12 @@ export function ImportWizardPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [duplicates, setDuplicates] = useState<Set<string>>(new Set());
   const [reading, setReading] = useState(false);
+  const [checkingCandidates, setCheckingCandidates] = useState(false);
+  const [existingExercises, setExistingExercises] = useState<Exercise[]>([]);
+  const [candidates, setCandidates] = useState<ExerciseCandidate[]>([]);
+  /** Confirmed "same exercise" decisions, keyed by normalised CSV name. Absence = different. */
+  const [confirmedMatches, setConfirmedMatches] = useState<Map<string, UUID>>(new Map());
+  const [searchingFor, setSearchingFor] = useState<string | null>(null);
   const [result, setResult] = useState<{
     workouts: number;
     sets: number;
@@ -58,6 +71,17 @@ export function ImportWizardPage() {
     () => (text ? analyseStrongCsv(text, { mapping, unit }) : null),
     [text, mapping, unit],
   );
+
+  /** Fetches the library and surfaces near-matches for the given workouts' exercise names. */
+  const resolveExerciseCandidates = async (workouts: readonly ParsedWorkout[]) => {
+    const existing = await repository.listExercises({ includeArchived: true });
+    setExistingExercises(existing);
+    const names = workouts.flatMap((workout) => workout.exercises.map((entry) => entry.name));
+    const found = findExerciseCandidates(names, existing);
+    setCandidates(found);
+    setConfirmedMatches(new Map());
+    return found;
+  };
 
   const onFile = async (file: File) => {
     if (file.size > MAX_CSV_BYTES) {
@@ -81,9 +105,13 @@ export function ImportWizardPage() {
           existing.add(workout.key);
       }
       setDuplicates(existing);
-      setStep(
-        parsed.missingRequired.length > 0 || parsed.unmappedColumns.length > 0 ? 'map' : 'preview',
-      );
+
+      if (parsed.missingRequired.length > 0 || parsed.unmappedColumns.length > 0) {
+        setStep('map');
+      } else {
+        const found = await resolveExerciseCandidates(parsed.workouts);
+        setStep(found.length > 0 ? 'resolve' : 'preview');
+      }
     } catch {
       toast.error('That file could not be read as text.');
     } finally {
@@ -91,11 +119,23 @@ export function ImportWizardPage() {
     }
   };
 
+  const goToResolveOrPreview = async () => {
+    if (!analysis) return;
+    setCheckingCandidates(true);
+    try {
+      const found = await resolveExerciseCandidates(analysis.workouts);
+      setSelected(new Set(analysis.workouts.map((workout) => workout.key)));
+      setStep(found.length > 0 ? 'resolve' : 'preview');
+    } finally {
+      setCheckingCandidates(false);
+    }
+  };
+
   const [runImport, importing] = useWrite(async () => {
     if (!analysis) return;
     const batch = buildImportBatch(analysis, {
       fileName,
-      existingExercises: await repository.listExercises({ includeArchived: true }),
+      existingExercises,
       existingFingerprints: allowDuplicates
         ? new Set<string>()
         : new Set(
@@ -105,6 +145,7 @@ export function ImportWizardPage() {
           ),
       allowDuplicates,
       selectedKeys: selected,
+      nameOverrides: confirmedMatches,
     });
 
     if (batch.workouts.length === 0) {
@@ -222,13 +263,10 @@ export function ImportWizardPage() {
             <Button
               block
               variant="primary"
-              disabled={analysis.missingRequired.length > 0}
-              onClick={() => {
-                setSelected(new Set(analysis.workouts.map((workout) => workout.key)));
-                setStep('preview');
-              }}
+              disabled={analysis.missingRequired.length > 0 || checkingCandidates}
+              onClick={() => void goToResolveOrPreview()}
             >
-              Preview import
+              {checkingCandidates ? 'Checking your library…' : 'Preview import'}
             </Button>
           </div>
           {analysis.missingRequired.length > 0 && (
@@ -238,6 +276,112 @@ export function ImportWizardPage() {
             </p>
           )}
         </Card>
+      )}
+
+      {step === 'resolve' && analysis && (
+        <>
+          <Card className="mb-3">
+            <h2 className="text-sm font-semibold text-ink">Resolve exercises</h2>
+            <p className="mt-1 text-xs text-ink-muted">
+              These {candidates.length === 1 ? 'name looks' : 'names look'} like{' '}
+              {candidates.length === 1 ? 'an exercise' : 'exercises'} already in your library, just
+              written differently. Confirm the ones that match — anything you leave as
+              &quot;Different exercise&quot; is created fresh, as usual.
+            </p>
+          </Card>
+
+          <ul className="mb-3 space-y-2">
+            {candidates.map((candidate) => {
+              const key = normaliseExerciseName(candidate.name);
+              const confirmedId = confirmedMatches.get(key);
+              const isSame = confirmedId !== undefined;
+              const matchedExercise =
+                confirmedId !== undefined
+                  ? (existingExercises.find((exercise) => exercise.id === confirmedId) ??
+                    candidate.exercise)
+                  : candidate.exercise;
+
+              return (
+                <li key={key}>
+                  <Card className="p-3">
+                    <p className="text-sm font-semibold text-ink">{candidate.name}</p>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      Looks like{' '}
+                      <span className="font-medium text-ink">{matchedExercise.name}</span> (
+                      {titleCase(matchedExercise.primaryMuscleGroup)} ·{' '}
+                      {titleCase(matchedExercise.equipment)})
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant={isSame ? 'primary' : undefined}
+                        onClick={() =>
+                          setConfirmedMatches((current) => {
+                            const next = new Map(current);
+                            next.set(key, candidate.exercise.id);
+                            return next;
+                          })
+                        }
+                      >
+                        Same exercise
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={isSame ? undefined : 'primary'}
+                        onClick={() =>
+                          setConfirmedMatches((current) => {
+                            const next = new Map(current);
+                            next.delete(key);
+                            return next;
+                          })
+                        }
+                      >
+                        Different exercise
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setSearchingFor(key)}>
+                        Search instead
+                      </Button>
+                    </div>
+                  </Card>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="mb-8 flex gap-2">
+            <Button block onClick={() => setStep('map')}>
+              Back
+            </Button>
+            <Button
+              block
+              variant="primary"
+              onClick={() => {
+                setSelected(new Set(analysis.workouts.map((workout) => workout.key)));
+                setStep('preview');
+              }}
+            >
+              Continue
+            </Button>
+          </div>
+
+          <ExercisePicker
+            open={searchingFor !== null}
+            multi={false}
+            title="Find the matching exercise"
+            onClose={() => setSearchingFor(null)}
+            onPick={([picked]) => {
+              const key = searchingFor;
+              if (key && picked) {
+                setConfirmedMatches((current) => {
+                  const next = new Map(current);
+                  next.set(key, picked.id);
+                  return next;
+                });
+              }
+              setSearchingFor(null);
+            }}
+          />
+        </>
       )}
 
       {step === 'preview' && analysis && (
@@ -405,18 +549,25 @@ export function ImportWizardPage() {
             <li>{result.exercises} exercises created as custom entries</li>
             <li>{result.skipped} rows skipped</li>
           </ul>
-          <p className="mt-2 text-xs text-ink-subtle">
-            Newly created exercises have a generic muscle group. Edit them in the library to improve
-            your muscle-group analytics.
-          </p>
+          {result.exercises > 0 && (
+            <p className="mt-2 text-xs text-ink-subtle">
+              {result.exercises} newly created exercise{result.exercises === 1 ? '' : 's'} have no
+              muscle group yet — Data Lab can&apos;t count them until you set one.
+            </p>
+          )}
           <div className="mt-4 flex gap-2">
             <Link to="/history" className="flex-1">
               <Button block variant="primary">
                 See imported history
               </Button>
             </Link>
-            <Link to="/exercises" className="flex-1">
-              <Button block>Review exercises</Button>
+            <Link
+              to={result.exercises > 0 ? '/exercises/classify' : '/exercises'}
+              className="flex-1"
+            >
+              <Button block>
+                {result.exercises > 0 ? 'Classify new exercises' : 'Review exercises'}
+              </Button>
             </Link>
           </div>
         </Card>

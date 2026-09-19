@@ -13,6 +13,7 @@ export function AskLabEntry({
   formula,
   includeWarmups,
   weightUnit,
+  goalLiftIds,
 }: {
   entries: readonly LoggedEntry[];
   weekStart: WeekStartDay;
@@ -21,6 +22,7 @@ export function AskLabEntry({
   formula: OneRepMaxFormula;
   includeWarmups: boolean;
   weightUnit: WeightUnit;
+  goalLiftIds?: readonly string[];
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -51,6 +53,7 @@ export function AskLabEntry({
           formula,
           includeWarmups,
           weightUnit,
+          goalLiftIds,
         }}
       />
     </>

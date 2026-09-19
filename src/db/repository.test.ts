@@ -347,6 +347,7 @@ describe('backup round trip', () => {
     const workoutId = await seedHistory();
     await repository.updateSettings({
       personalMuscleTargets: { chest: { min: 12, max: 16 } },
+      goalLiftIds: ['seed-bench-press'],
     });
     const exported = await repository.exportAll();
 
@@ -369,6 +370,22 @@ describe('backup round trip', () => {
     expect((await repository.getSettings()).personalMuscleTargets).toEqual({
       chest: { min: 12, max: 16 },
     });
+    expect((await repository.getSettings()).goalLiftIds).toEqual(['seed-bench-press']);
+  });
+
+  it('restores a backup from before goal lifts existed without the field', async () => {
+    await seedHistory();
+    const exported = await repository.exportAll();
+    const parsed = JSON.parse(backupToJson(exported));
+    delete parsed.data.settings.goalLiftIds;
+
+    const validation = validateBackup(parsed);
+    expect(validation.ok).toBe(true);
+
+    await repository.clearAllUserData();
+    await repository.replaceAll(validation.payload!);
+
+    expect((await repository.getSettings()).goalLiftIds).toBeUndefined();
   });
 
   it('merges a backup without duplicating existing workouts', async () => {

@@ -188,6 +188,56 @@ describe('trainingFlags', () => {
     expect(bench!.status).toBe('inactive');
   });
 
+  it('follows a chosen goal lift for stall checks instead of the most-frequent one', () => {
+    const frequentLifts: LoggedEntry[] = [];
+    for (const week of ['2026-08-10', '2026-08-17', '2026-08-24', '2026-08-31']) {
+      frequentLifts.push(
+        fixtureEntry(week, `row-${week}`, {
+          exerciseId: 'row',
+          exerciseName: 'Barbell Row',
+          hardSets: 3,
+        }),
+        fixtureEntry(week, `curl-${week}`, {
+          exerciseId: 'curl',
+          exerciseName: 'Barbell Curl',
+          hardSets: 3,
+        }),
+        fixtureEntry(week, `press-${week}`, {
+          exerciseId: 'press',
+          exerciseName: 'Overhead Press',
+          hardSets: 3,
+        }),
+      );
+    }
+    // Squat: flat e1RM across 3 sessions in the trailing 28 days vs an equal prior window —
+    // a stall, but squat is trained only once in the weekly baseline, so it never makes the
+    // inferred top 3 alongside row/curl/press.
+    const squatConfig = {
+      exerciseId: 'squat',
+      exerciseName: 'Back Squat',
+      hardSets: 3,
+      weightG: 100_000,
+      reps: 5,
+    };
+    const squatSessions = [
+      fixtureEntry('2026-07-20', 'squat-p1', squatConfig),
+      fixtureEntry('2026-07-27', 'squat-p2', squatConfig),
+      fixtureEntry('2026-08-03', 'squat-p3', squatConfig),
+      fixtureEntry('2026-08-24', 'squat-w1', squatConfig),
+      fixtureEntry('2026-09-01', 'squat-w2', squatConfig),
+      fixtureEntry('2026-09-10', 'squat-w3', squatConfig),
+    ];
+    const entries = [...frequentLifts, ...squatSessions];
+
+    const inferred = stallFlags(entries, GOLDEN_OPTIONS, 'monday', REF);
+    expect(inferred.find((flag) => flag.liftId === 'squat')).toBeUndefined();
+
+    const chosen = stallFlags(entries, GOLDEN_OPTIONS, 'monday', REF, ['squat']);
+    const squat = chosen.find((flag) => flag.liftId === 'squat');
+    expect(squat).toBeDefined();
+    expect(squat!.status).toBe('active');
+  });
+
   it('uses every matching exercise entry when comparing prior sessions', () => {
     const prior = ['2026-08-03', '2026-08-10', '2026-08-17'].flatMap((date, index) => {
       const first = fixtureEntry(date, `prior-${index}`, {

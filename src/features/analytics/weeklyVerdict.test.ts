@@ -85,7 +85,11 @@ describe('weeklyVerdict v1', () => {
 
   it('judges the last completed week, not the partial current week', () => {
     const result = weeklyVerdict(
-      [...baseline(10), entry('2026-09-08', 'last', { hardSets: 12 }), entry('2026-09-15', 'current', { hardSets: 2 })],
+      [
+        ...baseline(10),
+        entry('2026-09-08', 'last', { hardSets: 12 }),
+        entry('2026-09-15', 'current', { hardSets: 2 }),
+      ],
       options,
       'monday',
       reference,
@@ -184,17 +188,63 @@ describe('weeklyVerdict v1', () => {
 
   it('uses a new e1RM best as the first standout rule', () => {
     const result = weeklyVerdict(
-      [
-        ...baseline(4),
-        entry('2026-09-08', 'last', { hardSets: 4, weightG: 110_000, reps: 5 }),
-      ],
+      [...baseline(4), entry('2026-09-08', 'last', { hardSets: 4, weightG: 110_000, reps: 5 })],
       options,
       'monday',
       reference,
     );
 
     expect(result.standout?.id).toBe('standout_new_e1rm_best');
-    expect(weeklyVerdictCopy(result, 'kg').lines[1]?.plain).toContain('Bench Press hit a new best estimate');
+    expect(weeklyVerdictCopy(result, 'kg').lines[1]?.plain).toContain(
+      'Bench Press hit a new best estimate',
+    );
+  });
+
+  it('follows a chosen goal lift instead of the most-frequent one', () => {
+    const entries: LoggedEntry[] = [];
+    for (const week of ['2026-08-10', '2026-08-17', '2026-08-24', '2026-08-31']) {
+      entries.push(entry(week, `bench-${week}`, { hardSets: 3 }));
+      entries.push(
+        entry(week, `row-${week}`, { exerciseId: 'row', exerciseName: 'Barbell Row', hardSets: 3 }),
+      );
+      entries.push(
+        entry(week, `curl-${week}`, {
+          exerciseId: 'curl',
+          exerciseName: 'Barbell Curl',
+          hardSets: 3,
+        }),
+      );
+    }
+    // Squat is trained only once in the baseline — excluded from the inferred top 3.
+    entries.push(
+      entry('2026-08-10', 'squat-base', {
+        exerciseId: 'squat',
+        exerciseName: 'Back Squat',
+        hardSets: 3,
+        weightG: 100_000,
+        reps: 5,
+      }),
+    );
+    // Subject week: a new best on squat, and nothing else logged.
+    entries.push(
+      entry('2026-09-08', 'squat-last', {
+        exerciseId: 'squat',
+        exerciseName: 'Back Squat',
+        hardSets: 3,
+        weightG: 150_000,
+        reps: 5,
+      }),
+    );
+
+    const inferred = weeklyVerdict(entries, options, 'monday', reference);
+    expect(inferred.goalLiftSource).toBe('inferred');
+    expect(inferred.goalLifts.map((lift) => lift.id)).not.toContain('squat');
+    expect(inferred.standout?.id).not.toBe('standout_new_e1rm_best');
+
+    const chosen = weeklyVerdict(entries, options, 'monday', reference, ['squat']);
+    expect(chosen.goalLiftSource).toBe('chosen');
+    expect(chosen.standout?.id).toBe('standout_new_e1rm_best');
+    expect(chosen.standout?.text).toContain('Back Squat');
   });
 
   it('uses the sessions drop as a watch-out when hard sets are otherwise steady', () => {
@@ -232,12 +282,7 @@ describe('weeklyVerdict v1', () => {
     }
     entries.push(entry('2026-09-14', 'current', { hardSets: 2 }));
 
-    const result = weeklyVerdict(
-      entries,
-      options,
-      'monday',
-      new Date('2026-09-15T12:00:00.000Z'),
-    );
+    const result = weeklyVerdict(entries, options, 'monday', new Date('2026-09-15T12:00:00.000Z'));
 
     expect(result.pulse?.currentHardSets).toBe(2);
     expect(result.pulse?.baselineHardSetsAverage).toBe(2);
@@ -246,7 +291,11 @@ describe('weeklyVerdict v1', () => {
 
   it('hides the pulse on day one of the training week', () => {
     const result = weeklyVerdict(
-      [...baseline(10), entry('2026-09-08', 'last', { hardSets: 10 }), entry('2026-09-14', 'current', { hardSets: 2 })],
+      [
+        ...baseline(10),
+        entry('2026-09-08', 'last', { hardSets: 10 }),
+        entry('2026-09-14', 'current', { hardSets: 2 }),
+      ],
       options,
       'monday',
       new Date('2026-09-14T12:00:00.000Z'),

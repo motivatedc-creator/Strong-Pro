@@ -313,6 +313,14 @@ export interface BuildBatchOptions {
   allowDuplicates?: boolean;
   /** Only import these workout keys (the preview's selection). */
   selectedKeys?: ReadonlySet<string>;
+  /**
+   * User-confirmed "same exercise" decisions from the wizard's resolve step, keyed by
+   * `normaliseExerciseName(csvName)`. Checked before the exact-name match, so a name that
+   * would otherwise become a new unmapped custom exercise reuses the confirmed one instead.
+   * A name absent from this map falls through to today's behaviour unchanged — nothing here
+   * merges anything the user did not explicitly confirm.
+   */
+  nameOverrides?: ReadonlyMap<string, UUID>;
 }
 
 export interface BuiltBatch extends ImportBatch {
@@ -326,6 +334,7 @@ export function buildImportBatch(analysis: ImportAnalysis, options: BuildBatchOp
   for (const exercise of options.existingExercises) {
     byName.set(normaliseExerciseName(exercise.name), exercise);
   }
+  const byId = new Map(options.existingExercises.map((exercise) => [exercise.id, exercise]));
 
   const newExercises: Exercise[] = [];
   const workouts: WorkoutDetail[] = [];
@@ -365,6 +374,14 @@ export function buildImportBatch(analysis: ImportAnalysis, options: BuildBatchOp
     parsed.exercises.forEach((entry, index) => {
       const key = normaliseExerciseName(entry.name);
       let exercise = byName.get(key);
+      if (!exercise) {
+        const confirmedId = options.nameOverrides?.get(key);
+        const confirmed = confirmedId ? byId.get(confirmedId) : undefined;
+        if (confirmed) {
+          exercise = confirmed;
+          byName.set(key, exercise);
+        }
+      }
       if (!exercise) {
         exercise = {
           id: uuid(),
@@ -460,6 +477,72 @@ export function normaliseExerciseName(name: string): string {
     .replace(/\(.*?\)/g, ' ')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+function exerciseTokens(name: string): Set<string> {
+  const normalised = normaliseExerciseName(name);
+  return new Set(normalised ? normalised.split(' ') : []);
+}
+
+/** A name from the import that isn't an exact match, but reads like an exercise already here. */
+export interface ExerciseCandidate {
+  /** The exercise name exactly as it appeared in the CSV. */
+  name: string;
+  exercise: Exercise;
+  /** Fraction of tokens shared between the two names (0–1), for display only. */
+  score: number;
+}
+
+/** Below this, two names are treated as genuinely different exercises, not a possible match. */
+const CANDIDATE_MIN_SCORE = 0.7;
+/** Below this many tokens a side, matching is too unreliable to suggest ("Curl" vs "Curl-Up"). */
+const CANDIDATE_MIN_TOKENS = 2;
+
+/**
+ * Finds, for each distinct imported name that doesn't already match the library exactly, the
+ * best-scoring existing exercise it might be the same lift as — a word-order permutation of an
+ * existing name, most commonly ("Bench Press - Close Grip" vs "Close-Grip Bench Press").
+ *
+ * This never merges anything by itself. It only surfaces a suggestion for the import wizard's
+ * resolve step, where the user explicitly confirms "same exercise" or "different exercise" —
+ * matching stays deterministic and every merge stays a decision the user made, not one the
+ * import made for them.
+ */
+export function findExerciseCandidates(
+  names: readonly string[],
+  existingExercises: readonly Exercise[],
+): ExerciseCandidate[] {
+  const exactKeys = new Set(
+    existingExercises.map((exercise) => normaliseExerciseName(exercise.name)),
+  );
+  const existingTokens = existingExercises
+    .map((exercise) => ({ exercise, tokens: exerciseTokens(exercise.name) }))
+    .filter((entry) => entry.tokens.size >= CANDIDATE_MIN_TOKENS);
+
+  const candidates: ExerciseCandidate[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const name of names) {
+    const key = normaliseExerciseName(name);
+    if (seenKeys.has(key) || exactKeys.has(key)) continue;
+    seenKeys.add(key);
+
+    const tokens = exerciseTokens(name);
+    if (tokens.size < CANDIDATE_MIN_TOKENS) continue;
+
+    let best: { exercise: Exercise; score: number } | null = null;
+    for (const entry of existingTokens) {
+      let shared = 0;
+      for (const token of tokens) if (entry.tokens.has(token)) shared += 1;
+      const score = shared / Math.max(tokens.size, entry.tokens.size);
+      if (score >= CANDIDATE_MIN_SCORE && (!best || score > best.score)) {
+        best = { exercise: entry.exercise, score };
+      }
+    }
+    if (best) candidates.push({ name, exercise: best.exercise, score: best.score });
+  }
+
+  return candidates;
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   analyseStrongCsv,
   autoMap,
   buildImportBatch,
+  findExerciseCandidates,
   parseDuration,
   parseNumber,
   parseStrongDate,
@@ -167,6 +168,43 @@ describe('date, number and duration helpers', () => {
   });
 });
 
+describe('findExerciseCandidates', () => {
+  const closeGrip: Exercise = {
+    ...library[0]!,
+    id: 'seed-close-grip-bench-press',
+    name: 'Close-Grip Bench Press',
+  };
+
+  it('suggests a word-order permutation of an existing name', () => {
+    const candidates = findExerciseCandidates(['Bench Press - Close Grip (Barbell)'], [closeGrip]);
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]?.exercise.id).toBe('seed-close-grip-bench-press');
+  });
+
+  it('does not suggest a genuinely different exercise sharing one word', () => {
+    const candidates = findExerciseCandidates(['Incline Bench Press'], library);
+    expect(candidates).toEqual([]);
+  });
+
+  it('does not suggest anything for a name with no close match', () => {
+    const candidates = findExerciseCandidates(['Behind The Legs Deadlift'], library);
+    expect(candidates).toEqual([]);
+  });
+
+  it('skips a name that already exact-matches the library', () => {
+    const candidates = findExerciseCandidates(['Bench Press'], library);
+    expect(candidates).toEqual([]);
+  });
+
+  it('only surfaces each distinct name once', () => {
+    const candidates = findExerciseCandidates(
+      ['Bench Press - Close Grip (Barbell)', 'Bench Press - Close Grip (Barbell)'],
+      [closeGrip],
+    );
+    expect(candidates).toHaveLength(1);
+  });
+});
+
 describe('buildImportBatch', () => {
   const analysis = analyseStrongCsv(standardCsv);
 
@@ -253,6 +291,35 @@ describe('buildImportBatch', () => {
     });
     expect(batch.workouts).toHaveLength(1);
     expect(batch.workouts[0]?.workout.name).toBe('Push A');
+  });
+
+  it('honours a confirmed "same exercise" override instead of creating a custom one', () => {
+    const overridden = analyseStrongCsv(
+      'Date,Exercise Name,Set Order,Weight (kg),Reps\n2026-01-01,Overhead Press,1,40,8\n',
+    );
+    const batch = buildImportBatch(overridden, {
+      fileName: 'strong.csv',
+      existingExercises: library,
+      existingFingerprints: new Set(),
+      nameOverrides: new Map([['overhead press', 'seed-bench-press']]),
+    });
+    expect(batch.newExercises).toHaveLength(0);
+    expect(batch.workouts[0]?.exercises[0]?.exercise.exerciseId).toBe('seed-bench-press');
+  });
+
+  it("falls through to today's unmapped-custom behaviour when a name has no override", () => {
+    const batch = buildImportBatch(analysis, {
+      fileName: 'strong.csv',
+      existingExercises: library,
+      existingFingerprints: new Set(),
+      nameOverrides: new Map(),
+    });
+    expect(batch.newExercises.map((exercise) => exercise.name)).toEqual([
+      'Overhead Press',
+      'Barbell Row',
+      'Pull-Up',
+      'Rowing Machine',
+    ]);
   });
 
   it('produces a stable fingerprint across re-parses and different ones per workout', () => {

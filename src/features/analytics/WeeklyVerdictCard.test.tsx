@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DexieRepository, setRepository } from '@/db/dexieRepository';
+import { RepForgeDatabase } from '@/db/schema';
 import type { MuscleBandBalance } from './muscleSets';
 import type { WeeklyVerdict } from './weeklyVerdict';
 import { WeeklyVerdictCard } from './WeeklyVerdictCard';
@@ -50,6 +52,8 @@ const verdict: WeeklyVerdict = {
     baselineWeeks: 4,
     changePercent: 25,
   },
+  goalLifts: [],
+  goalLiftSource: 'inferred',
 };
 
 describe('WeeklyVerdictCard', () => {
@@ -124,5 +128,55 @@ describe('WeeklyVerdictCard muscle balance', () => {
     await userEvent.click(screen.getByRole('button', { name: /Balance: Chest below/ }));
     expect(screen.getByRole('dialog', { name: /Muscle balance evidence/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Research default limits/i })).toBeInTheDocument();
+  });
+});
+
+describe('WeeklyVerdictCard goal lifts', () => {
+  let db: RepForgeDatabase;
+  let repository: DexieRepository;
+
+  beforeEach(async () => {
+    db = new RepForgeDatabase(`repforge-verdict-goal-lifts-${Math.random().toString(36).slice(2)}`);
+    repository = new DexieRepository(db);
+    await repository.initialise();
+    setRepository(repository);
+  });
+
+  afterEach(() => {
+    setRepository(null);
+  });
+
+  it('says nothing was chosen and offers to choose, when the source is inferred', () => {
+    const inferred: WeeklyVerdict = {
+      ...verdict,
+      goalLiftSource: 'inferred',
+      goalLifts: [{ id: 'seed-bench-press', name: 'Bench Press', sessions: 4 }],
+    };
+    render(<WeeklyVerdictCard verdict={inferred} weightUnit="kg" onGoalLiftIdsChange={vi.fn()} />);
+    expect(screen.getByText(/Based on your top lifts: Bench Press\./)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose' })).toBeInTheDocument();
+  });
+
+  it("names the user's own picks without a hedge, when the source is chosen", () => {
+    const chosen: WeeklyVerdict = {
+      ...verdict,
+      goalLiftSource: 'chosen',
+      goalLifts: [{ id: 'seed-back-squat', name: 'Back Squat', sessions: 2 }],
+    };
+    render(<WeeklyVerdictCard verdict={chosen} weightUnit="kg" onGoalLiftIdsChange={vi.fn()} />);
+    expect(screen.getByText(/Goal lifts: Back Squat\./)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+  });
+
+  it('does not render an action when no change handler is given', () => {
+    render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" />);
+    expect(screen.queryByRole('button', { name: 'Choose' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+  });
+
+  it('opens the goal lift picker from the "Choose" action', async () => {
+    render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" onGoalLiftIdsChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Choose' }));
+    expect(await screen.findByRole('dialog', { name: 'Goal lifts' })).toBeInTheDocument();
   });
 });

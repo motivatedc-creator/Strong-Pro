@@ -57,6 +57,9 @@ export function ExerciseLibraryPage() {
   });
 
   const customCount = (data ?? []).filter((exercise) => exercise.isCustom).length;
+  const unmappedCount = (data ?? []).filter(
+    (exercise) => exercise.primaryMuscleGroup === 'unmapped',
+  ).length;
 
   return (
     <>
@@ -69,6 +72,18 @@ export function ExerciseLibraryPage() {
           </Button>
         }
       />
+
+      {unmappedCount > 0 && (
+        <Card className="mb-4 flex items-center justify-between gap-3 p-3">
+          <p className="text-xs text-ink-muted">
+            {unmappedCount} exercise{unmappedCount === 1 ? '' : 's'} without a muscle group —
+            usually left by a Strong import. Data Lab can&apos;t count these until they&apos;re set.
+          </p>
+          <Link to="/exercises/classify" className="shrink-0 text-sm font-semibold text-accent">
+            Classify all
+          </Link>
+        </Card>
+      )}
 
       <div className="mb-4 space-y-2">
         <TextInput

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui';
 import { Icon, Icons } from '@/components/icons';
 import { ActiveWorkoutExistsError } from '@/db/dexieRepository';
-import { STARTER_TEMPLATES, buildStarterTemplate } from '@/db/starterTemplates';
+import { STARTER_CATEGORIES, STARTER_TEMPLATES, buildStarterTemplate } from '@/db/starterTemplates';
 import type { Template } from '@/domain/types';
 
 /** Template list: create, reorder, duplicate, archive, delete — with no limit on how many. */
@@ -246,27 +246,38 @@ export function TemplatesPage() {
         title="Preset routines"
         description="Add one in a tap, then edit it however you like — nothing here is fixed."
       >
-        <ul className="space-y-2">
-          {STARTER_TEMPLATES.map((preset) => (
-            <li key={preset.id}>
-              <Card className="p-3">
-                <h3 className="text-sm font-semibold text-ink">{preset.name}</h3>
-                <p className="mt-0.5 text-xs text-ink-muted">{preset.description}</p>
-                <p className="mt-1 text-xs text-ink-subtle">
-                  {preset.exercises.map((entry) => entry.exerciseName).join(' · ')}
-                </p>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  className="mt-2"
-                  onClick={() => void addStarter(preset.id)}
-                >
-                  Add to my routines
-                </Button>
-              </Card>
-            </li>
-          ))}
-        </ul>
+        {STARTER_CATEGORIES.map((category) => {
+          const presets = STARTER_TEMPLATES.filter((preset) => preset.category === category);
+          if (presets.length === 0) return null;
+          return (
+            <div key={category} className="mb-4 last:mb-0">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-subtle">
+                {category}
+              </h3>
+              <ul className="space-y-2">
+                {presets.map((preset) => (
+                  <li key={preset.id}>
+                    <Card className="p-3">
+                      <h4 className="text-sm font-semibold text-ink">{preset.name}</h4>
+                      <p className="mt-0.5 text-xs text-ink-muted">{preset.description}</p>
+                      <p className="mt-1 text-xs text-ink-subtle">
+                        {preset.exercises.map((entry) => entry.exerciseName).join(' · ')}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        className="mt-2"
+                        onClick={() => void addStarter(preset.id)}
+                      >
+                        Add to my routines
+                      </Button>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </Sheet>
 
       <ConfirmDialog

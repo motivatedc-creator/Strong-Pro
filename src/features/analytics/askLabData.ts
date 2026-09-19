@@ -2,19 +2,10 @@ import { MAX_E1RM_REPS } from '@/domain/oneRepMax';
 import { titleCase } from '@/domain/taxonomy';
 import { localDateOf, RANGE_DESCRIPTIONS, resolveRange } from '@/domain/time';
 import { getClaim } from '@/domain/evidence';
-import {
-  exerciseOptions,
-  exerciseProgress,
-  filterByRange,
-  type AnalyticsOptions,
-} from './compute';
+import { exerciseOptions, exerciseProgress, filterByRange, type AnalyticsOptions } from './compute';
 import { muscleBandBalance, muscleBandBalanceSentence } from './muscleSets';
 import { shiftLocalDate, startOfTrainingWeekDate } from './trainingWeeks';
-import {
-  CHANGE_FLAGS_EMPTY,
-  CHANGE_FLAGS_PARTIAL,
-  trainingFlags,
-} from './trainingFlags';
+import { CHANGE_FLAGS_EMPTY, CHANGE_FLAGS_PARTIAL, trainingFlags } from './trainingFlags';
 import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
 import {
   detectMuscleInQuery,
@@ -75,7 +66,8 @@ export function answerTrainingEnough(query: string, context: AskLabContext): Ask
       matches,
       known: `Training week window ${weekStartDate} to ${weekEndDate} with week start ${context.weekStart}.`,
       missing: 'Completed working sets in this training week.',
-      nextStep: 'Log a session (or import a Strong CSV) so credited sets can be compared to targets.',
+      nextStep:
+        'Log a session (or import a Strong CSV) so credited sets can be compared to targets.',
       payload: {
         kind: 'training_enough',
         weekStartDate,
@@ -218,7 +210,13 @@ export function answerMuscleContribution(query: string, context: AskLabContext):
 export function answerVerdictWhy(query: string, context: AskLabContext): AskLabAnswer {
   const reference = context.reference ?? new Date();
   const options = analyticsOptions(context);
-  const verdict = weeklyVerdict(context.entries, options, context.weekStart, reference);
+  const verdict = weeklyVerdict(
+    context.entries,
+    options,
+    context.weekStart,
+    reference,
+    context.goalLiftIds,
+  );
   const copy = weeklyVerdictCopy(verdict, context.weightUnit ?? 'kg');
   const matches = claimLinks('weekly-verdict-deload-shape');
   const lead = copy.lines.map((line) => line.plain).join(' ');
@@ -303,8 +301,7 @@ export function answerGettingStronger(query: string, context: AskLabContext): As
       sessionsWithE1rm: progress.oneRepMax.length,
       firstE1rmG: first.value,
       lastE1rmG: last.value,
-      changePercent:
-        first.value > 0 ? ((last.value - first.value) / first.value) * 100 : null,
+      changePercent: first.value > 0 ? ((last.value - first.value) / first.value) * 100 : null,
       lastBestWeightG: lastBest?.value ?? null,
     });
   }
@@ -354,7 +351,13 @@ export function answerGettingStronger(query: string, context: AskLabContext): As
 export function answerChangeFlags(query: string, context: AskLabContext): AskLabAnswer {
   const reference = context.reference ?? new Date();
   const options = analyticsOptions(context);
-  const flags = trainingFlags(context.entries, options, context.weekStart, reference);
+  const flags = trainingFlags(
+    context.entries,
+    options,
+    context.weekStart,
+    reference,
+    context.goalLiftIds,
+  );
   const activeLabels = flags.active.map((flag) => flag.label);
   const receipts = flags.active.map((flag) => flag.receipt);
   const partialStalls = flags.stalls.filter((flag) => flag.status === 'partial');
