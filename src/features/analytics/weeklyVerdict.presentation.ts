@@ -40,7 +40,7 @@ export function weeklyVerdictCopy(
       lines: [
         sentence(
           [
-            { type: 'text', text: 'Weekly Verdict needs ' },
+            { type: 'text', text: 'Needs ' },
             {
               type: 'metric',
               text: `${remaining} more training ${weekWord}`,
@@ -48,7 +48,7 @@ export function weeklyVerdictCopy(
             },
             {
               type: 'text',
-              text: ' before it can compare your training honestly.',
+              text: ' before comparing your training honestly.',
             },
           ],
         ),
@@ -104,13 +104,13 @@ export function weeklyVerdictCopy(
         sentence([
           {
             type: 'text',
-            text: 'Lighter week, consistent sessions — looks like a deload. Good.',
+            text: 'Lighter week, consistent sessions — looks like a deload.',
           },
         ]),
         sentence([
           {
             type: 'text',
-            text: 'No single lift or metric needs calling out from this week.',
+            text: 'No single lift or metric stood out this week.',
           },
         ]),
         sentence([
@@ -365,7 +365,6 @@ function directionSentence(
   switch (direction.band) {
     case 'big_jump':
       return sentence([
-        { type: 'text', text: 'You did ' },
         hard,
         { type: 'text', text: ', ' },
         pct,
@@ -373,7 +372,6 @@ function directionSentence(
       ]);
     case 'up':
       return sentence([
-        { type: 'text', text: 'Training went up: ' },
         hard,
         { type: 'text', text: ', ' },
         pct,
@@ -381,13 +379,11 @@ function directionSentence(
       ]);
     case 'steady':
       return sentence([
-        { type: 'text', text: 'A steady week: ' },
         hard,
         { type: 'text', text: `, in line with your ${averageLabel}.` },
       ]);
     case 'down':
       return sentence([
-        { type: 'text', text: 'A lighter week: ' },
         hard,
         { type: 'text', text: ', ' },
         pct,
@@ -395,7 +391,6 @@ function directionSentence(
       ]);
     case 'well_down':
       return sentence([
-        { type: 'text', text: 'Training dropped: ' },
         hard,
         { type: 'text', text: ', ' },
         pct,
