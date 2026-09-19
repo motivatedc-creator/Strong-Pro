@@ -17,7 +17,7 @@ import {
 import { metricsFor } from './weeklyVerdict.metrics';
 
 export const MIN_BASELINE_WEEKS = 3;
-const MAX_GOAL_LIFTS = 3;
+export const MAX_GOAL_LIFTS = 3;
 
 export type WeeklyVerdictState = 'not_enough_history' | 'welcome_back' | 'deload' | 'full';
 export type DirectionBand = 'big_jump' | 'up' | 'steady' | 'down' | 'well_down';
@@ -60,6 +60,9 @@ export interface WeeklyVerdict {
   standout: WeeklyVerdictRule | null;
   watchout: WeeklyVerdictRule | null;
   pulse: WeeklyPulse | null;
+  /** The lifts standout/watchout drew on — the user's picks, or the honest inferred guess. */
+  goalLifts: GoalLift[];
+  goalLiftSource: GoalLiftSource;
 }
 
 export type VerdictEvidenceKey =
@@ -116,6 +119,7 @@ export function weeklyVerdict(
   options: AnalyticsOptions,
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
+  goalLiftIds?: readonly string[],
 ): WeeklyVerdict {
   const referenceLocalDate = localDateOf(reference);
   const currentWeekStart = startOfTrainingWeekDate(referenceLocalDate, weekStart);
@@ -125,6 +129,7 @@ export function weeklyVerdict(
   const baselineWeeks = selectTrainingBaseline(entries, subjectWindow.startDate, weekStart);
   const baselineMetrics = averageMetrics(baselineWeeks.map((week) => metricsFor(week.entries)));
   const pulse = buildPulse(entries, currentWeekStart, referenceLocalDate, weekStart);
+  const { lifts: goalLifts, source: goalLiftSource } = resolveGoalLifts(baselineWeeks, goalLiftIds);
 
   if (baselineWeeks.length < MIN_BASELINE_WEEKS) {
     return result(
@@ -137,6 +142,8 @@ export function weeklyVerdict(
       null,
       null,
       pulse,
+      goalLifts,
+      goalLiftSource,
     );
   }
 
@@ -157,6 +164,8 @@ export function weeklyVerdict(
       null,
       null,
       pulse,
+      goalLifts,
+      goalLiftSource,
     );
   }
 
@@ -176,11 +185,12 @@ export function weeklyVerdict(
       null,
       null,
       pulse,
+      goalLifts,
+      goalLiftSource,
     );
   }
 
   const direction = buildDirection(subjectMetrics, baselineMetrics);
-  const goalLifts = topGoalLifts(baselineWeeks);
   const standout = buildStandout(
     entries,
     subjectEntries,
@@ -213,6 +223,8 @@ export function weeklyVerdict(
     standout,
     watchout,
     pulse,
+    goalLifts,
+    goalLiftSource,
   );
 }
 
@@ -226,6 +238,8 @@ function result(
   standout: WeeklyVerdictRule | null,
   watchout: WeeklyVerdictRule | null,
   pulse: WeeklyPulse | null,
+  goalLifts: GoalLift[],
+  goalLiftSource: GoalLiftSource,
 ): WeeklyVerdict {
   return {
     state,
@@ -235,6 +249,8 @@ function result(
     standout,
     watchout,
     pulse,
+    goalLifts,
+    goalLiftSource,
   };
 }
 
@@ -279,8 +295,8 @@ function buildPulse(
 
   const currentWindow = windowThroughElapsedDay(weekWindow(currentWeekStart), dayIndex);
   const currentHardSets = metricsFor(entriesInWeek(entries, currentWindow)).hardSets;
-  const baselineHardSets = baselineWeeks.map((week) =>
-    metricsFor(entriesInWeek(entries, windowThroughElapsedDay(week, dayIndex))).hardSets,
+  const baselineHardSets = baselineWeeks.map(
+    (week) => metricsFor(entriesInWeek(entries, windowThroughElapsedDay(week, dayIndex))).hardSets,
   );
   const baselineHardSetsAverage = average(baselineHardSets);
 
@@ -298,7 +314,8 @@ export interface GoalLift {
   sessions: number;
 }
 
-export function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
+/** Session counts for every exercise seen in the baseline window, not just the top ones. */
+function sessionCountsByLift(weeks: readonly TrainingBaselineWeek[]): Map<string, GoalLift> {
   const byLift = new Map<string, GoalLift & { workoutIds: Set<string> }>();
   for (const entry of weeks.flatMap((week) => week.entries)) {
     const current = byLift.get(entry.exercise.exerciseId) ?? {
@@ -310,10 +327,47 @@ export function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[]
     current.workoutIds.add(entry.workout.id);
     byLift.set(current.id, current);
   }
-  return [...byLift.values()]
-    .map(({ workoutIds, ...lift }) => ({ ...lift, sessions: workoutIds.size }))
-    .sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name))
-    .slice(0, MAX_GOAL_LIFTS);
+  return new Map(
+    [...byLift.entries()].map(([id, { workoutIds, ...lift }]) => [
+      id,
+      { ...lift, sessions: workoutIds.size },
+    ]),
+  );
+}
+
+/** Every exercise seen in the baseline window, most sessions first — for the goal-lift picker. */
+export function rankedGoalLiftCandidates(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
+  return [...sessionCountsByLift(weeks).values()].sort(
+    (a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name),
+  );
+}
+
+/** The exercises with the most distinct sessions in the baseline window — the honest guess. */
+export function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
+  return rankedGoalLiftCandidates(weeks).slice(0, MAX_GOAL_LIFTS);
+}
+
+export type GoalLiftSource = 'chosen' | 'inferred';
+
+/**
+ * Resolves which lifts the verdict and stall flags should track: the user's explicit picks
+ * when they've made any, the inferred top lifts otherwise. A picked list always wins outright
+ * — it is never topped up with inferred lifts, and a picked lift with no data in the baseline
+ * window is dropped rather than compared against zero (the same rule `topGoalLifts` follows).
+ */
+export function resolveGoalLifts(
+  weeks: readonly TrainingBaselineWeek[],
+  goalLiftIds: readonly string[] | undefined,
+): { lifts: GoalLift[]; source: GoalLiftSource } {
+  if (!goalLiftIds || goalLiftIds.length === 0) {
+    return { lifts: topGoalLifts(weeks), source: 'inferred' };
+  }
+  const bySessions = sessionCountsByLift(weeks);
+  const lifts = goalLiftIds
+    .slice(0, MAX_GOAL_LIFTS)
+    .map((id) => bySessions.get(id))
+    .filter((lift): lift is GoalLift => lift !== undefined);
+  return { lifts, source: 'chosen' };
 }
 
 export function bestEstimateForLift(
@@ -338,7 +392,9 @@ function buildStandout(
   options: AnalyticsOptions,
 ): WeeklyVerdictRule {
   const baselineEntries = baselineWeeks.flatMap((week) => week.entries);
-  const historicalEntries = allEntries.filter((entry) => entry.workout.localDate < subjectWindow.startDate);
+  const historicalEntries = allEntries.filter(
+    (entry) => entry.workout.localDate < subjectWindow.startDate,
+  );
 
   for (const lift of goalLifts) {
     const current = bestEstimateForLift(subjectEntries, lift.id, options);
@@ -351,7 +407,8 @@ function buildStandout(
   for (const lift of goalLifts) {
     const current = bestEstimateForLift(subjectEntries, lift.id, options);
     const baselineBest = bestEstimateForLift(baselineEntries, lift.id, options);
-    const change = current !== null && baselineBest !== null ? percent(current, baselineBest) : null;
+    const change =
+      current !== null && baselineBest !== null ? percent(current, baselineBest) : null;
     if (change !== null && change >= 2.5) {
       return { id: 'standout_e1rm_up', text: `${lift.name}|${Math.round(change)}` };
     }

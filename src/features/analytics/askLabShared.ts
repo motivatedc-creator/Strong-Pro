@@ -122,6 +122,8 @@ export type AskLabContext = {
   weightUnit?: WeightUnit;
   /** Wall-clock reference; defaults to now. */
   reference?: Date;
+  /** User-picked goal lifts; empty or absent falls back to the inferred top lifts. */
+  goalLiftIds?: readonly string[];
 };
 
 export const ASK_LAB_STARTERS: readonly { label: string; query: string }[] = [

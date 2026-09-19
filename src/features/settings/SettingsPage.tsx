@@ -18,6 +18,7 @@ import type {
   WeekStartDay,
 } from '@/domain/types';
 import { Icon, Icons } from '@/components/icons';
+import { GoalLiftPicker } from '@/features/analytics/GoalLiftPicker';
 import { EquipmentSettings } from './EquipmentSettings';
 
 const SECTIONS = ['training', 'timers', 'equipment', 'appearance', 'data', 'about'] as const;
@@ -43,6 +44,7 @@ const APP_ICONS: Array<{ id: AppIcon; name: string }> = [
 export function SettingsPage() {
   const { settings, weightUnit, update } = useSettings();
   const [section, setSection] = useState<Section>('training');
+  const [pickingGoalLifts, setPickingGoalLifts] = useState(false);
 
   return (
     <>
@@ -179,6 +181,23 @@ export function SettingsPage() {
                 />
               )}
             </Field>
+
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="rf-label">Goal lifts</p>
+              <p className="mb-2 mt-1 text-xs text-ink-subtle">
+                Up to 3 lifts Weekly Verdict and stall flags track. Leave none set and Lock’d uses
+                your most-trained lifts instead, labelled as a guess on the Data Lab card.
+              </p>
+              <button
+                type="button"
+                className="min-h-tap text-sm font-semibold text-accent"
+                onClick={() => setPickingGoalLifts(true)}
+              >
+                {settings.goalLiftIds && settings.goalLiftIds.length > 0
+                  ? `${settings.goalLiftIds.length} lift${settings.goalLiftIds.length === 1 ? '' : 's'} set — change`
+                  : 'Your top lifts — set your own'}
+              </button>
+            </div>
           </Card>
         </>
       )}
@@ -361,6 +380,13 @@ export function SettingsPage() {
           </p>
         </Card>
       )}
+
+      <GoalLiftPicker
+        open={pickingGoalLifts}
+        onClose={() => setPickingGoalLifts(false)}
+        goalLiftIds={settings.goalLiftIds}
+        onChange={(goalLiftIds) => void update({ goalLiftIds })}
+      />
 
       <div className="h-8" aria-hidden="true" />
     </>
