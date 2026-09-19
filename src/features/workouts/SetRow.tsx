@@ -16,7 +16,8 @@ import { classifySetReps } from './targetPrescription';
  */
 export function SetRow({
   set,
-  index,
+  displayNumber,
+  side,
   trackingType,
   weightUnit,
   intensityMode,
@@ -31,7 +32,9 @@ export function SetRow({
   onCycleType,
 }: {
   set: WorkoutSet;
-  index: number;
+  displayNumber: number;
+  /** Set for a unilateral pair's row; undefined for an ordinary bilateral set. */
+  side?: 'left' | 'right';
   trackingType: TrackingType;
   weightUnit: WeightUnit;
   intensityMode: IntensityMode;
@@ -148,6 +151,10 @@ export function SetRow({
       }[verdict]
     : null;
 
+  // Text, not color alone, per the non-color-status rule — folded into aria-labels below too.
+  const sideLabel = side === 'left' ? 'Left' : side === 'right' ? 'Right' : null;
+  const sideSuffix = sideLabel ? `, ${sideLabel.toLowerCase()}` : '';
+
   return (
     <li
       className={cx(
@@ -169,7 +176,7 @@ export function SetRow({
           type="button"
           onClick={() => onCycleType(nextType.value)}
           title={`Set type: ${typeMeta.label}. Tap to change to ${nextType.label}.`}
-          aria-label={`Set ${index + 1}, ${typeMeta.label}. Change set type`}
+          aria-label={`Set ${displayNumber}${sideSuffix}, ${typeMeta.label}. Change set type`}
           className={cx(
             'flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold',
             set.setType === 'warmup'
@@ -181,7 +188,7 @@ export function SetRow({
                   : 'text-ink-muted',
           )}
         >
-          {typeMeta.short || index + 1}
+          {typeMeta.short || displayNumber}
         </button>
       </div>
 
@@ -203,7 +210,7 @@ export function SetRow({
             </IconButton>
             <NumberInput
               value={weightText}
-              aria-label={`Weight for set ${index + 1} in ${weightUnit}`}
+              aria-label={`Weight for set ${displayNumber}${sideSuffix} in ${weightUnit}`}
               aria-describedby={previous ? previousDescriptionId : undefined}
               step="any"
               min={0}
@@ -237,7 +244,7 @@ export function SetRow({
           <NumberInput
             ref={repsInputRef}
             value={repsText}
-            aria-label={`Reps for set ${index + 1}`}
+            aria-label={`Reps for set ${displayNumber}${sideSuffix}`}
             aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
@@ -264,7 +271,7 @@ export function SetRow({
           <NumberInput
             ref={durationInputRef}
             defaultValue={set.durationSeconds ?? ''}
-            aria-label={`Duration in seconds for set ${index + 1}`}
+            aria-label={`Duration in seconds for set ${displayNumber}${sideSuffix}`}
             aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
@@ -290,7 +297,7 @@ export function SetRow({
           <NumberInput
             ref={distanceInputRef}
             defaultValue={set.distanceM ?? ''}
-            aria-label={`Distance in metres for set ${index + 1}`}
+            aria-label={`Distance in metres for set ${displayNumber}${sideSuffix}`}
             aria-describedby={previous ? previousDescriptionId : undefined}
             inputMode="numeric"
             min={0}
@@ -311,7 +318,7 @@ export function SetRow({
         {intensityMode !== 'none' && (
           <NumberInput
             defaultValue={intensityMode === 'rpe' ? (set.rpe ?? '') : (set.rir ?? '')}
-            aria-label={`${intensityMode.toUpperCase()} for set ${index + 1}`}
+            aria-label={`${intensityMode.toUpperCase()} for set ${displayNumber}${sideSuffix}`}
             step="0.5"
             min={0}
             max={intensityMode === 'rpe' ? 10 : 10}
@@ -333,6 +340,11 @@ export function SetRow({
       </div>
 
       <div className="col-span-2 flex items-center justify-end gap-1 sm:col-span-1">
+        {sideLabel && (
+          <span className="hidden items-center rounded-md bg-surface-raised px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-muted sm:inline-flex">
+            {sideLabel}
+          </span>
+        )}
         {verdictMeta && (
           <span className="hidden items-center gap-1 rounded-md bg-surface-raised px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted sm:inline-flex">
             <Icon icon={verdictMeta.icon} size={12} strokeWidth={2.5} />
@@ -353,14 +365,20 @@ export function SetRow({
           variant={set.isCompleted ? 'success' : 'secondary'}
           aria-pressed={set.isCompleted}
           aria-label={
-            set.isCompleted ? `Mark set ${index + 1} as not done` : `Complete set ${index + 1}`
+            set.isCompleted
+              ? `Mark set ${displayNumber}${sideSuffix} as not done`
+              : `Complete set ${displayNumber}${sideSuffix}`
           }
           className="h-11 w-12 rounded-xl px-0"
           onClick={() => onToggleComplete(set.isCompleted ? {} : completionPatch())}
         >
           <Icon icon={Icons.check} size={18} strokeWidth={2.4} />
         </Button>
-        <IconButton label={`Delete set ${index + 1}`} onClick={onDelete} className="h-11 w-11">
+        <IconButton
+          label={`Delete set ${displayNumber}${sideSuffix}`}
+          onClick={onDelete}
+          className="h-11 w-11"
+        >
           <Icon icon={Icons.trash} size={16} />
         </IconButton>
       </div>
@@ -368,6 +386,11 @@ export function SetRow({
       {/* Mobile: previous-set reference sits under the inputs where there is room. */}
       <p className="col-span-2 -mt-1 flex flex-wrap items-center gap-2 text-[11px] text-ink-subtle sm:hidden">
         <span>Last: {previousLabel}</span>
+        {sideLabel && (
+          <span className="inline-flex items-center rounded-md bg-surface-raised px-1.5 py-0.5 font-bold uppercase tracking-wide text-ink-muted">
+            {sideLabel}
+          </span>
+        )}
         {verdictMeta && (
           <span className="inline-flex items-center gap-1 font-semibold uppercase tracking-wide text-ink-muted">
             <Icon icon={verdictMeta.icon} size={12} strokeWidth={2.5} />

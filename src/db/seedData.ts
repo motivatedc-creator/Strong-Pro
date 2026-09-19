@@ -27,6 +27,7 @@ type SeedTuple = [
   equipment: Equipment,
   pattern: MovementPattern,
   tracking?: TrackingType,
+  unilateral?: boolean,
 ];
 
 const SEED: SeedTuple[] = [
@@ -66,13 +67,15 @@ const SEED: SeedTuple[] = [
   ['Incline Dumbbell Press', 'chest', ['shoulders', 'triceps'], 'dumbbell', 'horizontal push'],
   ['Dumbbell Shoulder Press', 'shoulders', ['triceps'], 'dumbbell', 'vertical push'],
   ['Dumbbell Row', 'back', ['lats', 'biceps'], 'dumbbell', 'horizontal pull'],
-  ['One-Arm Dumbbell Row', 'back', ['lats', 'biceps'], 'dumbbell', 'horizontal pull'],
+  ['One-Arm Dumbbell Row', 'back', ['lats', 'biceps'], 'dumbbell', 'horizontal pull', undefined, true],
   [
     'Single-Arm Dumbbell Shoulder Press',
     'shoulders',
     ['triceps', 'core'],
     'dumbbell',
     'vertical push',
+    undefined,
+    true,
   ],
   ['Dumbbell Fly', 'chest', ['shoulders'], 'dumbbell', 'isolation'],
   ['Lateral Raise', 'shoulders', [], 'dumbbell', 'isolation'],
@@ -82,9 +85,9 @@ const SEED: SeedTuple[] = [
   ['Incline Dumbbell Curl', 'biceps', ['forearms'], 'dumbbell', 'isolation'],
   ['Dumbbell Skullcrusher', 'triceps', [], 'dumbbell', 'isolation'],
   ['Dumbbell Romanian Deadlift', 'hamstrings', ['glutes', 'back'], 'dumbbell', 'hinge'],
-  ['Bulgarian Split Squat', 'quads', ['glutes', 'hamstrings'], 'dumbbell', 'lunge'],
+  ['Bulgarian Split Squat', 'quads', ['glutes', 'hamstrings'], 'dumbbell', 'lunge', undefined, true],
   ['Goblet Squat', 'quads', ['glutes', 'core'], 'dumbbell', 'squat'],
-  ['Dumbbell Walking Lunge', 'quads', ['glutes', 'hamstrings'], 'dumbbell', 'lunge'],
+  ['Dumbbell Walking Lunge', 'quads', ['glutes', 'hamstrings'], 'dumbbell', 'lunge', undefined, true],
   ['Dumbbell Shrug', 'traps', ['forearms'], 'dumbbell', 'isolation'],
   ["Farmer's Carry", 'forearms', ['traps', 'core'], 'dumbbell', 'carry', 'distance_duration'],
 
@@ -160,7 +163,7 @@ export function slugify(name: string): string {
 }
 
 export function seedExercises(now: string): Exercise[] {
-  return SEED.map(([name, primary, secondary, equipment, pattern, tracking]) => ({
+  return SEED.map(([name, primary, secondary, equipment, pattern, tracking, unilateral]) => ({
     id: `seed-${slugify(name)}`,
     name,
     primaryMuscleGroup: primary,
@@ -169,6 +172,7 @@ export function seedExercises(now: string): Exercise[] {
     movementPattern: pattern,
     trackingType: tracking ?? 'weight_reps',
     incrementG: equipment === 'dumbbell' ? toGrams(2.5, 'kg') : undefined,
+    unilateral,
     isCustom: false,
     isArchived: false,
     createdAt: now,

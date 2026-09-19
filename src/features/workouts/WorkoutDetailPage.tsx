@@ -19,8 +19,10 @@ import { elapsedSeconds, formatDateTime } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { titleCase } from '@/domain/taxonomy';
-import type { SetType, WorkoutSet } from '@/domain/types';
+import type { SetType, WorkoutExercise, WorkoutSet } from '@/domain/types';
 import { SetRow } from './SetRow';
+import { pairedSetInputs } from './setPrefill';
+import { groupSetsForDisplay } from './setGrouping';
 
 /**
  * Completed-workout detail and editor.
@@ -46,32 +48,62 @@ export function WorkoutDetailPage() {
     reload();
   });
 
-  const [deleteSet] = useWrite(async (set: WorkoutSet) => {
+  const [deleteSet] = useWrite(async (set: WorkoutSet, partner?: WorkoutSet) => {
     await repository.deleteSet(set.id);
+    if (partner) await repository.deleteSet(partner.id);
     reload();
-    toast.undo('Set deleted.', () => void repository.restoreSet(set).then(reload));
+    toast.undo('Set deleted.', () =>
+      void Promise.all([
+        repository.restoreSet(set),
+        partner ? repository.restoreSet(partner) : Promise.resolve(),
+      ]).then(reload),
+    );
   });
 
-  const [addSet] = useWrite(async (workoutExerciseId: string, template?: WorkoutSet) => {
-    if (!data) return;
-    await repository.addSet(data.workout.id, {
-      workoutExerciseId,
-      weightG: template?.weightG,
-      reps: template?.reps,
-      setType: template?.setType ?? 'working',
-      isCompleted: true,
-    });
-    reload();
-  });
+  const [addSet] = useWrite(
+    async (exercise: WorkoutExercise, sets: WorkoutSet[], template?: WorkoutSet) => {
+      if (!data) return;
+      if (exercise.unilateralSnapshot) {
+        const lastLeft = [...sets].reverse().find((s) => s.side === 'left');
+        const lastRight = [...sets].reverse().find((s) => s.side === 'right');
+        await repository.addSets(
+          data.workout.id,
+          pairedSetInputs(exercise.id, { left: lastLeft, right: lastRight }).map((input) => ({
+            ...input,
+            isCompleted: true,
+          })),
+        );
+      } else {
+        await repository.addSet(data.workout.id, {
+          workoutExerciseId: exercise.id,
+          weightG: template?.weightG,
+          reps: template?.reps,
+          setType: template?.setType ?? 'working',
+          isCompleted: true,
+        });
+      }
+      reload();
+    },
+  );
 
   const [addExercises] = useWrite(async (ids: string[]) => {
     if (!data) return;
     for (const exerciseId of ids) {
       const workoutExercise = await repository.addExerciseToWorkout(data.workout.id, exerciseId);
-      await repository.addSet(data.workout.id, {
-        workoutExerciseId: workoutExercise.id,
-        isCompleted: true,
-      });
+      if (workoutExercise.unilateralSnapshot) {
+        await repository.addSets(
+          data.workout.id,
+          pairedSetInputs(workoutExercise.id, {}).map((input) => ({
+            ...input,
+            isCompleted: true,
+          })),
+        );
+      } else {
+        await repository.addSet(data.workout.id, {
+          workoutExerciseId: workoutExercise.id,
+          isCompleted: true,
+        });
+      }
     }
     reload();
   });
@@ -157,29 +189,41 @@ export function WorkoutDetailPage() {
               </div>
 
               <ul className="space-y-1.5">
-                {entry.sets.map((set, index) => (
-                  <SetRow
-                    key={set.id}
-                    set={set}
-                    index={index}
-                    trackingType={entry.exercise.trackingTypeSnapshot}
-                    weightUnit={weightUnit}
-                    intensityMode={settings.intensityMode}
-                    quickIncrementG={settings.quickIncrementG}
-                    onChange={(patch) => void updateSet(set.id, patch)}
-                    onToggleComplete={(prefill) =>
-                      void updateSet(set.id, { ...prefill, isCompleted: !set.isCompleted })
-                    }
-                    onDelete={() => void deleteSet(set)}
-                    onCycleType={(setType: SetType) => void updateSet(set.id, { setType })}
-                  />
-                ))}
+                {groupSetsForDisplay(entry.sets).flatMap(({ displayNumber, rows }) =>
+                  rows.map((set) => (
+                    <SetRow
+                      key={set.id}
+                      set={set}
+                      displayNumber={displayNumber}
+                      side={set.side}
+                      trackingType={entry.exercise.trackingTypeSnapshot}
+                      weightUnit={weightUnit}
+                      intensityMode={settings.intensityMode}
+                      quickIncrementG={settings.quickIncrementG}
+                      onChange={(patch) => void updateSet(set.id, patch)}
+                      onToggleComplete={(prefill) =>
+                        void updateSet(set.id, { ...prefill, isCompleted: !set.isCompleted })
+                      }
+                      onDelete={() =>
+                        void deleteSet(
+                          set,
+                          set.pairId
+                            ? entry.sets.find(
+                                (other) => other.pairId === set.pairId && other.id !== set.id,
+                              )
+                            : undefined,
+                        )
+                      }
+                      onCycleType={(setType: SetType) => void updateSet(set.id, { setType })}
+                    />
+                  )),
+                )}
               </ul>
 
               <Button
                 size="sm"
                 className="mt-2"
-                onClick={() => void addSet(entry.exercise.id, entry.sets.at(-1))}
+                onClick={() => void addSet(entry.exercise, entry.sets, entry.sets.at(-1))}
               >
                 + Add set
               </Button>

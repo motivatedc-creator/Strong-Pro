@@ -93,6 +93,84 @@ describe('schema migrations', () => {
       .equals(['ex1', 'w1'])
       .toArray();
     expect(viaCompound).toHaveLength(1);
+
+    // Additive unilateral/side/pairId fields never existed on this row and require no
+    // migration — they simply read back as undefined.
+    const workoutExercise = await db.workoutExercises.get('we1');
+    expect(workoutExercise?.unilateralSnapshot).toBeUndefined();
+    const set = await db.workoutSets.get('s1');
+    expect(set?.side).toBeUndefined();
+    expect(set?.pairId).toBeUndefined();
+    const exercise = await db.exercises.get('ex1');
+    expect(exercise?.unilateral).toBeUndefined();
+    db.close();
+  });
+
+  it('reads unilateral/side/pairId as undefined for an old-shape exercise/set/workoutExercise via the repository', async () => {
+    const legacy = openV1(dbName);
+    await legacy.open();
+    await legacy.table('workouts').put({
+      id: 'w1',
+      name: 'Legacy session',
+      status: 'completed',
+      startedAt: '2026-01-01T10:00:00.000Z',
+      endedAt: '2026-01-01T11:00:00.000Z',
+      localDate: '2026-01-01',
+      tzOffsetMinutes: 0,
+      createdAt: '2026-01-01T10:00:00.000Z',
+    });
+    await legacy.table('exercises').put({
+      id: 'ex-legacy',
+      name: 'Legacy Exercise',
+      primaryMuscleGroup: 'chest',
+      secondaryMuscleGroups: [],
+      equipment: 'barbell',
+      movementPattern: 'horizontal push',
+      trackingType: 'weight_reps',
+      isCustom: true,
+      isArchived: false,
+      createdAt: '2026-01-01T10:00:00.000Z',
+      updatedAt: '2026-01-01T10:00:00.000Z',
+      // no `unilateral` field — built before it existed
+    });
+    await legacy.table('workoutExercises').put({
+      id: 'we-legacy',
+      workoutId: 'w1',
+      exerciseId: 'ex-legacy',
+      order: 0,
+      exerciseNameSnapshot: 'Legacy Exercise',
+      primaryMuscleGroupSnapshot: 'chest',
+      secondaryMuscleGroupsSnapshot: [],
+      equipmentSnapshot: 'barbell',
+      trackingTypeSnapshot: 'weight_reps',
+      restSeconds: 120,
+      // no `unilateralSnapshot`
+    });
+    await legacy.table('workoutSets').put({
+      id: 's-legacy',
+      workoutId: 'w1',
+      workoutExerciseId: 'we-legacy',
+      order: 0,
+      setType: 'working',
+      reps: 5,
+      isCompleted: true,
+      // no `side`/`pairId`
+    });
+    legacy.close();
+
+    const db = new RepForgeDatabase(dbName);
+    const repository = new DexieRepository(db);
+    await repository.initialise();
+
+    const exercise = await repository.getExercise('ex-legacy');
+    expect(exercise?.unilateral).toBeUndefined();
+
+    const detail = await repository.getWorkoutDetail('w1');
+    const workoutExercise = detail?.exercises.find((entry) => entry.exercise.id === 'we-legacy');
+    expect(workoutExercise?.exercise.unilateralSnapshot).toBeUndefined();
+    const set = workoutExercise?.sets.find((entry) => entry.id === 's-legacy');
+    expect(set?.side).toBeUndefined();
+    expect(set?.pairId).toBeUndefined();
     db.close();
   });
 

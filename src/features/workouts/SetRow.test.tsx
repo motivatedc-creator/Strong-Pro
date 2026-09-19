@@ -22,7 +22,7 @@ describe('SetRow previous values', () => {
     render(
       <SetRow
         set={workoutSet()}
-        index={0}
+        displayNumber={1}
         trackingType="weight_reps"
         weightUnit="kg"
         intensityMode="none"
@@ -60,7 +60,7 @@ describe('SetRow previous values', () => {
     render(
       <SetRow
         set={workoutSet()}
-        index={0}
+        displayNumber={1}
         trackingType="weight_reps"
         weightUnit="kg"
         intensityMode="none"
@@ -82,7 +82,7 @@ describe('SetRow previous values', () => {
 
 describe('SetRow target verdict', () => {
   const baseProps = {
-    index: 0,
+    displayNumber: 1,
     trackingType: 'weight_reps' as const,
     weightUnit: 'kg' as const,
     intensityMode: 'none' as const,
@@ -146,5 +146,40 @@ describe('SetRow target verdict', () => {
       />,
     );
     expect(screen.queryByText('Under target')).not.toBeInTheDocument();
+  });
+});
+
+describe('SetRow side chip', () => {
+  const baseProps = {
+    displayNumber: 1,
+    trackingType: 'weight_reps' as const,
+    weightUnit: 'kg' as const,
+    intensityMode: 'none' as const,
+    quickIncrementG: 2_500,
+    onChange: vi.fn(),
+    onToggleComplete: vi.fn(),
+    onDelete: vi.fn(),
+    onCycleType: vi.fn(),
+  };
+
+  it('shows a Left chip for a left-side row', () => {
+    render(<SetRow {...baseProps} set={workoutSet({ side: 'left' })} side="left" />);
+    expect(screen.getAllByText('Left').length).toBeGreaterThan(0);
+  });
+
+  it('shows a Right chip for a right-side row', () => {
+    render(<SetRow {...baseProps} set={workoutSet({ side: 'right' })} side="right" />);
+    expect(screen.getAllByText('Right').length).toBeGreaterThan(0);
+  });
+
+  it('shows no side chip for an ordinary bilateral row', () => {
+    render(<SetRow {...baseProps} set={workoutSet()} />);
+    expect(screen.queryByText('Left')).not.toBeInTheDocument();
+    expect(screen.queryByText('Right')).not.toBeInTheDocument();
+  });
+
+  it('folds side into the aria-label', () => {
+    render(<SetRow {...baseProps} set={workoutSet({ side: 'left' })} side="left" />);
+    expect(screen.getByRole('button', { name: 'Complete set 1, left' })).toBeInTheDocument();
   });
 });
