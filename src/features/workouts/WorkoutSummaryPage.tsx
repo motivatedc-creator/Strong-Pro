@@ -8,6 +8,7 @@ import { elapsedSeconds, formatDateTime } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { setTypeLabel } from '@/domain/taxonomy';
+import { groupSetsForDisplay } from './setGrouping';
 
 /** Post-workout summary: what was done, and which records fell. */
 export function WorkoutSummaryPage() {
@@ -148,26 +149,39 @@ export function WorkoutSummaryPage() {
                 </Link>
               </h2>
               <ul className="space-y-0.5 text-sm text-ink-muted">
-                {entry.sets.map((set, index) => (
-                  <li key={set.id} className="flex items-center gap-2 tabular-nums">
-                    <span className="w-5 text-xs text-ink-subtle">{index + 1}</span>
-                    <span>
-                      {set.weightG !== undefined
-                        ? `${formatWeight(set.weightG, weightUnit)} ${weightUnit}`
-                        : '—'}
-                      {set.reps !== undefined ? ` × ${set.reps}` : ''}
-                      {set.durationSeconds ? ` · ${formatDuration(set.durationSeconds)}` : ''}
-                      {set.distanceM ? ` · ${set.distanceM} m` : ''}
-                    </span>
-                    {set.setType !== 'working' && <Chip>{setTypeLabel(set.setType)}</Chip>}
-                    {set.rpe !== undefined && (
-                      <span className="text-xs text-ink-subtle">RPE {set.rpe}</span>
-                    )}
-                    {set.rir !== undefined && (
-                      <span className="text-xs text-ink-subtle">RIR {set.rir}</span>
-                    )}
-                  </li>
-                ))}
+                {groupSetsForDisplay(entry.sets).map(({ displayNumber, rows }) => {
+                  const first = rows[0]!;
+                  return (
+                    <li key={first.id} className="flex items-center gap-2 tabular-nums">
+                      <span className="w-5 text-xs text-ink-subtle">{displayNumber}</span>
+                      <span>
+                        {rows.map((set, i) => (
+                          <span key={set.id}>
+                            {i > 0 && ' / '}
+                            {set.side && (
+                              <span className="mr-0.5 text-[10px] font-bold uppercase">
+                                {set.side === 'left' ? 'L' : 'R'}
+                              </span>
+                            )}
+                            {set.weightG !== undefined
+                              ? `${formatWeight(set.weightG, weightUnit)} ${weightUnit}`
+                              : '—'}
+                            {set.reps !== undefined ? ` × ${set.reps}` : ''}
+                            {set.durationSeconds ? ` · ${formatDuration(set.durationSeconds)}` : ''}
+                            {set.distanceM ? ` · ${set.distanceM} m` : ''}
+                          </span>
+                        ))}
+                      </span>
+                      {first.setType !== 'working' && <Chip>{setTypeLabel(first.setType)}</Chip>}
+                      {first.rpe !== undefined && (
+                        <span className="text-xs text-ink-subtle">RPE {first.rpe}</span>
+                      )}
+                      {first.rir !== undefined && (
+                        <span className="text-xs text-ink-subtle">RIR {first.rir}</span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </Card>
           </li>

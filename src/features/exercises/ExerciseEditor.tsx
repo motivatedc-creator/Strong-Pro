@@ -25,6 +25,7 @@ interface Draft {
   equipment: Equipment;
   movementPattern: MovementPattern;
   trackingType: TrackingType;
+  unilateral: boolean;
   notes: string;
   isArchived: boolean;
 }
@@ -37,6 +38,7 @@ function toDraft(exercise?: Exercise): Draft {
     equipment: exercise?.equipment ?? 'barbell',
     movementPattern: exercise?.movementPattern ?? 'horizontal push',
     trackingType: exercise?.trackingType ?? 'weight_reps',
+    unilateral: exercise?.unilateral ?? false,
     notes: exercise?.notes ?? '',
     isArchived: exercise?.isArchived ?? false,
   };
@@ -89,6 +91,7 @@ export function ExerciseEditor({
       equipment: draft.equipment,
       movementPattern: draft.movementPattern,
       trackingType: draft.trackingType,
+      unilateral: draft.unilateral,
       notes: draft.notes.trim() || undefined,
       isArchived: draft.isArchived,
     };
@@ -253,6 +256,13 @@ export function ExerciseEditor({
           </Select>
         )}
       </Field>
+
+      <Toggle
+        label="Single-arm / single-leg"
+        description="Logs each set as independent left and right rows."
+        checked={draft.unilateral}
+        onChange={(unilateral) => setDraft({ ...draft, unilateral })}
+      />
 
       <Field label="Notes">
         {({ id }) => (

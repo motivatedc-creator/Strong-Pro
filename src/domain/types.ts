@@ -90,6 +90,8 @@ export interface Exercise {
   trackingType: TrackingType;
   /** Rounding increment used by the warm-up generator for non-barbell work, in grams. */
   incrementG?: number;
+  /** Single-arm/single-leg exercise. Logged as independent left/right `WorkoutSet` rows. */
+  unilateral?: boolean;
   isCustom: boolean;
   isArchived: boolean;
   notes?: string;
@@ -143,6 +145,10 @@ export interface WorkoutSet {
   isCompleted: boolean;
   completedAt?: ISODateTime;
   notes?: string;
+  /** Undefined = bilateral row (unchanged meaning). Set for unilateral exercises. */
+  side?: 'left' | 'right';
+  /** UI-lookup-only grouping key linking the left+right row of one set-number. Never indexed. */
+  pairId?: string;
 }
 
 export interface WorkoutExercise {
@@ -156,6 +162,8 @@ export interface WorkoutExercise {
   secondaryMuscleGroupsSnapshot: MuscleGroup[];
   equipmentSnapshot: Equipment;
   trackingTypeSnapshot: TrackingType;
+  /** Snapshotted at add-to-workout time so a mid-workout exercise edit can't change behavior. */
+  unilateralSnapshot?: boolean;
   restSeconds: number;
   notes?: string;
   supersetGroup?: string;

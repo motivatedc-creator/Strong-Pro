@@ -26,8 +26,10 @@ import { elapsedSeconds } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { titleCase, usesWeight } from '@/domain/taxonomy';
-import type { SetType, WorkoutSet } from '@/domain/types';
+import type { SetType, WorkoutExercise, WorkoutSet } from '@/domain/types';
 import { SetRow } from './SetRow';
+import { pairedSetInputs, previousForRow } from './setPrefill';
+import { groupSetsForDisplay } from './setGrouping';
 import { useRestTimerStore } from './restTimer';
 import { formatTarget, resolveExerciseTarget } from './targetPrescription';
 
@@ -102,7 +104,14 @@ export function ActiveWorkoutPage() {
       const workoutExercise = await repository.addExerciseToWorkout(data.workout.id, id, {
         supersetGroup,
       });
-      await repository.addSet(data.workout.id, { workoutExerciseId: workoutExercise.id });
+      if (workoutExercise.unilateralSnapshot) {
+        await repository.addSets(
+          data.workout.id,
+          pairedSetInputs(workoutExercise.id, {}),
+        );
+      } else {
+        await repository.addSet(data.workout.id, { workoutExerciseId: workoutExercise.id });
+      }
     }
     reload();
   });
@@ -117,30 +126,52 @@ export function ActiveWorkoutPage() {
       const next = !set.isCompleted;
       await repository.updateSet(set.id, { ...(next ? prefill : {}), isCompleted: next });
       reload();
+      // Confirmed, intended behavior: completing left then right just restarts the timer
+      // against whichever side finished most recently — the timer store is a last-write-wins
+      // singleton, so no special-casing for unilateral pairs is needed here.
       if (next && settings.restTimerAutoStart && restSeconds > 0) {
         await startTimer(restSeconds, { workoutId: set.workoutId, setId: set.id, label });
       }
     },
   );
 
-  const [deleteSet] = useWrite(async (set: WorkoutSet) => {
+  const [deleteSet] = useWrite(async (set: WorkoutSet, partner?: WorkoutSet) => {
     await repository.deleteSet(set.id);
+    if (partner) await repository.deleteSet(partner.id);
     reload();
     toast.undo('Set deleted.', () => {
-      void repository.restoreSet(set).then(reload);
+      void Promise.all([
+        repository.restoreSet(set),
+        partner ? repository.restoreSet(partner) : Promise.resolve(),
+      ]).then(reload);
     });
   });
 
-  const [addSet] = useWrite(async (workoutExerciseId: string, template?: WorkoutSet) => {
-    if (!data) return;
-    await repository.addSet(data.workout.id, {
-      workoutExerciseId,
-      weightG: template?.weightG,
-      reps: template?.reps,
-      setType: template?.setType ?? 'working',
-    });
-    reload();
-  });
+  const [addSet] = useWrite(
+    async (
+      exercise: WorkoutExercise,
+      sets: WorkoutSet[],
+      template?: WorkoutSet,
+    ) => {
+      if (!data) return;
+      if (exercise.unilateralSnapshot) {
+        const lastLeft = [...sets].reverse().find((s) => s.side === 'left');
+        const lastRight = [...sets].reverse().find((s) => s.side === 'right');
+        await repository.addSets(
+          data.workout.id,
+          pairedSetInputs(exercise.id, { left: lastLeft, right: lastRight }),
+        );
+      } else {
+        await repository.addSet(data.workout.id, {
+          workoutExerciseId: exercise.id,
+          weightG: template?.weightG,
+          reps: template?.reps,
+          setType: template?.setType ?? 'working',
+        });
+      }
+      reload();
+    },
+  );
 
   const [removeExercise] = useWrite(async (workoutExerciseId: string) => {
     await repository.removeWorkoutExercise(workoutExerciseId);
@@ -298,37 +329,49 @@ export function ActiveWorkoutPage() {
                 )}
 
                 <ul className="space-y-1.5">
-                  {entry.sets.map((set, index) => (
-                    <SetRow
-                      key={set.id}
-                      set={set}
-                      index={index}
-                      trackingType={entry.exercise.trackingTypeSnapshot}
-                      weightUnit={weightUnit}
-                      intensityMode={settings.intensityMode}
-                      quickIncrementG={settings.quickIncrementG}
-                      previous={previous[index] ?? previous[previous.length - 1]}
-                      targetRepMin={target?.repMin}
-                      targetRepMax={target?.repMax}
-                      onChange={(patch) => void updateSet(set.id, patch)}
-                      onToggleComplete={(prefill) =>
-                        void completeSet(
-                          set,
-                          prefill,
-                          entry.exercise.restSeconds,
-                          entry.exercise.exerciseNameSnapshot,
-                        )
-                      }
-                      onDelete={() => void deleteSet(set)}
-                      onCycleType={(setType: SetType) => void updateSet(set.id, { setType })}
-                    />
-                  ))}
+                  {groupSetsForDisplay(entry.sets).flatMap(({ displayNumber, rows }) =>
+                    rows.map((set) => (
+                      <SetRow
+                        key={set.id}
+                        set={set}
+                        displayNumber={displayNumber}
+                        side={set.side}
+                        trackingType={entry.exercise.trackingTypeSnapshot}
+                        weightUnit={weightUnit}
+                        intensityMode={settings.intensityMode}
+                        quickIncrementG={settings.quickIncrementG}
+                        previous={previousForRow(previous, entry.sets, set)}
+                        targetRepMin={target?.repMin}
+                        targetRepMax={target?.repMax}
+                        onChange={(patch) => void updateSet(set.id, patch)}
+                        onToggleComplete={(prefill) =>
+                          void completeSet(
+                            set,
+                            prefill,
+                            entry.exercise.restSeconds,
+                            entry.exercise.exerciseNameSnapshot,
+                          )
+                        }
+                        onDelete={() =>
+                          void deleteSet(
+                            set,
+                            set.pairId
+                              ? entry.sets.find(
+                                  (other) => other.pairId === set.pairId && other.id !== set.id,
+                                )
+                              : undefined,
+                          )
+                        }
+                        onCycleType={(setType: SetType) => void updateSet(set.id, { setType })}
+                      />
+                    )),
+                  )}
                 </ul>
 
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    onClick={() => void addSet(entry.exercise.id, entry.sets.at(-1))}
+                    onClick={() => void addSet(entry.exercise, entry.sets, entry.sets.at(-1))}
                     icon={<Icon icon={Icons.plus} size={14} />}
                   >
                     Add set
@@ -551,6 +594,9 @@ export function ActiveWorkoutPage() {
             equipment={warmupEntry.exercise.equipmentSnapshot}
             insertLabel="Insert before working sets"
             onInsert={async (steps) => {
+              // Deliberately bilateral even for a unilateral exercise: the warm-up ramp is
+              // one weight regardless of side, and the generator has no per-side concept.
+              // Only working sets (add/complete/delete) split into left/right rows.
               await repository.addSets(
                 workout.id,
                 steps.map((step) => ({
