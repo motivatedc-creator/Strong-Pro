@@ -79,3 +79,72 @@ describe('SetRow previous values', () => {
     expect(onToggleComplete).toHaveBeenCalledWith({ weightG: 90_000, reps: 8 });
   });
 });
+
+describe('SetRow target verdict', () => {
+  const baseProps = {
+    index: 0,
+    trackingType: 'weight_reps' as const,
+    weightUnit: 'kg' as const,
+    intensityMode: 'none' as const,
+    quickIncrementG: 2_500,
+    onChange: vi.fn(),
+    onToggleComplete: vi.fn(),
+    onDelete: vi.fn(),
+    onCycleType: vi.fn(),
+  };
+
+  it('shows a hit verdict as icon plus text when a completed set is within the target range', () => {
+    render(
+      <SetRow
+        {...baseProps}
+        set={workoutSet({ reps: 10, isCompleted: true })}
+        targetRepMin={8}
+        targetRepMax={12}
+      />,
+    );
+    expect(screen.getAllByText('Hit target').length).toBeGreaterThan(0);
+  });
+
+  it('shows an under verdict when reps fall below the target minimum', () => {
+    render(
+      <SetRow
+        {...baseProps}
+        set={workoutSet({ reps: 5, isCompleted: true })}
+        targetRepMin={8}
+        targetRepMax={12}
+      />,
+    );
+    expect(screen.getAllByText('Under target').length).toBeGreaterThan(0);
+  });
+
+  it('shows an over verdict when reps exceed the target maximum', () => {
+    render(
+      <SetRow
+        {...baseProps}
+        set={workoutSet({ reps: 15, isCompleted: true })}
+        targetRepMin={8}
+        targetRepMax={12}
+      />,
+    );
+    expect(screen.getAllByText('Over target').length).toBeGreaterThan(0);
+  });
+
+  it('shows no verdict without a target, even when completed', () => {
+    render(<SetRow {...baseProps} set={workoutSet({ reps: 10, isCompleted: true })} />);
+    expect(screen.queryByText('Hit target')).not.toBeInTheDocument();
+    expect(screen.queryByText('Under target')).not.toBeInTheDocument();
+    expect(screen.queryByText('Over target')).not.toBeInTheDocument();
+  });
+
+  it('shows no verdict for an uncompleted set even if reps are typed', () => {
+    render(
+      <SetRow
+        {...baseProps}
+        set={workoutSet({ reps: 5, isCompleted: false })}
+        targetRepMin={8}
+        targetRepMax={12}
+      />,
+    );
+    expect(screen.queryByText('Under target')).not.toBeInTheDocument();
+  });
+});
