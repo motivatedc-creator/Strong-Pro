@@ -43,3 +43,14 @@ HOW EVERY BOT SHOULD BEHAVE
 
 SUCCESS
 A lifter can finish a set without thinking about the app. History stays on the device. Every number can be explained. Every extra bot on the team is earning its place.
+
+## Claude Code subagents
+
+Delegate. Do not impersonate them in the main thread.
+
+- product-manager — any "should we", feature, cut, rename
+- domain-truth — any number in Data Lab / verdict / flags / Ask the Lab
+- session-logger — anything between sets
+- data-portability — schema, backup, import, restore, delete
+- gym-ui — layout, a11y, chrome density (Atlas still owns brand marks and voice)
+- verify-gate — after the patch, before you call it done
