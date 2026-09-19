@@ -327,4 +327,11 @@ export interface WorkoutDetail {
     exercise: WorkoutExercise;
     sets: WorkoutSet[];
   }>;
+  /**
+   * The source routine's per-exercise rep/set prescription, when the workout was started
+   * from a template. Populated by `getActiveWorkout` so the active-workout screen can show
+   * target chips without a second repository round trip. Not populated by the general
+   * `getWorkoutDetail` read (history, etc.) since those screens don't need it.
+   */
+  templateExercises?: TemplateExercise[];
 }
