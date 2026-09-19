@@ -1,6 +1,8 @@
 import type { LucideIcon, LucideProps } from 'lucide-react';
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   Check,
   ChevronDown,
@@ -83,4 +85,6 @@ export const Icons = {
   alert: CircleAlert,
   plates: Disc3,
   dumbbell: Dumbbell,
+  arrowUp: ArrowUp,
+  arrowDown: ArrowDown,
 } as const;

@@ -26,9 +26,10 @@ import { elapsedSeconds } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { titleCase, usesWeight } from '@/domain/taxonomy';
-import type { SetType, WorkoutSet } from '@/domain/types';
+import type { SetType, TemplateExercise, WorkoutSet } from '@/domain/types';
 import { SetRow } from './SetRow';
 import { useRestTimerStore } from './restTimer';
+import { formatTarget, resolveExerciseTarget } from './targetPrescription';
 
 /**
  * Active workout screen.
@@ -61,6 +62,15 @@ export function ActiveWorkoutPage() {
       return Object.fromEntries(entries) as Record<string, WorkoutSet[]>;
     },
     [data?.workout.id, data?.exercises.length],
+  );
+
+  const { data: templateExercises } = useRepositoryData<TemplateExercise[] | undefined>(
+    async (repo) => {
+      if (!data?.workout.templateId) return undefined;
+      const detail = await repo.getTemplateDetail(data.workout.templateId);
+      return detail?.exercises.map((item) => item.templateExercise);
+    },
+    [data?.workout.templateId],
   );
 
   const [picking, setPicking] = useState(false);
@@ -253,6 +263,7 @@ export function ActiveWorkoutPage() {
       <ul className="space-y-4">
         {exercises.map((entry, exerciseIndex) => {
           const previous = previousByExercise?.[entry.exercise.exerciseId] ?? [];
+          const target = resolveExerciseTarget(workout, entry.exercise, templateExercises);
           const supersetPartners = entry.exercise.supersetGroup
             ? exercises.filter(
                 (other) =>
@@ -273,6 +284,7 @@ export function ActiveWorkoutPage() {
                       <span>{titleCase(entry.exercise.primaryMuscleGroupSnapshot)}</span>
                       <span>· {titleCase(entry.exercise.equipmentSnapshot)}</span>
                       <span>· rest {formatDuration(entry.exercise.restSeconds)}</span>
+                      {target && <span>· {formatTarget(target)}</span>}
                       {supersetPartners.length > 0 && (
                         <Chip tone="accent">Superset {entry.exercise.supersetGroup}</Chip>
                       )}
@@ -303,6 +315,8 @@ export function ActiveWorkoutPage() {
                       intensityMode={settings.intensityMode}
                       quickIncrementG={settings.quickIncrementG}
                       previous={previous[index] ?? previous[previous.length - 1]}
+                      targetRepMin={target?.repMin}
+                      targetRepMax={target?.repMax}
                       onChange={(patch) => void updateSet(set.id, patch)}
                       onToggleComplete={(prefill) =>
                         void completeSet(
