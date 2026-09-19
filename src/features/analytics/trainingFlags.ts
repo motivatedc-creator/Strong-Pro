@@ -17,12 +17,14 @@ import {
 export const STALL_WINDOW_DAYS = 28;
 export const STALL_MIN_SESSIONS = 3;
 export const DELOAD_CLAIM_ID = 'weekly-verdict-deload-shape' as const;
+export const SPIKE_CLAIM_ID = 'weekly-verdict-spike-flag' as const;
+export const STALL_CLAIM_ID = 'training-stall-flag' as const;
 
 export type FlagActivity = 'active' | 'inactive' | 'partial';
 
 export interface DeloadFlag {
   id: 'deload';
-  status: 'active' | 'inactive';
+  status: FlagActivity;
   label: 'Deload';
   subjectStartDate: string;
   subjectEndDate: string;
@@ -37,13 +39,14 @@ export interface DeloadFlag {
 
 export interface SpikeFlag {
   id: 'spike';
-  status: 'active' | 'inactive';
+  status: FlagActivity;
   label: 'Spike';
   subjectStartDate: string;
   subjectEndDate: string;
   directionBand: DirectionBand | null;
   changePercent: number | null;
   watchoutId: string | null;
+  claimId: typeof SPIKE_CLAIM_ID;
   receipt: string;
 }
 
@@ -58,7 +61,8 @@ export interface StallFlag {
   sessionsInWindow: number;
   bestE1rmInWindowG: number | null;
   comparisonBestE1rmG: number | null;
-  comparisonSource: 'prior_equal_window' | 'prior_best' | null;
+  comparisonSource: 'prior_equal_window' | null;
+  claimId: typeof STALL_CLAIM_ID;
   receipt: string;
 }
 
@@ -68,6 +72,8 @@ export interface TrainingFlags {
   stalls: StallFlag[];
   /** Active flags only (stall Partial is not active). */
   active: Array<DeloadFlag | SpikeFlag | StallFlag>;
+  /** A rule could not make an honest active / inactive call from the available data. */
+  hasPartial: boolean;
 }
 
 function formatSets(value: number): string {
@@ -90,14 +96,16 @@ function entriesInLocalRange(
   );
 }
 
-function sessionsForLift(entries: readonly LoggedEntry[], liftId: string): LoggedEntry[] {
-  const byWorkout = new Map<string, LoggedEntry>();
+function sessionsForLift(entries: readonly LoggedEntry[], liftId: string): LoggedEntry[][] {
+  const byWorkout = new Map<string, LoggedEntry[]>();
   for (const entry of entries) {
     if (entry.exercise.exerciseId !== liftId) continue;
-    if (!byWorkout.has(entry.workout.id)) byWorkout.set(entry.workout.id, entry);
+    const session = byWorkout.get(entry.workout.id);
+    if (session) session.push(entry);
+    else byWorkout.set(entry.workout.id, [entry]);
   }
   return [...byWorkout.values()].sort((a, b) =>
-    a.workout.localDate.localeCompare(b.workout.localDate),
+    a[0]!.workout.localDate.localeCompare(b[0]!.workout.localDate),
   );
 }
 
@@ -114,13 +122,16 @@ export function deloadFlag(
   const baselineSessionsMean = verdict.baseline.metrics.sessions;
   const sessionFloor = Math.round(baselineSessionsMean);
   const active = verdict.state === 'deload';
-  const receipt = active
-    ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: ${subjectHardSets} hard sets (< 60% of baseline mean ${formatSets(baselineHardSetsMean)}) with ${subjectSessions} sessions (≥ floor ${sessionFloor}). Receipt: deload-shaped week.`
-    : `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: not deload-shaped (${subjectHardSets} hard sets vs baseline mean ${formatSets(baselineHardSetsMean)}; ${subjectSessions} sessions vs floor ${sessionFloor}).`;
+  const partial = verdict.state === 'not_enough_history' || verdict.state === 'welcome_back';
+  const receipt = partial
+    ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: deload check is partial while Weekly Verdict is ${verdict.state.replaceAll('_', ' ')}.`
+    : active
+      ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: ${subjectHardSets} hard sets (< 60% of baseline mean ${formatSets(baselineHardSetsMean)}) with ${subjectSessions} sessions (≥ floor ${sessionFloor}). Receipt: deload-shaped week.`
+      : `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: not deload-shaped (${subjectHardSets} hard sets vs baseline mean ${formatSets(baselineHardSetsMean)}; ${subjectSessions} sessions vs floor ${sessionFloor}).`;
 
   return {
     id: 'deload',
-    status: active ? 'active' : 'inactive',
+    status: partial ? 'partial' : active ? 'active' : 'inactive',
     label: 'Deload',
     subjectStartDate: verdict.subject.startDate,
     subjectEndDate: verdict.subject.endDate,
@@ -145,21 +156,27 @@ export function spikeFlag(
   const changePercent = verdict.direction?.changePercent ?? null;
   const watchoutId = verdict.watchout?.id ?? null;
   const active = band === 'big_jump' || watchoutId === 'watchout_big_jump';
-  const receipt = active
-    ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: hard sets ${changePercent != null ? formatPercent(changePercent) : 'up'} vs baseline — big jump.`
-    : `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: no big-jump spike${
-        band ? ` (direction ${band.replaceAll('_', ' ')})` : ' (no direction band on this verdict state)'
-      }.`;
+  const partial = verdict.state === 'not_enough_history' || verdict.state === 'welcome_back';
+  const receipt = partial
+    ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: spike check is partial while Weekly Verdict is ${verdict.state.replaceAll('_', ' ')}.`
+    : active
+      ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: hard sets ${changePercent != null ? formatPercent(changePercent) : 'up'} vs baseline — big jump.`
+      : `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: no big-jump spike${
+          band
+            ? ` (direction ${band.replaceAll('_', ' ')})`
+            : ' (no direction band on this verdict state)'
+        }.`;
 
   return {
     id: 'spike',
-    status: active ? 'active' : 'inactive',
+    status: partial ? 'partial' : active ? 'active' : 'inactive',
     label: 'Spike',
     subjectStartDate: verdict.subject.startDate,
     subjectEndDate: verdict.subject.endDate,
     directionBand: band,
     changePercent,
     watchoutId,
+    claimId: SPIKE_CLAIM_ID,
     receipt,
   };
 }
@@ -199,6 +216,7 @@ export function stallFlags(
         bestE1rmInWindowG: bestEstimateForLift(windowEntries, lift.id, options),
         comparisonBestE1rmG: null,
         comparisonSource: null,
+        claimId: STALL_CLAIM_ID,
         receipt: `${lift.name}: ${sessionsInWindow} completed session${
           sessionsInWindow === 1 ? '' : 's'
         } in the trailing ${STALL_WINDOW_DAYS} local days (need ${STALL_MIN_SESSIONS}). Partial — no stall claim.`,
@@ -207,22 +225,16 @@ export function stallFlags(
 
     const bestE1rmInWindowG = bestEstimateForLift(windowEntries, lift.id, options);
     const priorEntries = entries.filter(
-      (entry) =>
-        entry.exercise.exerciseId === lift.id && entry.workout.localDate < windowStartDate,
+      (entry) => entry.exercise.exerciseId === lift.id && entry.workout.localDate < windowStartDate,
     );
     const priorSessions = sessionsForLift(priorEntries, lift.id);
-    const equalPriorSessions = priorSessions.slice(-sessionsInWindow);
+    const equalPriorEntries = priorSessions.slice(-sessionsInWindow).flat();
     let comparisonBestE1rmG: number | null = null;
     let comparisonSource: StallFlag['comparisonSource'] = null;
 
-    if (equalPriorSessions.length === sessionsInWindow) {
-      comparisonBestE1rmG = bestEstimateForLift(equalPriorSessions, lift.id, options);
+    if (priorSessions.length >= sessionsInWindow) {
+      comparisonBestE1rmG = bestEstimateForLift(equalPriorEntries, lift.id, options);
       comparisonSource = 'prior_equal_window';
-    }
-
-    if (comparisonBestE1rmG === null) {
-      comparisonBestE1rmG = bestEstimateForLift(priorEntries, lift.id, options);
-      comparisonSource = comparisonBestE1rmG !== null ? 'prior_best' : null;
     }
 
     if (bestE1rmInWindowG === null || comparisonBestE1rmG === null) {
@@ -238,18 +250,15 @@ export function stallFlags(
         bestE1rmInWindowG,
         comparisonBestE1rmG,
         comparisonSource,
+        claimId: STALL_CLAIM_ID,
         receipt: `${lift.name}: ${sessionsInWindow} sessions in the trailing ${STALL_WINDOW_DAYS} days, but e1RM comparison is incomplete. Partial — no stall claim.`,
       };
     }
 
     const stalled = bestE1rmInWindowG <= comparisonBestE1rmG;
     const receipt = stalled
-      ? `${lift.name}: best e1RM in trailing ${STALL_WINDOW_DAYS} days is flat or down vs ${
-          comparisonSource === 'prior_equal_window' ? 'prior equal-count window' : 'prior best'
-        } (${sessionsInWindow} sessions). Stall.`
-      : `${lift.name}: best e1RM in trailing ${STALL_WINDOW_DAYS} days improved vs ${
-          comparisonSource === 'prior_equal_window' ? 'prior equal-count window' : 'prior best'
-        }. No stall.`;
+      ? `${lift.name}: best e1RM in trailing ${STALL_WINDOW_DAYS} days is flat or down vs prior equal-count window (${sessionsInWindow} sessions). Stall.`
+      : `${lift.name}: best e1RM in trailing ${STALL_WINDOW_DAYS} days improved vs prior equal-count window. No stall.`;
 
     return {
       id: 'stall' as const,
@@ -263,6 +272,7 @@ export function stallFlags(
       bestE1rmInWindowG,
       comparisonBestE1rmG,
       comparisonSource,
+      claimId: STALL_CLAIM_ID,
       receipt,
     };
   });
@@ -283,8 +293,15 @@ export function trainingFlags(
     ...(spike.status === 'active' ? [spike] : []),
     ...stalls.filter((flag) => flag.status === 'active'),
   ];
-  return { deload, spike, stalls, active };
+  const hasPartial =
+    deload.status === 'partial' ||
+    spike.status === 'partial' ||
+    stalls.some((flag) => flag.status === 'partial');
+  return { deload, spike, stalls, active, hasPartial };
 }
 
 export const CHANGE_FLAGS_EMPTY =
   'No stall, spike, or deload flags on the current subject week / lift windows.';
+
+export const CHANGE_FLAGS_PARTIAL =
+  'Some checks need more comparable training history before they can make a call.';

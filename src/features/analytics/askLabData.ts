@@ -10,7 +10,11 @@ import {
 } from './compute';
 import { muscleBandBalance, muscleBandBalanceSentence } from './muscleSets';
 import { shiftLocalDate, startOfTrainingWeekDate } from './trainingWeeks';
-import { CHANGE_FLAGS_EMPTY, trainingFlags } from './trainingFlags';
+import {
+  CHANGE_FLAGS_EMPTY,
+  CHANGE_FLAGS_PARTIAL,
+  trainingFlags,
+} from './trainingFlags';
 import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
 import {
   detectMuscleInQuery,
@@ -351,34 +355,34 @@ export function answerChangeFlags(query: string, context: AskLabContext): AskLab
   const reference = context.reference ?? new Date();
   const options = analyticsOptions(context);
   const flags = trainingFlags(context.entries, options, context.weekStart, reference);
-  const matches = claimLinks('weekly-verdict-deload-shape');
   const activeLabels = flags.active.map((flag) => flag.label);
   const receipts = flags.active.map((flag) => flag.receipt);
   const partialStalls = flags.stalls.filter((flag) => flag.status === 'partial');
   const hasPartialStalls = partialStalls.length > 0;
+  const partialFlags = [flags.deload, flags.spike, ...partialStalls].filter(
+    (flag) => flag.status === 'partial',
+  );
+  const claimIds = [...new Set([...flags.active, ...partialFlags].map((flag) => flag.claimId))];
+  const matches = claimLinks(...claimIds);
 
-  if (flags.active.length === 0 && hasPartialStalls) {
+  if (flags.active.length === 0 && flags.hasPartial) {
     return {
       query,
       tier: 'partial',
       intent: 'change_flags',
-      call: CHANGE_FLAGS_EMPTY,
+      call: CHANGE_FLAGS_PARTIAL,
       matches,
-      known: `Subject week ${flags.deload.subjectStartDate} → ${flags.deload.subjectEndDate}. ${
-        partialStalls
-          .map((flag) => `${flag.liftName}: ${flag.sessionsInWindow} sessions in stall window`)
-          .join('; ')
-      }.`,
-      missing:
-        'At least three completed sessions per goal lift in the trailing 28 local days for a stall claim.',
-      nextStep: 'Log more sessions on goal lifts, then ask again.',
+      known: partialFlags.map((flag) => flag.receipt).join(' '),
+      missing: 'Enough comparable weekly and goal-lift history for every flag check.',
+      nextStep: 'Keep logging completed sessions, then ask again after another comparable week.',
       payload: {
         kind: 'change_flags',
         subjectStartDate: flags.deload.subjectStartDate,
         subjectEndDate: flags.deload.subjectEndDate,
         activeLabels: [],
         receipts: [],
-        hasPartialStalls: true,
+        hasPartialStalls,
+        hasPartialChecks: true,
       },
     };
   }
@@ -397,13 +401,14 @@ export function answerChangeFlags(query: string, context: AskLabContext): AskLab
         activeLabels: [],
         receipts: [],
         hasPartialStalls: false,
+        hasPartialChecks: false,
       },
     };
   }
 
   return {
     query,
-    tier: 'computed',
+    tier: flags.hasPartial ? 'partial' : 'computed',
     intent: 'change_flags',
     call: `Active flags: ${activeLabels.join('; ')}.`,
     matches,
@@ -418,6 +423,7 @@ export function answerChangeFlags(query: string, context: AskLabContext): AskLab
       activeLabels,
       receipts,
       hasPartialStalls,
+      hasPartialChecks: flags.hasPartial,
     },
   };
 }

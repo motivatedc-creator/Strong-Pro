@@ -93,6 +93,7 @@ export type AskLabPayload =
       activeLabels: string[];
       receipts: string[];
       hasPartialStalls: boolean;
+      hasPartialChecks: boolean;
     };
 
 export type AskLabAnswer = {

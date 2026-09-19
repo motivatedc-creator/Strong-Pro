@@ -37,6 +37,10 @@ describe('evidence catalog', () => {
     expect(getClaimsForBehavior('weekly_verdict_deload').map((c) => c.id)).toEqual([
       'weekly-verdict-deload-shape',
     ]);
+    expect(getClaim('weekly-verdict-spike-flag')?.kind).toBe('implementation_heuristic');
+    expect(getClaim('training-stall-flag')?.kind).toBe('implementation_heuristic');
+    expect(getSourcesForClaim('weekly-verdict-spike-flag')).toHaveLength(0);
+    expect(getSourcesForClaim('training-stall-flag')).toHaveLength(0);
   });
 
   it('marks e1RM formulas as pure calculation and the 12-rep cap as a heuristic', () => {

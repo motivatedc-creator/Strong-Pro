@@ -5,6 +5,7 @@ import { formatCompactNumber, fromGrams, type WeightUnit } from '@/domain/units'
 import { ClaimEvidenceSheet } from './ClaimEvidenceSheet';
 import {
   CHANGE_FLAGS_EMPTY,
+  CHANGE_FLAGS_PARTIAL,
   type DeloadFlag,
   type SpikeFlag,
   type StallFlag,
@@ -28,7 +29,7 @@ export function ChangeFlagsCard({
   const [selected, setSelected] = useState<FlagRow | null>(null);
   const [showClaim, setShowClaim] = useState(false);
   const active = flags.active;
-  const deloadClaim = getClaim(flags.deload.claimId);
+  const selectedClaim = selected ? getClaim(selected.claimId) : undefined;
 
   return (
     <Card className="mb-4 border-accent/30">
@@ -42,26 +43,31 @@ export function ChangeFlagsCard({
 
       {active.length === 0 ? (
         <p className="mt-4 rounded border border-line bg-surface-raised p-3 text-sm text-ink-muted">
-          {CHANGE_FLAGS_EMPTY}
+          {flags.hasPartial ? CHANGE_FLAGS_PARTIAL : CHANGE_FLAGS_EMPTY}
         </p>
       ) : (
-        <ul className="mt-4 divide-y divide-line rounded border border-line bg-surface-raised px-3">
-          {active.map((flag) => (
-            <li key={flag.id === 'stall' ? `stall-${flag.liftId}` : flag.id}>
-              <button
-                type="button"
-                className={cx(
-                  'flex min-h-14 w-full items-center justify-between gap-3 py-2 text-left',
-                  'transition-colors hover:bg-surface/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                )}
-                onClick={() => setSelected(flag)}
-              >
-                <span className="text-sm font-semibold text-ink">{flag.label}</span>
-                <span className="text-xs font-semibold text-accent">Open receipt</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="mt-4 divide-y divide-line rounded border border-line bg-surface-raised px-3">
+            {active.map((flag) => (
+              <li key={flag.id === 'stall' ? `stall-${flag.liftId}` : flag.id}>
+                <button
+                  type="button"
+                  className={cx(
+                    'flex min-h-14 w-full items-center justify-between gap-3 py-2 text-left',
+                    'transition-colors hover:bg-surface/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  )}
+                  onClick={() => setSelected(flag)}
+                >
+                  <span className="text-sm font-semibold text-ink">{flag.label}</span>
+                  <span className="text-xs font-semibold text-accent">Open receipt</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {flags.hasPartial && (
+            <p className="mt-3 text-xs text-ink-muted">{CHANGE_FLAGS_PARTIAL}</p>
+          )}
+        </>
       )}
 
       <Sheet
@@ -104,8 +110,7 @@ export function ChangeFlagsCard({
                   Subject week {selected.subjectStartDate} → {selected.subjectEndDate}
                 </li>
                 <li>
-                  Direction{' '}
-                  {selected.directionBand?.replaceAll('_', ' ') ?? 'none'}
+                  Direction {selected.directionBand?.replaceAll('_', ' ') ?? 'none'}
                   {selected.changePercent != null
                     ? ` (${selected.changePercent >= 0 ? '+' : ''}${Math.round(selected.changePercent)}%)`
                     : ''}
@@ -119,9 +124,7 @@ export function ChangeFlagsCard({
                   Window {selected.windowStartDate} → {selected.windowEndDate}
                 </li>
                 <li>Sessions in window {selected.sessionsInWindow}</li>
-                <li>
-                  Best e1RM in window {formatE1rm(selected.bestE1rmInWindowG, weightUnit)}
-                </li>
+                <li>Best e1RM in window {formatE1rm(selected.bestE1rmInWindowG, weightUnit)}</li>
                 <li>
                   Comparison e1RM {formatE1rm(selected.comparisonBestE1rmG, weightUnit)}
                   {selected.comparisonSource
@@ -131,14 +134,14 @@ export function ChangeFlagsCard({
               </ul>
             )}
 
-            {selected.id === 'deload' && deloadClaim && (
+            {selectedClaim && (
               <button
                 type="button"
                 className="w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-left"
                 onClick={() => setShowClaim(true)}
               >
                 <span className="block text-sm font-semibold text-ink">
-                  {deloadClaim.statement}
+                  {selectedClaim.statement}
                 </span>
                 <span className="mt-1 block text-[11px] text-accent">Open claim receipt</span>
               </button>
@@ -147,12 +150,12 @@ export function ChangeFlagsCard({
         )}
       </Sheet>
 
-      {deloadClaim && (
+      {selectedClaim && (
         <ClaimEvidenceSheet
           open={showClaim}
           onClose={() => setShowClaim(false)}
-          claim={deloadClaim}
-          title="Deload claim"
+          claim={selectedClaim}
+          title="Flag rule"
         />
       )}
     </Card>

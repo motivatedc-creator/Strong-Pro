@@ -92,6 +92,51 @@ starts on Monday; rolling ranges use exact week lengths. Where a comparison is s
 is against the immediately preceding window of the same length; with no prior data the app
 says "no prior period" instead of showing a fake 0%.
 
+## Weekly Verdict
+
+Weekly Verdict evaluates the **last completed training week**, using the week-start day in
+Settings. Its baseline is the mean of up to four most recent non-empty training weeks in
+the eight completed weeks before that subject week; at least three baseline weeks are
+required.
+
+- Direction uses completed working sets only. Warm-up, drop and failure sets do not drive
+  the direction band.
+- More than 50% above baseline is a `big jump`; 10% to 50% is `up`; within 10% is
+  `steady`; 10% to 30% below is `down`; more than 30% below is `well down`.
+- A deload-shaped week has fewer than 60% of baseline hard sets while completed-session
+  count stays at or above the rounded baseline session mean.
+- Standouts and watch-outs may use capped estimated 1RM, sessions and tonnage, but they do
+  not rewrite the hard-set direction.
+- The current-week pulse compares the same number of elapsed local days with each baseline
+  week. It never compares a partial current week with full baseline weeks.
+
+Every sentence opens to the underlying week window, formula and baseline values. The
+thresholds are product heuristics, not a training prescription.
+
+## Stall, spike and deload flags
+
+Data Lab’s **What should I change?** answer reuses Weekly Verdict and the same capped e1RM
+calculation. Flags are derived on read and are never stored.
+
+- **Spike** is the Weekly Verdict `big jump`: completed working sets are more than 50%
+  above the selected weekly baseline.
+- **Deload** is the deload-shaped Weekly Verdict state described above.
+- **Stall** is checked on up to three goal lifts from the weekly baseline. Each lift needs
+  at least three completed sessions in the trailing 28 local days. The best valid e1RM
+  across those sessions is compared with the same number of immediately prior sessions;
+  flat or lower produces the flag.
+
+If the weekly baseline, session count or valid e1RM comparison is missing, the check is
+shown as **Partial** rather than reporting a false all-clear. Each flag has a receipt with
+the exact dates and values. These are attention flags, not diagnoses or program changes.
+
+## Ask the Lab
+
+Ask the Lab is deterministic and offline. Supported questions route to the same functions
+used by the visible Data Lab cards; research questions route to the shared evidence
+catalog. An unsupported question is labelled as exploration and does not invent a metric,
+paper or training recommendation.
+
 ## Charts
 
 Every chart carries a text summary (always read by screen readers) and a data table that

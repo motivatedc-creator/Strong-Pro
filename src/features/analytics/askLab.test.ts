@@ -278,6 +278,18 @@ describe('answerAskLab data intents', () => {
     expect(answer.call.toLowerCase()).not.toMatch(/program|mesocycle|aura|cheer/);
     expect(answer.call.toLowerCase()).not.toMatch(/you should do|prescribe/);
   });
+
+  it('returns Partial instead of a false no-flags call without a weekly baseline', () => {
+    const answer = answerAskLab('What should I change?', context([entry({ date: '2026-09-10' })]));
+
+    expect(answer.intent).toBe('change_flags');
+    expect(answer.tier).toBe('partial');
+    expect(answer.call).toMatch(/more comparable training history/i);
+    expect(answer.call).not.toMatch(/^No stall/i);
+    expect(answer.payload?.kind).toBe('change_flags');
+    if (answer.payload?.kind !== 'change_flags') return;
+    expect(answer.payload.hasPartialChecks).toBe(true);
+  });
 });
 
 describe('detectMuscleInQuery', () => {

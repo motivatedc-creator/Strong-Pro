@@ -2,17 +2,16 @@ import { describe, expect, it } from 'vitest';
 import type { LoggedEntry } from './compute';
 import {
   CHANGE_FLAGS_EMPTY,
+  CHANGE_FLAGS_PARTIAL,
   DELOAD_CLAIM_ID,
+  SPIKE_CLAIM_ID,
+  STALL_CLAIM_ID,
   deloadFlag,
   spikeFlag,
   stallFlags,
   trainingFlags,
 } from './trainingFlags';
-import {
-  GOLDEN_OPTIONS,
-  fixtureEntry,
-  mondayBaseline,
-} from './weeklyVerdict.fixtures.helpers';
+import { GOLDEN_OPTIONS, fixtureEntry, mondayBaseline } from './weeklyVerdict.fixtures.helpers';
 import { weeklyVerdict } from './weeklyVerdict';
 
 const REF = new Date('2026-09-17T12:00:00.000Z');
@@ -150,6 +149,7 @@ describe('trainingFlags', () => {
     expect(verdict.watchout?.id).toBe('watchout_big_jump');
     expect(flag.status).toBe('active');
     expect(flag.directionBand).toBe('big_jump');
+    expect(flag.claimId).toBe(SPIKE_CLAIM_ID);
   });
 
   it('re-dating a spike session out of the subject week clears spikeFlag', () => {
@@ -173,6 +173,7 @@ describe('trainingFlags', () => {
     expect(bench).toBeDefined();
     expect(bench!.sessionsInWindow).toBeGreaterThanOrEqual(3);
     expect(bench!.status).toBe('active');
+    expect(bench!.claimId).toBe(STALL_CLAIM_ID);
     expect(bench!.bestE1rmInWindowG).not.toBeNull();
     expect(bench!.comparisonBestE1rmG).not.toBeNull();
     expect(bench!.bestE1rmInWindowG!).toBeLessThanOrEqual(bench!.comparisonBestE1rmG!);
@@ -185,6 +186,90 @@ describe('trainingFlags', () => {
 
     expect(bench).toBeDefined();
     expect(bench!.status).toBe('inactive');
+  });
+
+  it('uses every matching exercise entry when comparing prior sessions', () => {
+    const prior = ['2026-08-03', '2026-08-10', '2026-08-17'].flatMap((date, index) => {
+      const first = fixtureEntry(date, `prior-${index}`, {
+        exerciseId: 'bench',
+        exerciseName: 'Bench Press',
+        hardSets: 1,
+        weightG: 100_000,
+        reps: 5,
+      });
+      const second = fixtureEntry(date, `prior-${index}-second`, {
+        exerciseId: 'bench',
+        exerciseName: 'Bench Press',
+        hardSets: 1,
+        weightG: 120_000,
+        reps: 5,
+      });
+
+      second.workout = first.workout;
+      second.exercise.workoutId = first.workout.id;
+      second.sets.forEach((set) => {
+        set.workoutId = first.workout.id;
+      });
+      return [first, second];
+    });
+    const current = ['2026-08-24', '2026-09-01', '2026-09-10'].map((date, index) =>
+      fixtureEntry(date, `current-${index}`, {
+        exerciseId: 'bench',
+        exerciseName: 'Bench Press',
+        hardSets: 1,
+        weightG: 110_000,
+        reps: 5,
+      }),
+    );
+
+    const bench = stallFlags([...prior, ...current], GOLDEN_OPTIONS, 'monday', REF).find(
+      (flag) => flag.liftId === 'bench',
+    );
+
+    expect(bench).toBeDefined();
+    expect(bench!.comparisonSource).toBe('prior_equal_window');
+    expect(bench!.comparisonBestE1rmG).toBeGreaterThan(bench!.bestE1rmInWindowG!);
+    expect(bench!.status).toBe('active');
+  });
+
+  it('stays Partial when there are not enough prior sessions for an equal-count comparison', () => {
+    const entries = [
+      fixtureEntry('2026-08-10', 'prior-a', {
+        exerciseId: 'bench',
+        weightG: 100_000,
+        reps: 5,
+      }),
+      fixtureEntry('2026-08-17', 'prior-b', {
+        exerciseId: 'bench',
+        weightG: 100_000,
+        reps: 5,
+      }),
+      fixtureEntry('2026-08-24', 'current-a', {
+        exerciseId: 'bench',
+        weightG: 100_000,
+        reps: 5,
+      }),
+      fixtureEntry('2026-09-01', 'current-b', {
+        exerciseId: 'bench',
+        weightG: 100_000,
+        reps: 5,
+      }),
+      fixtureEntry('2026-09-10', 'current-c', {
+        exerciseId: 'bench',
+        weightG: 100_000,
+        reps: 5,
+      }),
+    ];
+
+    const bench = stallFlags(entries, GOLDEN_OPTIONS, 'monday', REF).find(
+      (flag) => flag.liftId === 'bench',
+    );
+
+    expect(bench).toBeDefined();
+    expect(bench!.sessionsInWindow).toBe(3);
+    expect(bench!.comparisonBestE1rmG).toBeNull();
+    expect(bench!.comparisonSource).toBeNull();
+    expect(bench!.status).toBe('partial');
   });
 
   it('stallFlag is Partial when fewer than 3 sessions in the trailing 28 days', () => {
@@ -239,5 +324,16 @@ describe('trainingFlags', () => {
     expect(flags.spike.status).toBe('inactive');
     expect(flags.active).toHaveLength(0);
     expect(CHANGE_FLAGS_EMPTY).toMatch(/No stall, spike, or deload flags/);
+  });
+
+  it('keeps weekly checks partial until an honest baseline exists', () => {
+    const entries = [fixtureEntry('2026-09-10', 'only', { hardSets: 5 })];
+    const flags = trainingFlags(entries, GOLDEN_OPTIONS, 'monday', REF);
+
+    expect(flags.deload.status).toBe('partial');
+    expect(flags.spike.status).toBe('partial');
+    expect(flags.active).toHaveLength(0);
+    expect(flags.hasPartial).toBe(true);
+    expect(CHANGE_FLAGS_PARTIAL).toMatch(/more comparable training history/);
   });
 });

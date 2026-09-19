@@ -184,6 +184,34 @@ export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
     lastReviewed: '2026-09-18',
   },
   {
+    id: 'weekly-verdict-spike-flag',
+    statement:
+      'A spike flag appears when completed working sets are more than 50% above the selected weekly baseline.',
+    kind: 'implementation_heuristic',
+    behaviors: ['weekly_verdict_spike', 'training_change_flags'],
+    sourceIds: [],
+    support: 'context',
+    interpretation:
+      'The flag reuses Weekly Verdict’s big-jump direction band so the same logged work produces the same result everywhere in Data Lab.',
+    limitations:
+      'The 50% threshold is a product attention rule, not a sports-science danger threshold or a recommendation to change training.',
+    lastReviewed: '2026-09-19',
+  },
+  {
+    id: 'training-stall-flag',
+    statement:
+      'A stall flag compares the best valid estimated 1RM across at least three sessions in the trailing 28 local days with the same number of prior sessions.',
+    kind: 'implementation_heuristic',
+    behaviors: ['training_stall_flag', 'training_change_flags'],
+    sourceIds: [],
+    support: 'context',
+    interpretation:
+      'The check uses the app’s capped estimated-1RM calculation and calls a stall only when the recent best is flat or lower. It is recomputed from logged sets.',
+    limitations:
+      'The 28-day window, three-session minimum and equal-session comparison are product heuristics. A flag is not a diagnosis, program prescription or proof that adaptation has stopped.',
+    lastReviewed: '2026-09-19',
+  },
+  {
     id: 'proximity-to-failure-context',
     statement:
       'Training near failure can matter for hypertrophy, but Lock’d does not currently prescribe an RIR target.',
