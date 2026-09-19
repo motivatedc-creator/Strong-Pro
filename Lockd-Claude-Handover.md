@@ -11,6 +11,28 @@ not a doc to rewrite — append, don't summarize away the history.
 
 ## Log
 
+### 2026-09-19 — Per-set rep targets in the active workout (PR #26)
+
+Ran end to end through the subagent chain: `session-logger` implemented, `verify-gate`
+signed off MERGE, no fixes needed. Exercise header shows the Routine's prescription
+(`3 × 8–12`) when the workout has a `templateId` and a matching `TemplateExercise`
+with both rep bounds; otherwise the slot doesn't render. Each completed set row shows
+hit/under/over against the range as icon + text, never color alone. New pure helper
+`src/features/workouts/targetPrescription.ts` (`resolveExerciseTarget`,
+`classifySetReps`, `formatTarget`) — everything derived on read via the existing
+`repo.getTemplateDetail`, no schema/migration, no input prefill, no analytics coupling.
+Not verified: a real 320px screenshot pass (the new markup reuses layout already
+proven at that width elsewhere on the page, but nobody looked at a live narrow
+viewport) — worth a `gym-ui` pass if it ever looks off in practice.
+
+### 2026-09-19 — Weekly Verdict copy tightening (PR #25)
+
+Ran through the new subagent chain end to end: `product-manager` scoped it (caught a
+bare "Good." violating the no-cheerleading rule), founder confirmed one judgment call
+(collapse down/well_down band phrasing to match), `domain-truth` implemented,
+`verify-gate` signed off. Copy-only — no logic touched, 344 tests unchanged in count
+before the next PR added more.
+
 ### 2026-09-19 — Six project subagents (PR #23)
 
 Added `product-manager`, `domain-truth`, `session-logger`, `data-portability`,
@@ -46,8 +68,9 @@ ended. Added `stopForWorkout(id)` to the timer store, wired into both handlers.
 
 ## Queued next
 
-- Weekly Verdict copy tightening — polish pass on an engine that's already correct
-  (not started).
+Empty — no in-flight or committed-to work. Candidates not yet decided (unilateral/
+flexible fields, goal lenses, PR moments/share cards, Ask the Lab's LLM layer) are
+listed for the next `product-manager` pass, not accepted tasks.
 
 ## Standing reminders
 
