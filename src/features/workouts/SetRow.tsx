@@ -5,6 +5,7 @@ import { SET_TYPES, usesDistance, usesDuration, usesReps, usesWeight } from '@/d
 import type { IntensityMode, SetType, TrackingType, WorkoutSet } from '@/domain/types';
 import { formatWeight, fromGrams, toGrams, trimNumber, type WeightUnit } from '@/domain/units';
 import { previousSetPatch } from './setPrefill';
+import { classifySetReps } from './targetPrescription';
 
 /**
  * One logged set.
@@ -22,6 +23,8 @@ export function SetRow({
   quickIncrementG,
   previous,
   isPr,
+  targetRepMin,
+  targetRepMax,
   onChange,
   onToggleComplete,
   onDelete,
@@ -35,6 +38,9 @@ export function SetRow({
   quickIncrementG: number;
   previous?: WorkoutSet;
   isPr?: boolean;
+  /** Prescribed rep range from the Routine this workout was started from, if any. */
+  targetRepMin?: number;
+  targetRepMax?: number;
   onChange: (patch: Partial<WorkoutSet>) => void;
   onToggleComplete: (prefill: Partial<WorkoutSet>) => void;
   onDelete: () => void;
@@ -128,6 +134,19 @@ export function SetRow({
   const previousWeightPlaceholder =
     previous?.weightG === undefined ? undefined : formatWeight(previous.weightG, weightUnit);
   const previousRepsPlaceholder = previous?.reps === undefined ? undefined : String(previous.reps);
+
+  // Only meaningful once the set is completed against a Routine's rep range — never shown
+  // while editing, and never the only signal (icon is paired with visible text, not color alone).
+  const verdict = set.isCompleted
+    ? classifySetReps(set.reps, { repMin: targetRepMin, repMax: targetRepMax })
+    : null;
+  const verdictMeta = verdict
+    ? {
+        hit: { label: 'Hit target', icon: Icons.check },
+        under: { label: 'Under target', icon: Icons.arrowDown },
+        over: { label: 'Over target', icon: Icons.arrowUp },
+      }[verdict]
+    : null;
 
   return (
     <li
@@ -314,6 +333,12 @@ export function SetRow({
       </div>
 
       <div className="col-span-2 flex items-center justify-end gap-1 sm:col-span-1">
+        {verdictMeta && (
+          <span className="hidden items-center gap-1 rounded-md bg-surface-raised px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-muted sm:inline-flex">
+            <Icon icon={verdictMeta.icon} size={12} strokeWidth={2.5} />
+            {verdictMeta.label}
+          </span>
+        )}
         {isPr && (
           <span
             title="Personal record"
@@ -343,6 +368,12 @@ export function SetRow({
       {/* Mobile: previous-set reference sits under the inputs where there is room. */}
       <p className="col-span-2 -mt-1 flex flex-wrap items-center gap-2 text-[11px] text-ink-subtle sm:hidden">
         <span>Last: {previousLabel}</span>
+        {verdictMeta && (
+          <span className="inline-flex items-center gap-1 font-semibold uppercase tracking-wide text-ink-muted">
+            <Icon icon={verdictMeta.icon} size={12} strokeWidth={2.5} />
+            {verdictMeta.label}
+          </span>
+        )}
         {set.weightG !== undefined && set.reps ? (
           <span className="ml-auto tabular-nums">
             {trimNumber(Math.round(fromGrams(set.weightG, weightUnit) * set.reps))} {weightUnit}{' '}
