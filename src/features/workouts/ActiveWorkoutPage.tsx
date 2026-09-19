@@ -42,6 +42,7 @@ export function ActiveWorkoutPage() {
   const repository = useRepository();
   const { settings, weightUnit } = useSettings();
   const startTimer = useRestTimerStore((state) => state.start);
+  const stopTimerForWorkout = useRestTimerStore((state) => state.stopForWorkout);
 
   const { data, loading, reload } = useRepositoryData((repo) => repo.getActiveWorkout(), []);
   const { data: previousByExercise } = useRepositoryData(
@@ -159,12 +160,14 @@ export function ActiveWorkoutPage() {
     if (!data) return;
     const id = data.workout.id;
     await repository.completeWorkout(id);
+    await stopTimerForWorkout(id);
     navigate(`/workout/${id}/summary`, { replace: true });
   });
 
   const [discard] = useWrite(async () => {
     if (!data) return;
     await repository.discardWorkout(data.workout.id);
+    await stopTimerForWorkout(data.workout.id);
     toast.info('Workout discarded.');
     navigate('/', { replace: true });
   });

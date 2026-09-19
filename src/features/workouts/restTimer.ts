@@ -25,6 +25,12 @@ interface RestTimerState {
   ) => Promise<void>;
   adjust: (deltaSeconds: number) => Promise<void>;
   stop: () => Promise<void>;
+  /**
+   * Clear the timer when a workout ends. The repository drops the stored row on finish and
+   * discard; without this the in-memory copy survives and the bar keeps counting — and
+   * chiming — over a session that is already over.
+   */
+  stopForWorkout: (workoutId: UUID) => Promise<void>;
   announce: (options: { sound: boolean; vibration: boolean; notification: boolean }) => void;
 }
 
@@ -99,6 +105,14 @@ export const useRestTimerStore = create<RestTimerState>((set, get) => ({
     set({ timer: null, announcedFor: null });
     await getRepository().setTimer(null);
     void cancelRestNotification();
+  },
+
+  stopForWorkout: async (workoutId) => {
+    const current = get().timer;
+    if (!current) return;
+    // A timer explicitly owned by another workout is not ours to cancel.
+    if (current.workoutId && current.workoutId !== workoutId) return;
+    await get().stop();
   },
 
   announce: ({ sound, vibration, notification }) => {
