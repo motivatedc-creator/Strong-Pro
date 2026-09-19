@@ -10,6 +10,11 @@ import {
 } from './compute';
 import { muscleBandBalance, muscleBandBalanceSentence } from './muscleSets';
 import { shiftLocalDate, startOfTrainingWeekDate } from './trainingWeeks';
+import {
+  CHANGE_FLAGS_EMPTY,
+  CHANGE_FLAGS_PARTIAL,
+  trainingFlags,
+} from './trainingFlags';
 import { weeklyVerdict, weeklyVerdictCopy } from './weeklyVerdict';
 import {
   detectMuscleInQuery,
@@ -93,40 +98,8 @@ export function answerTrainingEnough(query: string, context: AskLabContext): Ask
     state: row.state,
   }));
   const evidence = insights.flatMap((row) => row.evidence);
-  const below = muscles.filter((row) => row.state === 'below');
-  const inRange = muscles.filter((row) => row.state === 'in_range');
-  const above = muscles.filter((row) => row.state === 'above');
 
-  const summaryParts: string[] = [];
-  if (inRange.length > 0) {
-    summaryParts.push(
-      `${inRange.length} muscle${inRange.length === 1 ? '' : 's'} in target (${inRange
-        .slice(0, 3)
-        .map((row) => titleCase(row.muscle))
-        .join(', ')}${inRange.length > 3 ? '…' : ''})`,
-    );
-  }
-  if (below.length > 0) {
-    summaryParts.push(
-      `${below.length} below (${below
-        .slice(0, 3)
-        .map((row) => `${titleCase(row.muscle)} ${formatSets(row.sets)}`)
-        .join(', ')}${below.length > 3 ? '…' : ''})`,
-    );
-  }
-  if (above.length > 0) {
-    summaryParts.push(
-      `${above.length} above (${above
-        .slice(0, 3)
-        .map((row) => titleCase(row.muscle))
-        .join(', ')}${above.length > 3 ? '…' : ''})`,
-    );
-  }
-
-  const lead =
-    balance.insufficientMapping
-      ? balanceSentence.plain
-      : balanceSentence.plain;
+  const lead = balanceSentence.plain;
   return {
     query,
     tier: balance.insufficientMapping ? 'partial' : 'computed',
@@ -374,6 +347,83 @@ export function answerGettingStronger(query: string, context: AskLabContext): As
       windowLabel,
       repCap: MAX_E1RM_REPS,
       trends,
+    },
+  };
+}
+
+export function answerChangeFlags(query: string, context: AskLabContext): AskLabAnswer {
+  const reference = context.reference ?? new Date();
+  const options = analyticsOptions(context);
+  const flags = trainingFlags(context.entries, options, context.weekStart, reference);
+  const activeLabels = flags.active.map((flag) => flag.label);
+  const receipts = flags.active.map((flag) => flag.receipt);
+  const partialStalls = flags.stalls.filter((flag) => flag.status === 'partial');
+  const hasPartialStalls = partialStalls.length > 0;
+  const partialFlags = [flags.deload, flags.spike, ...partialStalls].filter(
+    (flag) => flag.status === 'partial',
+  );
+  const claimIds = [...new Set([...flags.active, ...partialFlags].map((flag) => flag.claimId))];
+  const matches = claimLinks(...claimIds);
+
+  if (flags.active.length === 0 && flags.hasPartial) {
+    return {
+      query,
+      tier: 'partial',
+      intent: 'change_flags',
+      call: CHANGE_FLAGS_PARTIAL,
+      matches,
+      known: partialFlags.map((flag) => flag.receipt).join(' '),
+      missing: 'Enough comparable weekly and goal-lift history for every flag check.',
+      nextStep: 'Keep logging completed sessions, then ask again after another comparable week.',
+      payload: {
+        kind: 'change_flags',
+        subjectStartDate: flags.deload.subjectStartDate,
+        subjectEndDate: flags.deload.subjectEndDate,
+        activeLabels: [],
+        receipts: [],
+        hasPartialStalls,
+        hasPartialChecks: true,
+      },
+    };
+  }
+
+  if (flags.active.length === 0) {
+    return {
+      query,
+      tier: 'computed',
+      intent: 'change_flags',
+      call: CHANGE_FLAGS_EMPTY,
+      matches,
+      payload: {
+        kind: 'change_flags',
+        subjectStartDate: flags.deload.subjectStartDate,
+        subjectEndDate: flags.deload.subjectEndDate,
+        activeLabels: [],
+        receipts: [],
+        hasPartialStalls: false,
+        hasPartialChecks: false,
+      },
+    };
+  }
+
+  return {
+    query,
+    tier: flags.hasPartial ? 'partial' : 'computed',
+    intent: 'change_flags',
+    call: `Active flags: ${activeLabels.join('; ')}.`,
+    matches,
+    known: receipts.join(' '),
+    nextStep: hasPartialStalls
+      ? 'Open Data Lab → What should I change? for receipts. Some goal lifts still need more sessions for a stall claim.'
+      : 'Open Data Lab → What should I change? to inspect each flag receipt.',
+    payload: {
+      kind: 'change_flags',
+      subjectStartDate: flags.deload.subjectStartDate,
+      subjectEndDate: flags.deload.subjectEndDate,
+      activeLabels,
+      receipts,
+      hasPartialStalls,
+      hasPartialChecks: flags.hasPartial,
     },
   };
 }

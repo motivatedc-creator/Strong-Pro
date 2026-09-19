@@ -292,13 +292,13 @@ function buildPulse(
   };
 }
 
-interface GoalLift {
+export interface GoalLift {
   id: string;
   name: string;
   sessions: number;
 }
 
-function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
+export function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
   const byLift = new Map<string, GoalLift & { workoutIds: Set<string> }>();
   for (const entry of weeks.flatMap((week) => week.entries)) {
     const current = byLift.get(entry.exercise.exerciseId) ?? {
@@ -316,7 +316,7 @@ function topGoalLifts(weeks: readonly TrainingBaselineWeek[]): GoalLift[] {
     .slice(0, MAX_GOAL_LIFTS);
 }
 
-function bestEstimateForLift(
+export function bestEstimateForLift(
   entries: readonly LoggedEntry[],
   liftId: string,
   options: AnalyticsOptions,

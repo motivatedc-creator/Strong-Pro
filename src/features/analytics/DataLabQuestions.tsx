@@ -15,7 +15,6 @@ const QUESTIONS: Array<{
     id: 'change',
     question: 'What should I change?',
     answer: 'Stall, spike and deload flags',
-    comingSoon: true,
   },
   { id: 'last_week', question: 'How did last week go?', answer: 'Your Weekly Verdict above' },
 ];
