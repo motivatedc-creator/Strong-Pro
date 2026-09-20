@@ -26,6 +26,7 @@ import {
   Ruler,
   Search,
   Settings,
+  Share2,
   Timer,
   Trash2,
   Wrench,
@@ -87,4 +88,5 @@ export const Icons = {
   dumbbell: Dumbbell,
   arrowUp: ArrowUp,
   arrowDown: ArrowDown,
+  share: Share2,
 } as const;

@@ -7,6 +7,7 @@ import type {
   TemplateExercise,
 } from '@/domain/types';
 import type { BackupPayload } from '@/db/repository';
+import { downloadBlob } from '@/platform/share';
 import { toCsv } from './csv';
 
 /**
@@ -243,17 +244,7 @@ export function measurementsCsv(
 
 /** Triggers a browser download without touching the network. */
 export function downloadFile(fileName: string, content: string, mimeType: string): void {
-  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.rel = 'noopener';
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  // Revoke on the next tick so Safari has time to start the download.
-  setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  downloadBlob(fileName, new Blob([content], { type: `${mimeType};charset=utf-8` }));
 }
 
 export function backupFileName(date = new Date()): string {
