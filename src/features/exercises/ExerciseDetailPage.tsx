@@ -3,20 +3,27 @@ import { Link, useParams } from 'react-router-dom';
 import { useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
 import { CHART_COLORS, ChartCard } from '@/components/Chart';
-import { Button, Card, Chip, EmptyState, PageHeader, Spinner, StatTile } from '@/components/ui';
+import { Button, Card, Chip, EmptyState, PageHeader, Sheet, Spinner, StatTile } from '@/components/ui';
 import { Icon, Icons } from '@/components/icons';
 import { FORMULA_LABEL } from '@/domain/oneRepMax';
-import { formatDate } from '@/domain/time';
+import { formatDate, localDateOf, parseIso } from '@/domain/time';
 import { setTypeLabel, titleCase, trackingLabel } from '@/domain/taxonomy';
 import { formatWeight } from '@/domain/units';
+import { getClaim } from '@/domain/evidence';
+import { suggestProgression, type ExerciseSession } from '@/domain/progression';
 import { ExerciseEditor } from './ExerciseEditor';
 import { exerciseProgress, type LoggedEntry } from '@/features/analytics/compute';
+import { ClaimEvidenceSheet } from '@/features/analytics/ClaimEvidenceSheet';
+import { resolveIncrementG } from '@/features/workouts/progressionSessions';
+import { PROGRESSION_STATE_META, formatProgressionTarget } from '@/features/workouts/progressionCopy';
 
 /** Per-exercise history: every previous session, records and progression charts. */
 export function ExerciseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { settings, weightUnit } = useSettings();
   const [editing, setEditing] = useState(false);
+  const [showProgressionReceipt, setShowProgressionReceipt] = useState(false);
+  const [showProgressionClaim, setShowProgressionClaim] = useState(false);
 
   const { data, loading } = useRepositoryData(
     async (repository) => {
@@ -45,13 +52,32 @@ export function ExerciseDetailPage() {
     const bestOneRm = progress.oneRepMax.reduce((max, point) => Math.max(max, point.value), 0);
     const bestWeight = progress.bestWeight.reduce((max, point) => Math.max(max, point.value), 0);
     const totalVolume = progress.volume.reduce((sum, point) => sum + point.value, 0);
-    return { progress, sessions, bestOneRm, bestWeight, totalVolume };
+
+    // No workout/template context on this page, so no rep range — the engine takes its honest
+    // "beat last session" fallback rather than inventing a range.
+    const exerciseSessions: ExerciseSession[] = sessions.map((entry) => {
+      const parsed = parseIso(entry.workout.startedAt);
+      return {
+        localDate: parsed ? localDateOf(parsed) : entry.workout.startedAt,
+        sets: entry.sets,
+      };
+    });
+    const progression = data.exercise
+      ? suggestProgression(
+          exerciseSessions,
+          settings.oneRepMaxFormula,
+          resolveIncrementG(data.exercise, { quickIncrementG: settings.quickIncrementG }),
+        )
+      : null;
+
+    return { progress, sessions, bestOneRm, bestWeight, totalVolume, progression };
   }, [
     data,
     id,
     settings.oneRepMaxFormula,
     settings.excludeWarmupsFromAnalytics,
     settings.secondaryMuscleCredit,
+    settings.quickIncrementG,
   ]);
 
   if (loading && !data) return <Spinner label="Loading exercise" />;
@@ -114,6 +140,33 @@ export function ExerciseDetailPage() {
             />
             <StatTile label="Sessions" value={String(view.sessions.length)} />
           </div>
+
+          {view.progression && (
+            <Card className="mb-4 border-accent/30">
+              <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+                What to beat next
+              </p>
+              <button
+                type="button"
+                className="mt-2 flex min-h-11 w-full items-center justify-between gap-3 rounded border border-line bg-surface-raised px-3 py-2 text-left transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                onClick={() => setShowProgressionReceipt(true)}
+                aria-label={`Progression suggestion: ${
+                  PROGRESSION_STATE_META[view.progression.state].label
+                }, ${formatProgressionTarget(view.progression.target, weightUnit)}. Open receipt`}
+              >
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+                    <Icon icon={PROGRESSION_STATE_META[view.progression.state].icon} size={14} />
+                    {PROGRESSION_STATE_META[view.progression.state].label}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-ink-muted">
+                    {formatProgressionTarget(view.progression.target, weightUnit)}
+                  </span>
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-accent">Open receipt</span>
+              </button>
+            </Card>
+          )}
 
           <div className="mb-4 space-y-4">
             <ChartCard
@@ -222,6 +275,58 @@ export function ExerciseDetailPage() {
       )}
 
       <ExerciseEditor open={editing} exercise={exercise} onClose={() => setEditing(false)} />
+
+      <Sheet
+        open={showProgressionReceipt}
+        onClose={() => {
+          setShowProgressionReceipt(false);
+          setShowProgressionClaim(false);
+        }}
+        title="Progression"
+        description="Numbers from logged sessions. Not a prescription."
+      >
+        {view?.progression && (
+          <div className="space-y-4 text-sm">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+              <Icon icon={PROGRESSION_STATE_META[view.progression.state].icon} size={14} />
+              {PROGRESSION_STATE_META[view.progression.state].label}
+            </p>
+            <Card className="p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
+                Receipt
+              </p>
+              <p className="mt-1 font-medium text-ink">{view.progression.receipt}</p>
+            </Card>
+            {(() => {
+              const claim = getClaim(view.progression.claimId);
+              return claim ? (
+                <button
+                  type="button"
+                  className="min-h-11 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-left"
+                  onClick={() => setShowProgressionClaim(true)}
+                >
+                  <span className="block text-sm font-semibold text-ink">{claim.statement}</span>
+                  <span className="mt-1 block text-[11px] text-accent">Open claim receipt</span>
+                </button>
+              ) : null;
+            })()}
+          </div>
+        )}
+      </Sheet>
+
+      {view?.progression &&
+        (() => {
+          const claim = getClaim(view.progression.claimId);
+          return claim ? (
+            <ClaimEvidenceSheet
+              open={showProgressionClaim}
+              onClose={() => setShowProgressionClaim(false)}
+              claim={claim}
+              title="Progression rule"
+            />
+          ) : null;
+        })()}
+
       <div className="h-8" aria-hidden="true" />
     </>
   );

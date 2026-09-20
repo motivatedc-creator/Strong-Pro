@@ -212,6 +212,20 @@ export const EVIDENCE_CLAIMS: readonly EvidenceClaim[] = [
     lastReviewed: '2026-09-19',
   },
   {
+    id: 'progression-double-progression',
+    statement:
+      'Progression Engine suggests filling a prescribed rep range before adding load, then adding load once every working set reaches the top of the range; without a range it suggests beating last session’s rep count at the same weight.',
+    kind: 'implementation_heuristic',
+    behaviors: ['progression_next_target'],
+    sourceIds: [],
+    support: 'context',
+    interpretation:
+      'Double progression is a common gym heuristic for driving load over time, not a result derived from a cited study. The suggested target is recomputed from logged sets and any linked Routine rep range.',
+    limitations:
+      'This is not a coaching prescription: it does not model fatigue, RPE, deloads, or plate availability, and it does not know why a rep range or increment was chosen. It only names a concrete next target from history.',
+    lastReviewed: '2026-09-20',
+  },
+  {
     id: 'proximity-to-failure-context',
     statement:
       'Training near failure can matter for hypertrophy, but Lock’d does not currently prescribe an RIR target.',
