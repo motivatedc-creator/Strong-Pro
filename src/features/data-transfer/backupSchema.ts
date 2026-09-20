@@ -194,6 +194,7 @@ export const settingsSchema = z.object({
     .optional()
     .default({}),
   goalLiftIds: z.array(id).max(3).optional(),
+  goalLens: z.enum(['build', 'strength', 'maintain']).optional(),
   defaultBarProfileId: id.optional(),
   defaultPlateInventoryId: id.optional(),
   themeMode: z.enum(['light', 'dark', 'system']),

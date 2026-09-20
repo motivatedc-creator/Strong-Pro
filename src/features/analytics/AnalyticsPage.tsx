@@ -59,8 +59,23 @@ export function AnalyticsPage() {
 
     const summary = summarise(current, options);
     const priorSummary = summarise(priorEntries, options);
-    const weekVerdict = weeklyVerdict(entries, options, weekStart, undefined, settings.goalLiftIds);
-    const changeFlags = trainingFlags(entries, options, weekStart, undefined, settings.goalLiftIds);
+    const goalLens = settings.goalLens ?? 'build';
+    const weekVerdict = weeklyVerdict(
+      entries,
+      options,
+      weekStart,
+      undefined,
+      settings.goalLiftIds,
+      goalLens,
+    );
+    const changeFlags = trainingFlags(
+      entries,
+      options,
+      weekStart,
+      undefined,
+      settings.goalLiftIds,
+      goalLens,
+    );
     const effectiveGranularity = range === 'all' ? 'month' : granularity;
     const buckets = bucketVolume(current, effectiveGranularity, options);
     const muscles = muscleBreakdown(current, options);
@@ -110,6 +125,7 @@ export function AnalyticsPage() {
     settings.secondaryMuscleCredit,
     settings.personalMuscleTargets,
     settings.goalLiftIds,
+    settings.goalLens,
   ]);
 
   const formatWeightValue = (grams: number) => formatCompactNumber(fromGrams(grams, weightUnit));
@@ -147,6 +163,8 @@ export function AnalyticsPage() {
         muscleBalance={view.subjectWeekBalance}
         goalLiftIds={settings.goalLiftIds}
         onGoalLiftIdsChange={(goalLiftIds) => void update({ goalLiftIds })}
+        goalLens={settings.goalLens}
+        onGoalLensChange={(goalLens) => void update({ goalLens })}
       />
 
       <DataLabQuestions

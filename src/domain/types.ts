@@ -243,6 +243,7 @@ export interface BarProfile {
 }
 
 export type OneRepMaxFormula = 'epley' | 'brzycki';
+export type GoalLens = 'build' | 'strength' | 'maintain';
 export type IntensityMode = 'rpe' | 'rir' | 'none';
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type AccentTheme = 'stamp' | 'ember' | 'glacier' | 'moss' | 'violet';
@@ -272,6 +273,8 @@ export interface AppSettings {
    * "infer from training" — the most-trained lifts in the baseline window, labelled as such.
    */
   goalLiftIds?: UUID[];
+  /** Missing means 'build' — today's shipped verdict framing, unchanged. */
+  goalLens?: GoalLens;
   defaultBarProfileId?: UUID;
   defaultPlateInventoryId?: UUID;
   themeMode: ThemeMode;

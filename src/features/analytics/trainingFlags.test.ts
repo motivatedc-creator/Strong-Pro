@@ -139,6 +139,36 @@ describe('trainingFlags', () => {
     expect(deloadFlag(heavier, GOLDEN_OPTIONS, 'monday', REF).status).toBe('inactive');
   });
 
+  it('deloadFlag receipt reads "intensity block" under Strength when goal-lift e1RM held', () => {
+    const entries = deloadEntries();
+    const buildFlag = deloadFlag(entries, GOLDEN_OPTIONS, 'monday', REF, undefined, 'build');
+    const strengthFlag = deloadFlag(entries, GOLDEN_OPTIONS, 'monday', REF, undefined, 'strength');
+
+    expect(buildFlag.status).toBe('active');
+    expect(buildFlag.receipt.toLowerCase()).toContain('deload-shaped');
+    expect(buildFlag.receipt.toLowerCase()).not.toContain('intensity block');
+
+    expect(strengthFlag.status).toBe('active');
+    expect(strengthFlag.receipt.toLowerCase()).toContain('intensity block');
+    expect(strengthFlag.receipt.toLowerCase()).not.toContain('deload-shaped week');
+  });
+
+  it('deloadFlag keeps the Deload receipt under Strength when goal-lift e1RM slipped', () => {
+    const entries = [
+      ...mondayBaseline(10).flatMap((row, index) => [
+        row,
+        fixtureEntry(row.workout.localDate, `b-extra-${index}`, { hardSets: 1 }),
+      ]),
+      fixtureEntry('2026-09-08', 'last-a', { hardSets: 3, weightG: 60_000 }),
+      fixtureEntry('2026-09-11', 'last-b', { hardSets: 2, weightG: 60_000 }),
+    ];
+    const strengthFlag = deloadFlag(entries, GOLDEN_OPTIONS, 'monday', REF, undefined, 'strength');
+
+    expect(strengthFlag.status).toBe('active');
+    expect(strengthFlag.receipt.toLowerCase()).toContain('deload-shaped');
+    expect(strengthFlag.receipt.toLowerCase()).not.toContain('intensity block');
+  });
+
   it('spikeFlag is active when Verdict direction is big_jump', () => {
     const entries = spikeEntries();
     const verdict = weeklyVerdict(entries, GOLDEN_OPTIONS, 'monday', REF);

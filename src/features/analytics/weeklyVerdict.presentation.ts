@@ -1,3 +1,4 @@
+import type { GoalLens } from '@/domain/types';
 import type { WeightUnit } from '@/domain/units';
 import {
   muscleBandBalanceSentence,
@@ -22,6 +23,7 @@ export function weeklyVerdictCopy(
   verdict: WeeklyVerdict,
   weightUnit: WeightUnit,
   muscleBalance?: MuscleBandBalance | null,
+  lens: GoalLens = 'build',
 ): WeeklyVerdictCopy {
   const balanceSlot = balanceCopy(muscleBalance);
   const baselineCount = verdict.baseline.weeks.length;
@@ -100,26 +102,7 @@ export function weeklyVerdictCopy(
       available: true,
       title: 'Last week',
       baselineLabel,
-      lines: [
-        sentence([
-          {
-            type: 'text',
-            text: 'Lighter week, consistent sessions — looks like a deload.',
-          },
-        ]),
-        sentence([
-          {
-            type: 'text',
-            text: 'No single lift or metric stood out this week.',
-          },
-        ]),
-        sentence([
-          {
-            type: 'text',
-            text: 'Nothing to fix — return to normal training when planned.',
-          },
-        ]),
-      ],
+      lines: deloadLines(lens, verdict.intensityHeld === true),
       ...balanceSlot,
       pulse: pulseSentence(verdict.pulse),
     };
@@ -130,13 +113,90 @@ export function weeklyVerdictCopy(
     title: 'Last week',
     baselineLabel,
     lines: [
-      directionSentence(verdict.direction!, verdict.subject.metrics.hardSets, baselineCount),
+      directionSentence(
+        verdict.direction!,
+        verdict.subject.metrics.hardSets,
+        baselineCount,
+        lens,
+        verdict.standout!,
+        verdict.watchout!,
+      ),
       standoutSentence(verdict.standout!, weightUnit),
       watchoutSentence(verdict.watchout!),
     ],
     ...balanceSlot,
     pulse: pulseSentence(verdict.pulse),
   };
+}
+
+/** Deload-state lines. Build is unchanged; Strength names both facts when e1RM held; Maintain drops the jargon. */
+function deloadLines(lens: GoalLens, intensityHeld: boolean): VerdictSentence[] {
+  if (lens === 'strength' && intensityHeld) {
+    return [
+      sentence([
+        {
+          type: 'text',
+          text: 'Lighter week, but your goal lift held its numbers — an intensity block, not a deload.',
+        },
+      ]),
+      sentence([
+        {
+          type: 'text',
+          text: 'No single lift or metric stood out this week.',
+        },
+      ]),
+      sentence([
+        {
+          type: 'text',
+          text: 'Nothing to fix — return to normal training when planned.',
+        },
+      ]),
+    ];
+  }
+
+  if (lens === 'maintain') {
+    return [
+      sentence([
+        {
+          type: 'text',
+          text: 'Lighter week, consistent sessions.',
+        },
+      ]),
+      sentence([
+        {
+          type: 'text',
+          text: 'No single lift or metric stood out this week.',
+        },
+      ]),
+      sentence([
+        {
+          type: 'text',
+          text: 'Nothing to fix — return to normal training when planned.',
+        },
+      ]),
+    ];
+  }
+
+  return [
+    sentence([
+      {
+        type: 'text',
+        text: 'Lighter week, consistent sessions — looks like a deload.',
+      },
+    ]),
+    sentence([
+      {
+        type: 'text',
+        text: 'No single lift or metric stood out this week.',
+      },
+    ]),
+    sentence([
+      {
+        type: 'text',
+        text: 'Nothing to fix — return to normal training when planned.',
+      },
+    ]),
+  ];
 }
 
 export function metricEvidenceFor(
@@ -330,10 +390,27 @@ function sentence(parts: SentencePart[]): VerdictSentence {
   return { plain: parts.map((part) => part.text).join(''), parts };
 }
 
+/**
+ * For the Strength lens, names whether the goal lift's e1RM is concurrently up or down, reusing
+ * the already-built standout/watchout rules — no new metric, no new evidence key.
+ */
+function strengthE1rmClause(standout: WeeklyVerdictRule, watchout: WeeklyVerdictRule): string {
+  if (standout.id === 'standout_new_e1rm_best' || standout.id === 'standout_e1rm_up') {
+    return ' Your e1RM is still climbing.';
+  }
+  if (watchout.id === 'watchout_e1rm_slip') {
+    return ' Your e1RM has slipped too.';
+  }
+  return '';
+}
+
 function directionSentence(
   direction: WeeklyDirection,
   hardSets: number,
   baselineWeeks: number,
+  lens: GoalLens,
+  standout: WeeklyVerdictRule,
+  watchout: WeeklyVerdictRule,
 ): VerdictSentence {
   if (direction.changePercent === null) {
     return sentence([
@@ -383,18 +460,32 @@ function directionSentence(
         { type: 'text', text: `, in line with your ${averageLabel}.` },
       ]);
     case 'down':
+      if (lens === 'maintain') {
+        return sentence([
+          hard,
+          { type: 'text', text: ', ' },
+          pct,
+          { type: 'text', text: ` below your ${averageLabel} — holding within your usual range.` },
+        ]);
+      }
       return sentence([
         hard,
         { type: 'text', text: ', ' },
         pct,
-        { type: 'text', text: ` below your ${averageLabel}.` },
+        {
+          type: 'text',
+          text: ` below your ${averageLabel}.${lens === 'strength' ? strengthE1rmClause(standout, watchout) : ''}`,
+        },
       ]);
     case 'well_down':
       return sentence([
         hard,
         { type: 'text', text: ', ' },
         pct,
-        { type: 'text', text: ` below your ${averageLabel}.` },
+        {
+          type: 'text',
+          text: ` below your ${averageLabel}.${lens === 'strength' ? strengthE1rmClause(standout, watchout) : ''}`,
+        },
       ]);
   }
 }

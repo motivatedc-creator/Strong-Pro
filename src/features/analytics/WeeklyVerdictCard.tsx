@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Card, Chip } from '@/components/ui';
-import type { UUID } from '@/domain/types';
+import type { GoalLens, UUID } from '@/domain/types';
 import type { WeightUnit } from '@/domain/units';
 import { GoalLiftPicker } from './GoalLiftPicker';
+import { GoalLensPicker } from './GoalLensPicker';
 import { VerdictEvidenceSheet, formatDateRange } from './VerdictEvidenceSheet';
 import type { MuscleBandBalance } from './muscleSets';
 import {
@@ -12,12 +13,20 @@ import {
   type WeeklyVerdict,
 } from './weeklyVerdict';
 
+const LENS_LABELS: Record<GoalLens, string> = {
+  build: 'Build',
+  strength: 'Strength',
+  maintain: 'Maintain',
+};
+
 export function WeeklyVerdictCard({
   verdict,
   weightUnit,
   muscleBalance = null,
   goalLiftIds,
   onGoalLiftIdsChange,
+  goalLens,
+  onGoalLensChange,
 }: {
   verdict: WeeklyVerdict;
   weightUnit: WeightUnit;
@@ -26,10 +35,15 @@ export function WeeklyVerdictCard({
   /** The raw setting — not `verdict.goalLifts`, which drops a pick with no data this window. */
   goalLiftIds?: readonly UUID[];
   onGoalLiftIdsChange?: (ids: UUID[]) => void;
+  /** Missing means 'build' — mirrors AppSettings.goalLens. */
+  goalLens?: GoalLens;
+  onGoalLensChange?: (lens: GoalLens) => void;
 }) {
   const [evidenceKey, setEvidenceKey] = useState<VerdictEvidenceKey | null>(null);
   const [pickingGoalLifts, setPickingGoalLifts] = useState(false);
-  const copy = weeklyVerdictCopy(verdict, weightUnit, muscleBalance);
+  const [pickingGoalLens, setPickingGoalLens] = useState(false);
+  const effectiveLens = goalLens ?? 'build';
+  const copy = weeklyVerdictCopy(verdict, weightUnit, muscleBalance, effectiveLens);
   const showGoalLiftsLine = verdict.state === 'full';
   const liftNames = verdict.goalLifts.map((lift) => lift.name).join(', ');
 
@@ -96,6 +110,19 @@ export function WeeklyVerdictCard({
             )}
           </p>
         )}
+
+        <p className="mt-1 px-1 text-xs text-ink-subtle">
+          {`Lens: ${LENS_LABELS[effectiveLens]}.`}{' '}
+          {onGoalLensChange && (
+            <button
+              type="button"
+              className="min-h-11 font-semibold text-accent underline decoration-accent/50 underline-offset-2"
+              onClick={() => setPickingGoalLens(true)}
+            >
+              Change
+            </button>
+          )}
+        </p>
       </Card>
 
       <VerdictEvidenceSheet
@@ -114,6 +141,15 @@ export function WeeklyVerdictCard({
           goalLiftIds={goalLiftIds}
           baselineWeeks={verdict.baseline.weeks}
           onChange={onGoalLiftIdsChange}
+        />
+      )}
+
+      {onGoalLensChange && (
+        <GoalLensPicker
+          open={pickingGoalLens}
+          onClose={() => setPickingGoalLens(false)}
+          goalLens={goalLens}
+          onGoalLensChange={onGoalLensChange}
         />
       )}
     </section>

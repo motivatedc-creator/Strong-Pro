@@ -180,3 +180,35 @@ describe('WeeklyVerdictCard goal lifts', () => {
     expect(await screen.findByRole('dialog', { name: 'Goal lifts' })).toBeInTheDocument();
   });
 });
+
+describe('WeeklyVerdictCard goal lens', () => {
+  it('shows the active lens as visible text, defaulting to Build', () => {
+    render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" />);
+    expect(screen.getByText('Lens: Build.')).toBeInTheDocument();
+  });
+
+  it('shows a non-default lens as visible text', () => {
+    render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" goalLens="strength" />);
+    expect(screen.getByText('Lens: Strength.')).toBeInTheDocument();
+  });
+
+  it('does not render a Change affordance without a change handler', () => {
+    render(<WeeklyVerdictCard verdict={verdict} weightUnit="kg" goalLens="maintain" />);
+    expect(screen.getByText('Lens: Maintain.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Change' })).not.toBeInTheDocument();
+  });
+
+  it('opens the goal lens picker from the labelled "Change" action', async () => {
+    render(
+      <WeeklyVerdictCard
+        verdict={verdict}
+        weightUnit="kg"
+        goalLens="build"
+        onGoalLensChange={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Change' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Change' }));
+    expect(await screen.findByRole('dialog', { name: 'Goal lens' })).toBeInTheDocument();
+  });
+});
