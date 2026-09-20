@@ -1,5 +1,11 @@
 import { localDateOf } from '@/domain/time';
 import type { GoalLens, WeekStartDay } from '@/domain/types';
+import {
+  computeStallComparison,
+  STALL_MIN_SESSIONS,
+  STALL_WINDOW_DAYS,
+  type ExerciseSession,
+} from '@/domain/progression';
 import type { AnalyticsOptions, LoggedEntry } from './compute';
 import {
   selectTrainingBaseline,
@@ -7,15 +13,9 @@ import {
   startOfTrainingWeekDate,
   weekWindow,
 } from './trainingWeeks';
-import {
-  bestEstimateForLift,
-  resolveGoalLifts,
-  weeklyVerdict,
-  type DirectionBand,
-} from './weeklyVerdict';
+import { resolveGoalLifts, weeklyVerdict, type DirectionBand } from './weeklyVerdict';
 
-export const STALL_WINDOW_DAYS = 28;
-export const STALL_MIN_SESSIONS = 3;
+export { STALL_MIN_SESSIONS, STALL_WINDOW_DAYS };
 export const DELOAD_CLAIM_ID = 'weekly-verdict-deload-shape' as const;
 export const SPIKE_CLAIM_ID = 'weekly-verdict-spike-flag' as const;
 export const STALL_CLAIM_ID = 'training-stall-flag' as const;
@@ -83,17 +83,6 @@ function formatSets(value: number): string {
 function formatPercent(value: number): string {
   const rounded = Math.round(value);
   return `${rounded >= 0 ? '+' : ''}${rounded}%`;
-}
-
-/** Entries whose workout localDate falls in [startDate, endDate] inclusive. */
-function entriesInLocalRange(
-  entries: readonly LoggedEntry[],
-  startDate: string,
-  endDate: string,
-): LoggedEntry[] {
-  return entries.filter(
-    (entry) => entry.workout.localDate >= startDate && entry.workout.localDate <= endDate,
-  );
 }
 
 function sessionsForLift(entries: readonly LoggedEntry[], liftId: string): LoggedEntry[][] {
@@ -204,11 +193,19 @@ export function stallFlags(
   const { lifts: goalLifts } = resolveGoalLifts(baselineWeeks, goalLiftIds);
 
   return goalLifts.map((lift) => {
-    const windowEntries = entriesInLocalRange(entries, windowStartDate, windowEndDate).filter(
-      (entry) => entry.exercise.exerciseId === lift.id,
+    const liftSessions: ExerciseSession[] = sessionsForLift(entries, lift.id).map((session) => ({
+      localDate: session[0]!.workout.localDate,
+      sets: session.flatMap((entry) => entry.sets),
+    }));
+    const comparison = computeStallComparison(
+      liftSessions,
+      options.formula,
+      windowStartDate,
+      windowEndDate,
+      STALL_MIN_SESSIONS,
     );
-    const windowSessions = sessionsForLift(windowEntries, lift.id);
-    const sessionsInWindow = windowSessions.length;
+    const { sessionsInWindow, bestE1rmInWindowG, comparisonBestE1rmG, comparisonSource } =
+      comparison;
     const label = `Stall — ${lift.name}`;
 
     if (sessionsInWindow < STALL_MIN_SESSIONS) {
@@ -221,7 +218,7 @@ export function stallFlags(
         windowStartDate,
         windowEndDate,
         sessionsInWindow,
-        bestE1rmInWindowG: bestEstimateForLift(windowEntries, lift.id, options),
+        bestE1rmInWindowG,
         comparisonBestE1rmG: null,
         comparisonSource: null,
         claimId: STALL_CLAIM_ID,
@@ -229,20 +226,6 @@ export function stallFlags(
           sessionsInWindow === 1 ? '' : 's'
         } in the trailing ${STALL_WINDOW_DAYS} local days (need ${STALL_MIN_SESSIONS}). Partial — no stall claim.`,
       };
-    }
-
-    const bestE1rmInWindowG = bestEstimateForLift(windowEntries, lift.id, options);
-    const priorEntries = entries.filter(
-      (entry) => entry.exercise.exerciseId === lift.id && entry.workout.localDate < windowStartDate,
-    );
-    const priorSessions = sessionsForLift(priorEntries, lift.id);
-    const equalPriorEntries = priorSessions.slice(-sessionsInWindow).flat();
-    let comparisonBestE1rmG: number | null = null;
-    let comparisonSource: StallFlag['comparisonSource'] = null;
-
-    if (priorSessions.length >= sessionsInWindow) {
-      comparisonBestE1rmG = bestEstimateForLift(equalPriorEntries, lift.id, options);
-      comparisonSource = 'prior_equal_window';
     }
 
     if (bestE1rmInWindowG === null || comparisonBestE1rmG === null) {
@@ -263,7 +246,7 @@ export function stallFlags(
       };
     }
 
-    const stalled = bestE1rmInWindowG <= comparisonBestE1rmG;
+    const stalled = comparison.state === 'stalled';
     const receipt = stalled
       ? `${lift.name}: best e1RM in trailing ${STALL_WINDOW_DAYS} days is flat or down vs prior equal-count window (${sessionsInWindow} sessions). Stall.`
       : `${lift.name}: best e1RM in trailing ${STALL_WINDOW_DAYS} days improved vs prior equal-count window. No stall.`;

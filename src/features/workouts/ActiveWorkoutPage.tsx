@@ -26,12 +26,21 @@ import { elapsedSeconds } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { titleCase, usesWeight } from '@/domain/taxonomy';
+import { getClaim } from '@/domain/evidence';
+import {
+  suggestProgression,
+  type ExerciseSession,
+  type ProgressionSuggestion,
+} from '@/domain/progression';
 import type { SetType, WorkoutExercise, WorkoutSet } from '@/domain/types';
 import { SetRow } from './SetRow';
 import { pairedSetInputs, previousForRow } from './setPrefill';
 import { groupSetsForDisplay } from './setGrouping';
 import { useRestTimerStore } from './restTimer';
 import { formatTarget, resolveExerciseTarget } from './targetPrescription';
+import { groupSetsIntoSessions, resolveIncrementG } from './progressionSessions';
+import { PROGRESSION_STATE_META, formatProgressionTarget } from './progressionCopy';
+import { ClaimEvidenceSheet } from '@/features/analytics/ClaimEvidenceSheet';
 
 /**
  * Active workout screen.
@@ -66,6 +75,33 @@ export function ActiveWorkoutPage() {
     [data?.workout.id, data?.exercises.length],
   );
 
+  const { data: progressionInputsByExercise } = useRepositoryData(
+    async (repo) => {
+      const active = await repo.getActiveWorkout();
+      if (!active) return {};
+      const entries = await Promise.all(
+        active.exercises.map(async (entry) => {
+          const [history, exercise] = await Promise.all([
+            repo.getSetHistoryForExercise(entry.exercise.exerciseId),
+            repo.getExercise(entry.exercise.exerciseId),
+          ]);
+          return [
+            entry.exercise.exerciseId,
+            {
+              sessions: groupSetsIntoSessions(history),
+              incrementG: resolveIncrementG(exercise ?? {}, settings),
+            },
+          ] as const;
+        }),
+      );
+      return Object.fromEntries(entries) as Record<
+        string,
+        { sessions: ExerciseSession[]; incrementG: number }
+      >;
+    },
+    [data?.workout.id, data?.exercises.length, settings.quickIncrementG],
+  );
+
   const templateExercises = data?.templateExercises;
 
   const [picking, setPicking] = useState(false);
@@ -77,6 +113,11 @@ export function ActiveWorkoutPage() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  const [progressionSheet, setProgressionSheet] = useState<{
+    exerciseName: string;
+    suggestion: ProgressionSuggestion;
+  } | null>(null);
+  const [showProgressionClaim, setShowProgressionClaim] = useState(false);
 
   const tick = useTicker(!!data, 1_000);
   const elapsed = useMemo(
@@ -288,6 +329,15 @@ export function ActiveWorkoutPage() {
         {exercises.map((entry, exerciseIndex) => {
           const previous = previousByExercise?.[entry.exercise.exerciseId] ?? [];
           const target = resolveExerciseTarget(workout, entry.exercise, templateExercises);
+          const progressionInputs = progressionInputsByExercise?.[entry.exercise.exerciseId];
+          const progression = progressionInputs
+            ? suggestProgression(
+                progressionInputs.sessions,
+                settings.oneRepMaxFormula,
+                progressionInputs.incrementG,
+                target ? { repRange: { repMin: target.repMin, repMax: target.repMax } } : {},
+              )
+            : null;
           const supersetPartners = entry.exercise.supersetGroup
             ? exercises.filter(
                 (other) =>
@@ -309,6 +359,25 @@ export function ActiveWorkoutPage() {
                       <span>· {titleCase(entry.exercise.equipmentSnapshot)}</span>
                       <span>· rest {formatDuration(entry.exercise.restSeconds)}</span>
                       {target && <span>· {formatTarget(target)}</span>}
+                      {progression && (
+                        <button
+                          type="button"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-full border border-line bg-surface-raised px-2 py-1 text-xs font-semibold text-ink transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                          onClick={() =>
+                            setProgressionSheet({
+                              exerciseName: entry.exercise.exerciseNameSnapshot,
+                              suggestion: progression,
+                            })
+                          }
+                          aria-label={`Progression suggestion for ${entry.exercise.exerciseNameSnapshot}: ${
+                            PROGRESSION_STATE_META[progression.state].label
+                          }, ${formatProgressionTarget(progression.target, weightUnit)}. Open receipt`}
+                        >
+                          <Icon icon={PROGRESSION_STATE_META[progression.state].icon} size={12} />
+                          {PROGRESSION_STATE_META[progression.state].label} ·{' '}
+                          {formatProgressionTarget(progression.target, weightUnit)}
+                        </button>
+                      )}
                       {supersetPartners.length > 0 && (
                         <Chip tone="accent">Superset {entry.exercise.supersetGroup}</Chip>
                       )}
@@ -627,6 +696,60 @@ export function ActiveWorkoutPage() {
           />
         )}
       </Sheet>
+
+      <Sheet
+        open={!!progressionSheet}
+        onClose={() => {
+          setProgressionSheet(null);
+          setShowProgressionClaim(false);
+        }}
+        title={progressionSheet ? `${progressionSheet.exerciseName} progression` : 'Progression'}
+        description="Numbers from logged sessions. Not a prescription."
+      >
+        {progressionSheet && (
+          <div className="space-y-4 text-sm">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+              <Icon
+                icon={PROGRESSION_STATE_META[progressionSheet.suggestion.state].icon}
+                size={14}
+              />
+              {PROGRESSION_STATE_META[progressionSheet.suggestion.state].label}
+            </p>
+            <Card className="p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
+                Receipt
+              </p>
+              <p className="mt-1 font-medium text-ink">{progressionSheet.suggestion.receipt}</p>
+            </Card>
+            {(() => {
+              const claim = getClaim(progressionSheet.suggestion.claimId);
+              return claim ? (
+                <button
+                  type="button"
+                  className="min-h-11 w-full rounded-xl border border-line bg-surface-raised px-3 py-2 text-left"
+                  onClick={() => setShowProgressionClaim(true)}
+                >
+                  <span className="block text-sm font-semibold text-ink">{claim.statement}</span>
+                  <span className="mt-1 block text-[11px] text-accent">Open claim receipt</span>
+                </button>
+              ) : null;
+            })()}
+          </div>
+        )}
+      </Sheet>
+
+      {progressionSheet &&
+        (() => {
+          const claim = getClaim(progressionSheet.suggestion.claimId);
+          return claim ? (
+            <ClaimEvidenceSheet
+              open={showProgressionClaim}
+              onClose={() => setShowProgressionClaim(false)}
+              claim={claim}
+              title="Progression rule"
+            />
+          ) : null;
+        })()}
 
       <ConfirmDialog
         open={confirmFinish}
