@@ -1,9 +1,11 @@
 # Lock'd × Claude handover
 
-Read this alongside `AGENTS.md` at the start of a session, before delegating to any
-subagent. `AGENTS.md` is doctrine (what the product is and how bots should behave).
-This file is state — what actually happened, most recent first — so a session doesn't
-have to re-derive it from scratch or ask "PR's merged... now what?"
+Read this at the start of a session, before delegating to any subagent. This file is
+state — what actually happened, most recent first — so a session doesn't have to
+re-derive it from scratch or ask "PR's merged... now what?"
+
+Product direction is the founder's call, made in conversation. There is no doctrine
+file; don't treat anything here as a veto on what to build.
 
 Keep entries short: what shipped or is in flight, and what it means for the next
 session. Update it at the end of a session or PR cycle, not mid-task. This is a log,
@@ -74,8 +76,11 @@ listed for the next `product-manager` pass, not accepted tasks.
 
 ## Standing reminders
 
-Full doctrine is `AGENTS.md`; this is just what a session tends to forget mid-task:
+These are technical invariants, not product opinions — breaking one costs data or
+makes a number lie. What a session tends to forget mid-task:
 
+- Canonical storage: mass in grams, length in mm, distance in metres, duration in
+  seconds — integers. Units are display-only.
 - Domain math lives in `src/domain`; UI never writes Dexie directly.
 - Numbers are derived on read — never persist a PR, verdict, flag, or aggregate as
   source of truth.
