@@ -18,7 +18,20 @@ import type {
  * names to stable rows.
  */
 
-export const SEED_LIBRARY_VERSION = 1;
+export const SEED_LIBRARY_VERSION = 2;
+
+/**
+ * Names of seed exercises that must carry `unilateral: true`. Bumping SEED_LIBRARY_VERSION
+ * to 2 backfills these onto installs that seeded before the flag existed (see PR #29) —
+ * insert-time seeding never updates rows that already exist, so pre-existing installs would
+ * otherwise be stuck without the left/right split logging behaviour indefinitely.
+ */
+export const UNILATERAL_BACKFILL_EXERCISE_NAMES = [
+  'One-Arm Dumbbell Row',
+  'Single-Arm Dumbbell Shoulder Press',
+  'Bulgarian Split Squat',
+  'Dumbbell Walking Lunge',
+] as const;
 
 type SeedTuple = [
   name: string,
@@ -161,6 +174,11 @@ export function slugify(name: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 }
+
+/** Deterministic seed ids for {@link UNILATERAL_BACKFILL_EXERCISE_NAMES}. */
+export const UNILATERAL_BACKFILL_EXERCISE_IDS = UNILATERAL_BACKFILL_EXERCISE_NAMES.map(
+  (name) => `seed-${slugify(name)}`,
+);
 
 export function seedExercises(now: string): Exercise[] {
   return SEED.map(([name, primary, secondary, equipment, pattern, tracking, unilateral]) => ({
