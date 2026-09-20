@@ -11,6 +11,42 @@ not a doc to rewrite — append, don't summarize away the history.
 
 ## Log
 
+### 2026-09-20 — Fold template-exercises read into getActiveWorkout (PR #28)
+
+Fast-follow to #26: `ActiveWorkoutPage` fired two independent repository reads
+on mount (`getActiveWorkout` plus a second `getTemplateDetail` call just for
+the target chip). Factored the shared query into a private
+`getTemplateExercises` helper and have `getActiveWorkout` attach it directly
+to `WorkoutDetail` when the workout has a `templateId` — one round trip
+instead of two on the hottest screen in the app, zero behavior change. Had a
+one-line merge conflict with #29 (both touched the same import line in
+`ActiveWorkoutPage.tsx` since #29 landed first) — resolved by merging main in,
+keeping this PR's single-read consolidation alongside #29's `WorkoutExercise`
+import; `npm run verify` green after.
+
+### 2026-09-19 — Unilateral (single-arm/single-leg) set logging (PR #29)
+
+No schema/UI support existed for single-arm/single-leg work — a set of 10
+left + 10 right either collapsed into one row (losing the asymmetry) or went
+into notes, unreadable by analytics. Logs each set as two independent
+`WorkoutSet` rows (left/right) linked by a new `pairId`, not one row with two
+loads, so tonnage/e1RM/PRs need zero changes — they already iterate
+`WorkoutSet[]` flat. Additive schema only (`Exercise.unilateral`,
+`WorkoutExercise.unilateralSnapshot`, `WorkoutSet.side`/`pairId`), no Dexie
+version bump, same precedent as `weekStartDay`/`goalLiftIds`. `pairId` exists
+because `order` is a dense auto-renumbered index that can't safely be shared
+between two rows. Founder-confirmed: deleting either side of a pair deletes
+both as one action; warm-up-generator sets stay bilateral even for a
+unilateral exercise. Ran through `data-portability` (schema/backup/seed/
+ExerciseEditor toggle) then `session-logger` (logging UI/grouping/doubling) —
+the session-logger pass hit a session rate limit mid-task and had to be
+finished directly rather than re-delegated, but nothing was discarded.
+`verify-gate` signed off MERGE on the combined diff. Known gap: existing
+installs won't retroactively backfill `unilateral: true` onto the four newly
+flagged seed exercises (seeding only inserts missing rows, doesn't update
+existing ones) — a user has to toggle it by hand, or a future pass could bump
+`SEED_LIBRARY_VERSION` for an update-in-place path.
+
 ### 2026-09-19 — Per-set rep targets in the active workout (PR #26)
 
 Ran end to end through the subagent chain: `session-logger` implemented, `verify-gate`
