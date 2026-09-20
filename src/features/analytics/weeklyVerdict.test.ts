@@ -304,3 +304,152 @@ describe('weeklyVerdict v1', () => {
     expect(result.pulse).toBeNull();
   });
 });
+
+describe('Goal Lenses v1', () => {
+  const reference = new Date('2026-09-17T12:00:00.000Z');
+
+  function deloadEntriesHeld() {
+    return baseline(10).flatMap((row, index) => [
+      row,
+      entry(row.workout.localDate, `b-extra-${index}`, { hardSets: 1 }),
+    ]);
+  }
+
+  it('default (omitted) goalLens is byte-identical to build — deload copy unchanged', () => {
+    const entries = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2 }),
+    ];
+    const withoutLens = weeklyVerdict(entries, options, 'monday', reference);
+    const explicitBuild = weeklyVerdict(entries, options, 'monday', reference, undefined, 'build');
+
+    expect(withoutLens.state).toBe('deload');
+    expect(withoutLens.goalLens).toBe('build');
+    expect(withoutLens).toEqual(explicitBuild);
+
+    const copy = weeklyVerdictCopy(withoutLens, 'kg');
+    expect(copy.lines[0]?.plain).toContain('looks like a deload');
+    expect(copy.lines[0]?.plain).not.toContain('intensity block');
+  });
+
+  it('computes intensityHeld regardless of the active lens (derived-on-read)', () => {
+    const entries = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2 }),
+    ];
+    const buildResult = weeklyVerdict(entries, options, 'monday', reference);
+    const strengthResult = weeklyVerdict(entries, options, 'monday', reference, undefined, 'strength');
+
+    expect(buildResult.state).toBe('deload');
+    expect(buildResult.intensityHeld).toBe(true);
+    expect(strengthResult.intensityHeld).toBe(true);
+  });
+
+  it('Strength + deload-shape + e1RM held reads as "Intensity block"', () => {
+    const entries = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2 }),
+    ];
+    const result = weeklyVerdict(entries, options, 'monday', reference, undefined, 'strength');
+
+    expect(result.state).toBe('deload');
+    expect(result.intensityHeld).toBe(true);
+    const copy = weeklyVerdictCopy(result, 'kg', undefined, 'strength');
+    expect(copy.lines[0]?.plain.toLowerCase()).toContain('intensity block');
+    expect(copy.lines[0]?.plain.toLowerCase()).toContain('lighter week');
+  });
+
+  it('Strength + deload-shape + e1RM down falls through to today\'s Deload copy unchanged', () => {
+    const entries = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3, weightG: 60_000 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2, weightG: 60_000 }),
+    ];
+    const result = weeklyVerdict(entries, options, 'monday', reference, undefined, 'strength');
+
+    expect(result.state).toBe('deload');
+    expect(result.intensityHeld).toBe(false);
+    const copy = weeklyVerdictCopy(result, 'kg', undefined, 'strength');
+    expect(copy.lines[0]?.plain).toBe('Lighter week, consistent sessions — looks like a deload.');
+  });
+
+  it('Maintain + deload-shape drops the "deload" jargon regardless of e1RM', () => {
+    const entries = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3, weightG: 60_000 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2, weightG: 60_000 }),
+    ];
+    const result = weeklyVerdict(entries, options, 'monday', reference, undefined, 'maintain');
+    const copy = weeklyVerdictCopy(result, 'kg', undefined, 'maintain');
+
+    expect(copy.lines[0]?.plain).not.toContain('deload');
+    expect(copy.lines[0]?.plain).toContain('Lighter week');
+  });
+
+  it('Build + deload-shape stays identical whether or not e1RM held', () => {
+    const held = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2 }),
+    ];
+    const down = [
+      ...deloadEntriesHeld(),
+      entry('2026-09-08', 'last-a', { hardSets: 3, weightG: 60_000 }),
+      entry('2026-09-11', 'last-b', { hardSets: 2, weightG: 60_000 }),
+    ];
+    const heldCopy = weeklyVerdictCopy(
+      weeklyVerdict(held, options, 'monday', reference, undefined, 'build'),
+      'kg',
+    );
+    const downCopy = weeklyVerdictCopy(
+      weeklyVerdict(down, options, 'monday', reference, undefined, 'build'),
+      'kg',
+    );
+
+    expect(heldCopy.lines[0]?.plain).toBe('Lighter week, consistent sessions — looks like a deload.');
+    expect(downCopy.lines[0]?.plain).toBe('Lighter week, consistent sessions — looks like a deload.');
+  });
+
+  it('Maintain mutes a -10% to -30% direction band to neutral tone, pct still evidenced', () => {
+    const result = weeklyVerdict(
+      [...baseline(10), entry('2026-09-08', 'last', { hardSets: 8 })],
+      options,
+      'monday',
+      reference,
+    );
+
+    expect(result.state).toBe('full');
+    expect(result.direction?.band).toBe('down');
+    expect(result.direction?.changePercent).toBe(-20);
+
+    const maintainCopy = weeklyVerdictCopy(result, 'kg', undefined, 'maintain');
+    expect(maintainCopy.lines[0]?.plain).toContain('holding within your usual range');
+    expect(maintainCopy.lines[0]?.plain).toContain('20%');
+    expect(maintainCopy.lines[0]?.parts.some((part) => part.evidenceKey === 'direction_change')).toBe(
+      true,
+    );
+
+    const buildCopy = weeklyVerdictCopy(result, 'kg');
+    expect(buildCopy.lines[0]?.plain).not.toContain('holding within your usual range');
+  });
+
+  it('Maintain stays attention-worthy beyond -30% (well_down) — no neutral reframe', () => {
+    const result = weeklyVerdict(
+      [...baseline(10), entry('2026-09-08', 'last', { hardSets: 7 })],
+      options,
+      'monday',
+      reference,
+    );
+
+    expect(result.state).toBe('full');
+    expect(result.direction?.band).toBe('well_down');
+
+    const maintainCopy = weeklyVerdictCopy(result, 'kg', undefined, 'maintain');
+    const buildCopy = weeklyVerdictCopy(result, 'kg');
+    expect(maintainCopy.lines[0]?.plain).not.toContain('holding within your usual range');
+    expect(maintainCopy.lines[0]?.plain).toBe(buildCopy.lines[0]?.plain);
+  });
+});

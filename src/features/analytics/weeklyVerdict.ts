@@ -1,6 +1,6 @@
 import { bestOneRepMax } from '@/domain/oneRepMax';
 import { localDateOf } from '@/domain/time';
-import type { WeekStartDay } from '@/domain/types';
+import type { GoalLens, WeekStartDay } from '@/domain/types';
 import type { AnalyticsOptions, LoggedEntry } from './compute';
 import {
   elapsedDayIndex,
@@ -63,6 +63,14 @@ export interface WeeklyVerdict {
   /** The lifts standout/watchout drew on — the user's picks, or the honest inferred guess. */
   goalLifts: GoalLift[];
   goalLiftSource: GoalLiftSource;
+  /** Active goal lens — copy-layer input only. Never changes any figure above. Missing means 'build'. */
+  goalLens?: GoalLens;
+  /**
+   * Only meaningful when state is 'deload'. Whether goal-lift e1RM in the subject week held or
+   * rose versus the baseline-window best. Computed regardless of active lens — derived-on-read,
+   * inspectable under Build too. The copy layer only consults it under the Strength lens.
+   */
+  intensityHeld?: boolean;
 }
 
 export type VerdictEvidenceKey =
@@ -120,6 +128,7 @@ export function weeklyVerdict(
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
   goalLiftIds?: readonly string[],
+  goalLens: GoalLens = 'build',
 ): WeeklyVerdict {
   const referenceLocalDate = localDateOf(reference);
   const currentWeekStart = startOfTrainingWeekDate(referenceLocalDate, weekStart);
@@ -144,6 +153,7 @@ export function weeklyVerdict(
       pulse,
       goalLifts,
       goalLiftSource,
+      goalLens,
     );
   }
 
@@ -166,6 +176,7 @@ export function weeklyVerdict(
       pulse,
       goalLifts,
       goalLiftSource,
+      goalLens,
     );
   }
 
@@ -175,6 +186,7 @@ export function weeklyVerdict(
     subjectMetrics.sessions >= Math.round(baselineMetrics.sessions);
 
   if (deloadShaped) {
+    const intensityHeld = intensityHeldForGoalLifts(subjectEntries, baselineWeeks, goalLifts, options);
     return result(
       'deload',
       subjectWindow,
@@ -187,6 +199,8 @@ export function weeklyVerdict(
       pulse,
       goalLifts,
       goalLiftSource,
+      goalLens,
+      intensityHeld,
     );
   }
 
@@ -225,6 +239,7 @@ export function weeklyVerdict(
     pulse,
     goalLifts,
     goalLiftSource,
+    goalLens,
   );
 }
 
@@ -240,6 +255,8 @@ function result(
   pulse: WeeklyPulse | null,
   goalLifts: GoalLift[],
   goalLiftSource: GoalLiftSource,
+  goalLens: GoalLens,
+  intensityHeld?: boolean,
 ): WeeklyVerdict {
   return {
     state,
@@ -251,6 +268,8 @@ function result(
     pulse,
     goalLifts,
     goalLiftSource,
+    goalLens,
+    ...(intensityHeld === undefined ? {} : { intensityHeld }),
   };
 }
 
@@ -379,6 +398,25 @@ export function bestEstimateForLift(
     .filter((entry) => entry.exercise.exerciseId === liftId)
     .flatMap((entry) => entry.sets);
   return bestOneRepMax(sets, options.formula, { includeWarmups: false })?.value ?? null;
+}
+
+/**
+ * Whether any goal lift's e1RM in the subject (deload-shaped) week held or rose versus the
+ * baseline-window best. Computed independent of active lens — the Strength lens copy is the
+ * only consumer, but the figure itself stays inspectable under every lens.
+ */
+function intensityHeldForGoalLifts(
+  subjectEntries: readonly LoggedEntry[],
+  baselineWeeks: readonly TrainingBaselineWeek[],
+  goalLifts: readonly GoalLift[],
+  options: AnalyticsOptions,
+): boolean {
+  const baselineEntries = baselineWeeks.flatMap((week) => week.entries);
+  return goalLifts.some((lift) => {
+    const current = bestEstimateForLift(subjectEntries, lift.id, options);
+    const baselineBest = bestEstimateForLift(baselineEntries, lift.id, options);
+    return current !== null && baselineBest !== null && current >= baselineBest;
+  });
 }
 
 function buildStandout(

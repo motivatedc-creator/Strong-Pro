@@ -512,6 +512,37 @@ describe('backup round trip', () => {
     expect((await repository.getSettings()).goalLiftIds).toBeUndefined();
   });
 
+  it('restores a backup from before goal lenses existed without the field, resolving to build', async () => {
+    await seedHistory();
+    await repository.updateSettings({ goalLens: 'strength' });
+    const exported = await repository.exportAll();
+    const parsed = JSON.parse(backupToJson(exported));
+    delete parsed.data.settings.goalLens;
+
+    const validation = validateBackup(parsed);
+    expect(validation.ok).toBe(true);
+
+    await repository.clearAllUserData();
+    await repository.replaceAll(validation.payload!);
+
+    const restoredSettings = await repository.getSettings();
+    expect(restoredSettings.goalLens).toBeUndefined();
+    expect(restoredSettings.goalLens ?? 'build').toBe('build');
+  });
+
+  it('round-trips an explicit goalLens through a backup', async () => {
+    await seedHistory();
+    await repository.updateSettings({ goalLens: 'maintain' });
+    const exported = await repository.exportAll();
+    const validation = validateBackup(JSON.parse(backupToJson(exported)));
+    expect(validation.ok).toBe(true);
+
+    await repository.clearAllUserData();
+    await repository.replaceAll(validation.payload!);
+
+    expect((await repository.getSettings()).goalLens).toBe('maintain');
+  });
+
   it('merges a backup without duplicating existing workouts', async () => {
     await seedHistory();
     const exported = await repository.exportAll();

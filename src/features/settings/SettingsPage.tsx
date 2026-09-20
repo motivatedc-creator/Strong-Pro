@@ -11,6 +11,7 @@ import { formatWeight, defaultQuickIncrementG, toGrams } from '@/domain/units';
 import type {
   AccentTheme,
   AppIcon,
+  GoalLens,
   IntensityMode,
   OneRepMaxFormula,
   ThemeMode,
@@ -19,6 +20,7 @@ import type {
 } from '@/domain/types';
 import { Icon, Icons } from '@/components/icons';
 import { GoalLiftPicker } from '@/features/analytics/GoalLiftPicker';
+import { GoalLensPicker } from '@/features/analytics/GoalLensPicker';
 import { EquipmentSettings } from './EquipmentSettings';
 
 const SECTIONS = ['training', 'timers', 'equipment', 'appearance', 'data', 'about'] as const;
@@ -33,6 +35,12 @@ const SECTION_LABELS: Record<Section, string> = {
   about: 'About',
 };
 
+const GOAL_LENS_LABELS: Record<GoalLens, string> = {
+  build: 'Build',
+  strength: 'Strength',
+  maintain: 'Maintain',
+};
+
 const APP_ICONS: Array<{ id: AppIcon; name: string }> = [
   { id: 'default', name: 'Lock’d' },
   { id: 'ember', name: 'Ember' },
@@ -45,6 +53,7 @@ export function SettingsPage() {
   const { settings, weightUnit, update } = useSettings();
   const [section, setSection] = useState<Section>('training');
   const [pickingGoalLifts, setPickingGoalLifts] = useState(false);
+  const [pickingGoalLens, setPickingGoalLens] = useState(false);
 
   return (
     <>
@@ -196,6 +205,21 @@ export function SettingsPage() {
                 {settings.goalLiftIds && settings.goalLiftIds.length > 0
                   ? `${settings.goalLiftIds.length} lift${settings.goalLiftIds.length === 1 ? '' : 's'} set — change`
                   : 'Your top lifts — set your own'}
+              </button>
+            </div>
+
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="rf-label">Goal lens</p>
+              <p className="mb-2 mt-1 text-xs text-ink-subtle">
+                Changes how the Weekly Verdict describes your week. It never changes the numbers
+                themselves.
+              </p>
+              <button
+                type="button"
+                className="min-h-tap text-sm font-semibold text-accent"
+                onClick={() => setPickingGoalLens(true)}
+              >
+                {`Lens: ${GOAL_LENS_LABELS[settings.goalLens ?? 'build']} — change`}
               </button>
             </div>
           </Card>
@@ -386,6 +410,13 @@ export function SettingsPage() {
         onClose={() => setPickingGoalLifts(false)}
         goalLiftIds={settings.goalLiftIds}
         onChange={(goalLiftIds) => void update({ goalLiftIds })}
+      />
+
+      <GoalLensPicker
+        open={pickingGoalLens}
+        onClose={() => setPickingGoalLens(false)}
+        goalLens={settings.goalLens}
+        onGoalLensChange={(goalLens) => void update({ goalLens })}
       />
 
       <div className="h-8" aria-hidden="true" />

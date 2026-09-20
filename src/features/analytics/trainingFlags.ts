@@ -1,5 +1,5 @@
 import { localDateOf } from '@/domain/time';
-import type { WeekStartDay } from '@/domain/types';
+import type { GoalLens, WeekStartDay } from '@/domain/types';
 import type { AnalyticsOptions, LoggedEntry } from './compute';
 import {
   selectTrainingBaseline,
@@ -115,8 +115,9 @@ export function deloadFlag(
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
   goalLiftIds?: readonly string[],
+  goalLens: GoalLens = 'build',
 ): DeloadFlag {
-  const verdict = weeklyVerdict(entries, options, weekStart, reference, goalLiftIds);
+  const verdict = weeklyVerdict(entries, options, weekStart, reference, goalLiftIds, goalLens);
   const subjectHardSets = verdict.subject.metrics.hardSets;
   const baselineHardSetsMean = verdict.baseline.metrics.hardSets;
   const subjectSessions = verdict.subject.metrics.sessions;
@@ -124,10 +125,13 @@ export function deloadFlag(
   const sessionFloor = Math.round(baselineSessionsMean);
   const active = verdict.state === 'deload';
   const partial = verdict.state === 'not_enough_history' || verdict.state === 'welcome_back';
+  const readsAsIntensityBlock = active && goalLens === 'strength' && verdict.intensityHeld === true;
   const receipt = partial
     ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: deload check is partial while Weekly Verdict is ${verdict.state.replaceAll('_', ' ')}.`
     : active
-      ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: ${subjectHardSets} hard sets (< 60% of baseline mean ${formatSets(baselineHardSetsMean)}) with ${subjectSessions} sessions (≥ floor ${sessionFloor}). Receipt: deload-shaped week.`
+      ? readsAsIntensityBlock
+        ? `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: ${subjectHardSets} hard sets (< 60% of baseline mean ${formatSets(baselineHardSetsMean)}) with ${subjectSessions} sessions (≥ floor ${sessionFloor}); goal-lift e1RM held or rose. Receipt: intensity block, not a deload.`
+        : `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: ${subjectHardSets} hard sets (< 60% of baseline mean ${formatSets(baselineHardSetsMean)}) with ${subjectSessions} sessions (≥ floor ${sessionFloor}). Receipt: deload-shaped week.`
       : `Subject week ${verdict.subject.startDate} → ${verdict.subject.endDate}: not deload-shaped (${subjectHardSets} hard sets vs baseline mean ${formatSets(baselineHardSetsMean)}; ${subjectSessions} sessions vs floor ${sessionFloor}).`;
 
   return {
@@ -152,8 +156,9 @@ export function spikeFlag(
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
   goalLiftIds?: readonly string[],
+  goalLens: GoalLens = 'build',
 ): SpikeFlag {
-  const verdict = weeklyVerdict(entries, options, weekStart, reference, goalLiftIds);
+  const verdict = weeklyVerdict(entries, options, weekStart, reference, goalLiftIds, goalLens);
   const band = verdict.direction?.band ?? null;
   const changePercent = verdict.direction?.changePercent ?? null;
   const watchoutId = verdict.watchout?.id ?? null;
@@ -288,9 +293,10 @@ export function trainingFlags(
   weekStart: WeekStartDay = 'monday',
   reference: Date = new Date(),
   goalLiftIds?: readonly string[],
+  goalLens: GoalLens = 'build',
 ): TrainingFlags {
-  const deload = deloadFlag(entries, options, weekStart, reference, goalLiftIds);
-  const spike = spikeFlag(entries, options, weekStart, reference, goalLiftIds);
+  const deload = deloadFlag(entries, options, weekStart, reference, goalLiftIds, goalLens);
+  const spike = spikeFlag(entries, options, weekStart, reference, goalLiftIds, goalLens);
   const stalls = stallFlags(entries, options, weekStart, reference, goalLiftIds);
   const active = [
     ...(deload.status === 'active' ? [deload] : []),
