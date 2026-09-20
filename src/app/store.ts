@@ -54,6 +54,8 @@ export const toast = {
     useAppStore
       .getState()
       .pushToast({ message, tone: 'info', action: { label: 'Undo', onAction } }),
+  action: (message: string, label: string, onAction: () => void) =>
+    useAppStore.getState().pushToast({ message, tone: 'info', action: { label, onAction } }),
 };
 
 export function bumpData(): void {
