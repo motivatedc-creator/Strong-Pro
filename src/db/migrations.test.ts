@@ -2,6 +2,7 @@ import Dexie from 'dexie';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CURRENT_SCHEMA_VERSION, RepForgeDatabase } from './schema';
 import { DexieRepository } from './dexieRepository';
+import { UNILATERAL_BACKFILL_EXERCISE_IDS } from './seedData';
 
 /**
  * Migration coverage. Each case builds a database at an older schema version using the
@@ -193,6 +194,65 @@ describe('schema migrations', () => {
     expect(await db.exercises.count()).toBe(seededCount);
     expect((await db.exercises.get('seed-back-squat'))?.name).toBe('Back Squat (high bar)');
     expect((await db.exercises.get('seed-front-squat'))?.isArchived).toBe(true);
+
+    // Fresh installs get `unilateral: true` on these rows straight from insert-time seeding
+    // (PR #29); the version-2 backfill pass is a no-op here.
+    for (const id of UNILATERAL_BACKFILL_EXERCISE_IDS) {
+      expect((await db.exercises.get(id))?.unilateral).toBe(true);
+    }
+    db.close();
+  });
+
+  it('backfills unilateral:true onto installs seeded before the flag existed, exactly once', async () => {
+    // Simulates a pre-#29 install: SEED_LIBRARY_VERSION was 1 when these rows were inserted,
+    // so they exist but were never given the `unilateral` flag added afterwards. Insert-time
+    // seeding only fills in *missing* rows, so without a version bump + backfill pass these
+    // installs would be stuck without unilateral logging on these exercises indefinitely.
+    const legacy = openV1(dbName);
+    await legacy.open();
+    const now = '2026-01-01T10:00:00.000Z';
+    await legacy.table('meta').put({
+      id: 'meta',
+      schemaVersion: 1,
+      createdAt: now,
+      updatedAt: now,
+      seededLibraryVersion: 1,
+    });
+    await legacy.table('settings').put({ id: 'settings' });
+    for (const id of UNILATERAL_BACKFILL_EXERCISE_IDS) {
+      await legacy.table('exercises').put({
+        id,
+        name: id,
+        primaryMuscleGroup: 'back',
+        secondaryMuscleGroups: [],
+        equipment: 'dumbbell',
+        movementPattern: 'horizontal pull',
+        trackingType: 'weight_reps',
+        isCustom: false,
+        isArchived: false,
+        createdAt: now,
+        updatedAt: now,
+        // no `unilateral` field — the pre-#29 shape.
+      });
+    }
+    legacy.close();
+
+    const db = new RepForgeDatabase(dbName);
+    const repository = new DexieRepository(db);
+    await repository.initialise();
+
+    for (const id of UNILATERAL_BACKFILL_EXERCISE_IDS) {
+      expect((await db.exercises.get(id))?.unilateral).toBe(true);
+    }
+    expect((await db.meta.get('meta'))?.seededLibraryVersion).toBe(2);
+
+    // Idempotent: once backfilled, a later initialise() must not force the flag back on —
+    // the version gate (seededLibraryVersion is now 2) keeps this a one-time pass.
+    const sampleId = UNILATERAL_BACKFILL_EXERCISE_IDS[0]!;
+    await db.exercises.update(sampleId, { unilateral: false });
+    await repository.initialise();
+    expect((await db.exercises.get(sampleId))?.unilateral).toBe(false);
+
     db.close();
   });
 

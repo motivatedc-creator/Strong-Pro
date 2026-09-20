@@ -23,6 +23,7 @@ import type { SetWithContext } from '@/domain/records';
 import { CURRENT_SCHEMA_VERSION, getDb, type RepForgeDatabase } from './schema';
 import {
   SEED_LIBRARY_VERSION,
+  UNILATERAL_BACKFILL_EXERCISE_IDS,
   seedBarProfiles,
   seedExercises,
   seedPlateInventories,
@@ -105,6 +106,15 @@ export class DexieRepository implements RepForgeRepository {
           );
           const missing = seedExercises(now).filter((exercise) => !existing.has(exercise.id));
           if (missing.length > 0) await this.db.exercises.bulkPut(missing);
+
+          // One-time backfill: installs seeded before the `unilateral` flag existed (see
+          // PR #29) never had these four rows updated, since seeding above only inserts rows
+          // that are missing. Match by deterministic seed id only — name is user-editable.
+          await this.db.exercises
+            .where('id')
+            .anyOf(UNILATERAL_BACKFILL_EXERCISE_IDS)
+            .modify({ unilateral: true });
+
           await this.db.meta.update('meta', {
             seededLibraryVersion: SEED_LIBRARY_VERSION,
             schemaVersion: CURRENT_SCHEMA_VERSION,

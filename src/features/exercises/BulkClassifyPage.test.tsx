@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -65,8 +65,11 @@ describe('BulkClassifyPage', () => {
     await user.click(saveButton);
 
     // Only the changed row was saved and drops off the unmapped list; the untouched row stays.
-    await screen.findByRole('button', { name: 'Save all' });
-    expect(screen.queryByText('Bench - Close Grip (Dumbbell)')).not.toBeInTheDocument();
+    // The "Save all" label appears as soon as the in-memory drafts reset, which can race ahead
+    // of the reload's async refetch — wait for the actual row removal, not the button label.
+    await waitFor(() => {
+      expect(screen.queryByText('Bench - Close Grip (Dumbbell)')).not.toBeInTheDocument();
+    });
     expect(screen.getByText('Behind Legs Shrug (Smith Machine)')).toBeInTheDocument();
 
     const exercises = await repository.listExercises({ includeArchived: true });
