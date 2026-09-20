@@ -1,19 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useRepositoryData } from '@/app/hooks';
 import { useSettings } from '@/app/SettingsProvider';
-import { Card, Chip, PageHeader, Spinner, StatTile, buttonClasses } from '@/components/ui';
-import { PR_LABEL, findNewRecords, type SetWithContext } from '@/domain/records';
+import { Button, Card, Chip, PageHeader, Spinner, StatTile, buttonClasses } from '@/components/ui';
+import { Icon, Icons } from '@/components/icons';
+import { PR_LABEL, findNewRecords, type PrFlag, type SetWithContext } from '@/domain/records';
 import { elapsedSeconds, formatDateTime } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { setTypeLabel } from '@/domain/taxonomy';
 import { groupSetsForDisplay } from './setGrouping';
+import { PrMomentCard } from './PrMomentCard';
 
 /** Post-workout summary: what was done, and which records fell. */
 export function WorkoutSummaryPage() {
   const { id } = useParams<{ id: string }>();
   const { settings, weightUnit } = useSettings();
+  const [sharing, setSharing] = useState<PrFlag | null>(null);
 
   const { data, loading } = useRepositoryData(
     async (repository) => {
@@ -125,6 +128,15 @@ export function WorkoutSummaryPage() {
                       {PR_LABEL[kind]}
                     </Chip>
                   ))}
+                  <Button
+                    size="sm"
+                    className="ml-auto"
+                    icon={<Icon icon={Icons.share} size={16} />}
+                    aria-label={`Share ${nameByExercise.get(flag.exerciseId) ?? ''} record`}
+                    onClick={() => setSharing(flag)}
+                  >
+                    Share
+                  </Button>
                 </li>
               );
             })}
@@ -199,6 +211,21 @@ export function WorkoutSummaryPage() {
           Back to Today
         </Link>
       </div>
+
+      {sharing && (
+        <PrMomentCard
+          open
+          onClose={() => setSharing(null)}
+          record={{
+            kinds: sharing.kinds,
+            exerciseName: nameByExercise.get(sharing.exerciseId) ?? 'Exercise',
+            weightG: setById.get(sharing.setId)?.weightG,
+            reps: setById.get(sharing.setId)?.reps,
+            performedAt: detail.workout.startedAt,
+            weightUnit,
+          }}
+        />
+      )}
     </>
   );
 }
