@@ -26,7 +26,7 @@ import { elapsedSeconds } from '@/domain/time';
 import { formatDuration, formatWeight } from '@/domain/units';
 import { totalsForGroups } from '@/domain/volume';
 import { titleCase, usesWeight } from '@/domain/taxonomy';
-import type { SetType, TemplateExercise, WorkoutExercise, WorkoutSet } from '@/domain/types';
+import type { SetType, WorkoutExercise, WorkoutSet } from '@/domain/types';
 import { SetRow } from './SetRow';
 import { pairedSetInputs, previousForRow } from './setPrefill';
 import { groupSetsForDisplay } from './setGrouping';
@@ -66,14 +66,7 @@ export function ActiveWorkoutPage() {
     [data?.workout.id, data?.exercises.length],
   );
 
-  const { data: templateExercises } = useRepositoryData<TemplateExercise[] | undefined>(
-    async (repo) => {
-      if (!data?.workout.templateId) return undefined;
-      const detail = await repo.getTemplateDetail(data.workout.templateId);
-      return detail?.exercises.map((item) => item.templateExercise);
-    },
-    [data?.workout.templateId],
-  );
+  const templateExercises = data?.templateExercises;
 
   const [picking, setPicking] = useState(false);
   const [menuFor, setMenuFor] = useState<string | null>(null);

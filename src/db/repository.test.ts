@@ -24,6 +24,40 @@ describe('active workouts', () => {
     expect((await repository.getActiveWorkout())?.workout.name).toBe('First');
   });
 
+  it('has no templateExercises when started without a template', async () => {
+    await repository.startWorkout({ name: 'Freestyle' });
+    const active = await repository.getActiveWorkout();
+    expect(active?.templateExercises).toBeUndefined();
+  });
+
+  it('folds the template prescription into a single getActiveWorkout read', async () => {
+    const template = await repository.createTemplate('Push day');
+    await repository.saveTemplate(template, [
+      {
+        id: 'te1',
+        templateId: template.id,
+        exerciseId: 'seed-bench-press',
+        order: 0,
+        targetSets: 3,
+        targetRepMin: 8,
+        targetRepMax: 12,
+        restSeconds: 120,
+        defaultSetType: 'working',
+        includeWarmup: true,
+      },
+    ]);
+
+    await repository.startWorkout({ templateId: template.id });
+    const active = await repository.getActiveWorkout();
+    expect(active?.templateExercises).toHaveLength(1);
+    expect(active?.templateExercises?.[0]).toMatchObject({
+      exerciseId: 'seed-bench-press',
+      targetSets: 3,
+      targetRepMin: 8,
+      targetRepMax: 12,
+    });
+  });
+
   it('completing a workout twice is idempotent', async () => {
     const detail = await repository.startWorkout({ name: 'Session' });
     const workoutExercise = await repository.addExerciseToWorkout(

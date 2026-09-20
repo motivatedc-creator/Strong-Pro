@@ -263,9 +263,7 @@ export class DexieRepository implements RepForgeRepository {
   async getTemplateDetail(id: UUID): Promise<TemplateDetail | undefined> {
     const template = await this.db.templates.get(id);
     if (!template) return undefined;
-    const templateExercises = (
-      await this.db.templateExercises.where('templateId').equals(id).toArray()
-    ).sort((a, b) => a.order - b.order);
+    const templateExercises = await this.getTemplateExercises(id);
     const exercises = await this.db.exercises.bulkGet(templateExercises.map((t) => t.exerciseId));
     return {
       template,
@@ -274,6 +272,13 @@ export class DexieRepository implements RepForgeRepository {
         exercise: exercises[index] ?? undefined,
       })),
     };
+  }
+
+  /** Shared by `getTemplateDetail` and `getActiveWorkout` so both read the same query. */
+  private async getTemplateExercises(templateId: UUID): Promise<TemplateExercise[]> {
+    return (
+      await this.db.templateExercises.where('templateId').equals(templateId).toArray()
+    ).sort((a, b) => a.order - b.order);
   }
 
   async createTemplate(name: string, notes?: string): Promise<Template> {
@@ -360,7 +365,11 @@ export class DexieRepository implements RepForgeRepository {
   async getActiveWorkout(): Promise<WorkoutDetail | undefined> {
     const active = await this.db.workouts.where('status').equals('active').first();
     if (!active) return undefined;
-    return this.getWorkoutDetail(active.id);
+    const detail = await this.getWorkoutDetail(active.id);
+    if (!detail) return undefined;
+    if (!detail.workout.templateId) return detail;
+    const templateExercises = await this.getTemplateExercises(detail.workout.templateId);
+    return { ...detail, templateExercises };
   }
 
   async startWorkout(input: StartWorkoutInput): Promise<WorkoutDetail> {
