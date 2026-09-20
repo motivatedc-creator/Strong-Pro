@@ -79,6 +79,7 @@ const SEED: SeedTuple[] = [
   ['Dumbbell Bench Press', 'chest', ['triceps', 'shoulders'], 'dumbbell', 'horizontal push'],
   ['Incline Dumbbell Press', 'chest', ['shoulders', 'triceps'], 'dumbbell', 'horizontal push'],
   ['Dumbbell Shoulder Press', 'shoulders', ['triceps'], 'dumbbell', 'vertical push'],
+  ['Arnold Press', 'shoulders', ['triceps'], 'dumbbell', 'vertical push'],
   ['Dumbbell Row', 'back', ['lats', 'biceps'], 'dumbbell', 'horizontal pull'],
   ['One-Arm Dumbbell Row', 'back', ['lats', 'biceps'], 'dumbbell', 'horizontal pull', undefined, true],
   [
