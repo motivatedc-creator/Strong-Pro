@@ -18,15 +18,14 @@ createRoot(container).render(
 );
 
 const updateSW = registerSW({
+  // The waiting service worker only activates when something calls updateSW(true), so the
+  // prompt has to carry the action that does it. An informational toast leaves the new
+  // build parked in "waiting" forever and the user looking at a stale app — which is
+  // exactly what happened before this was wired up.
   onNeedRefresh() {
-    toast.info('A new version of Lock’d is ready.');
-    window.addEventListener(
-      'rf-apply-update',
-      () => {
-        void updateSW(true);
-      },
-      { once: true },
-    );
+    toast.action('A new version of Lock’d is ready.', 'Reload', () => {
+      void updateSW(true);
+    });
   },
   onOfflineReady() {
     toast.success('Lock’d is ready offline.');
