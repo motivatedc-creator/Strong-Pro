@@ -80,4 +80,46 @@ describe('BulkClassifyPage', () => {
     expect(classified?.primaryMuscleGroup).toBe('chest');
     expect(stillUnmapped?.primaryMuscleGroup).toBe('unmapped');
   });
+
+  it('previews a taxonomy suggestion without applying it until the user confirms', async () => {
+    const user = userEvent.setup();
+    await seedUnmapped('Bicep Curl (Cable)');
+
+    render(
+      <MemoryRouter>
+        <BulkClassifyPage />
+      </MemoryRouter>,
+    );
+
+    const card = (await screen.findByText('Bicep Curl (Cable)')).closest('li')!;
+    expect(within(card).getByText('Suggested: Biceps · Cable · Isolation')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save all' })).toBeDisabled();
+
+    await user.click(within(card).getByRole('button', { name: 'Use suggestion' }));
+
+    expect(within(card).getByLabelText('Primary muscle')).toHaveValue('biceps');
+    expect(within(card).getByLabelText('Equipment')).toHaveValue('cable');
+    expect(within(card).getByLabelText('Movement pattern')).toHaveValue('isolation');
+    expect(screen.getByRole('button', { name: 'Save 1 exercise' })).toBeEnabled();
+  });
+
+  it('can stage every available suggestion in one explicit review step', async () => {
+    const user = userEvent.setup();
+    await seedUnmapped('Bicep Curl (Cable)');
+    await seedUnmapped('Jefferson Pull');
+
+    render(
+      <MemoryRouter>
+        <BulkClassifyPage />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Use 1 suggestion' }));
+
+    const suggestedCard = screen.getByText('Bicep Curl (Cable)').closest('li')!;
+    const unknownCard = screen.getByText('Jefferson Pull').closest('li')!;
+    expect(within(suggestedCard).getByLabelText('Primary muscle')).toHaveValue('biceps');
+    expect(within(unknownCard).getByLabelText('Primary muscle')).toHaveValue('unmapped');
+    expect(screen.getByRole('button', { name: 'Save 1 exercise' })).toBeEnabled();
+  });
 });
