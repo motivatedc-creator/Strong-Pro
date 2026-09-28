@@ -6,6 +6,7 @@ import { Button, Card, EmptyState, PageHeader, Select, Spinner } from '@/compone
 import { Icon, Icons } from '@/components/icons';
 import { EQUIPMENT, MOVEMENT_PATTERNS, MUSCLE_GROUPS, titleCase } from '@/domain/taxonomy';
 import type { Equipment, Exercise, MovementPattern, MuscleGroup } from '@/domain/types';
+import { suggestExerciseTaxonomy } from '@/domain/exerciseTaxonomy';
 
 interface Draft {
   primaryMuscleGroup: MuscleGroup;
@@ -44,7 +45,16 @@ export function BulkClassifyPage() {
     return all.filter((exercise) => exercise.primaryMuscleGroup === 'unmapped');
   }, []);
 
-  const exercises = data ?? [];
+  const exercises = useMemo(() => data ?? [], [data]);
+
+  const suggestions = useMemo(
+    () =>
+      exercises.flatMap((exercise) => {
+        const suggestion = suggestExerciseTaxonomy(exercise.name);
+        return suggestion ? [{ exercise, suggestion }] : [];
+      }),
+    [exercises],
+  );
 
   const draftFor = (exercise: Exercise): Draft => drafts[exercise.id] ?? toDraft(exercise);
 
@@ -59,6 +69,16 @@ export function BulkClassifyPage() {
       ...current,
       [exerciseId]: { ...draftFor(exercises.find((e) => e.id === exerciseId)!), ...patch },
     }));
+  };
+
+  const useAllSuggestions = () => {
+    setDrafts((current) => {
+      const next = { ...current };
+      for (const { exercise, suggestion } of suggestions) {
+        next[exercise.id] = { ...(current[exercise.id] ?? toDraft(exercise)), ...suggestion };
+      }
+      return next;
+    });
   };
 
   const [saveAll, saving] = useWrite(async () => {
@@ -108,13 +128,39 @@ export function BulkClassifyPage() {
             nothing here is forced.
           </p>
 
+          {suggestions.length > 0 && (
+            <Card className="mb-3 flex flex-wrap items-center justify-between gap-3 p-3">
+              <p className="min-w-0 flex-1 text-xs text-ink-muted">
+                Lock’d found {suggestions.length} name-based{' '}
+                {suggestions.length === 1 ? 'suggestion' : 'suggestions'}. Stage them, review the
+                fields below, then save when they look right.
+              </p>
+              <Button size="sm" onClick={useAllSuggestions}>
+                Use {suggestions.length} {suggestions.length === 1 ? 'suggestion' : 'suggestions'}
+              </Button>
+            </Card>
+          )}
+
           <ul className="mb-20 space-y-2">
             {exercises.map((exercise) => {
               const draft = draftFor(exercise);
+              const suggestion = suggestExerciseTaxonomy(exercise.name);
               return (
                 <li key={exercise.id}>
                   <Card className="p-3">
                     <h2 className="truncate text-sm font-semibold text-ink">{exercise.name}</h2>
+                    {suggestion && (
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded border border-accent/30 bg-accent/5 px-3 py-2">
+                        <p className="text-xs text-ink-muted">
+                          Suggested: {titleCase(suggestion.primaryMuscleGroup)} ·{' '}
+                          {titleCase(suggestion.equipment)} ·{' '}
+                          {titleCase(suggestion.movementPattern)}
+                        </p>
+                        <Button size="sm" onClick={() => setDraft(exercise.id, suggestion)}>
+                          Use suggestion
+                        </Button>
+                      </div>
+                    )}
                     <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
                       <label className="text-xs text-ink-muted">
                         Primary muscle
